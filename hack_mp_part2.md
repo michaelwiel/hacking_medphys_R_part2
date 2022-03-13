@@ -1,7 +1,7 @@
 ---
 title: "Hacking Medical Physics with R"
 author: "Michael Wieland"
-date: "`r Sys.Date()`"
+date: "2022-03-13"
 output: 
   html_document: 
     highlight: tango
@@ -12,7 +12,8 @@ output:
     keep_md: true
 ---
 
-```{r setup, warning=FALSE, message=FALSE}
+
+```r
 knitr::opts_chunk$set(echo = TRUE)
 
 library(tidyverse)
@@ -42,8 +43,30 @@ If your data files reside in the working directory you can access them in a rela
 ### Reading an Excel File
 My preferred method to read Excel files is to use the `readxl`-package:
 
-```{r reading_excel}
+
+```r
 read_xls(path = "reports/StaffDoses_1.xls")
+```
+
+```
+## # A tibble: 22 x 18
+##    `Customer name` `Customer UID` Department `Department UID` Name  `Person UID`
+##    <chr>           <chr>          <chr>      <chr>            <chr> <chr>       
+##  1 Hogsmeade Roya~ 141            Nuclear M~ 1                Seve~ 12368       
+##  2 Hogsmeade Roya~ 141            Nuclear M~ 1                Harr~ 12369       
+##  3 Hogsmeade Roya~ 141            Nuclear M~ 1                Parv~ 12370       
+##  4 Hogsmeade Roya~ 141            Nuclear M~ 1                Parv~ 12370       
+##  5 Hogsmeade Roya~ 141            Nuclear M~ 1                Cedr~ 12371       
+##  6 Hogsmeade Roya~ 141            Nuclear M~ 1                Cedr~ 12371       
+##  7 Hogsmeade Roya~ 141            Nuclear M~ 1                Ron ~ 12372       
+##  8 Hogsmeade Roya~ 141            Nuclear M~ 1                Tom ~ 12373       
+##  9 Hogsmeade Roya~ 141            Diagnosti~ 2                Herm~ 12374       
+## 10 Hogsmeade Roya~ 141            Diagnosti~ 2                Albu~ 12375       
+## # ... with 12 more rows, and 12 more variables: Radiation type <chr>,
+## #   Hp(10) <chr>, Hp(0.07) <chr>, User type <chr>, Dosimeter type <chr>,
+## #   Dosimeter placement <chr>, Dosimeter UID <chr>,
+## #   Measurement period (start) <chr>, Measurement period (end) <chr>,
+## #   Read date <chr>, Report date <chr>, Report UID <chr>
 ```
 
 ### Fixing the column names
@@ -56,7 +79,8 @@ Reading the Excel-File with the function `read_xls` from the package `readxl` gi
 
 Assuming that the reports are always delivered in the same format and structure we can fix the column headers once and use them later on to replace the column names for all reports.
 
-```{r fixing_report_header}
+
+```r
 report_column_names <- read_xls(path = "reports/StaffDoses_1.xls",
          n_max = 0) %>% # to extract the column names we don't need any data 
   colnames() %>% # exctracting the column names as a vector
@@ -71,16 +95,51 @@ report_column_names <- read_xls(path = "reports/StaffDoses_1.xls",
 report_column_names
 ```
 
+```
+##  [1] "customer_name"            "customer_uid"            
+##  [3] "department"               "department_uid"          
+##  [5] "name"                     "person_uid"              
+##  [7] "radiation_type"           "hp10"                    
+##  [9] "hp007"                    "user_type"               
+## [11] "dosimeter_type"           "dosimeter_placement"     
+## [13] "dosimeter_uid"            "measurement_period_start"
+## [15] "measurement_period_end"   "read_date"               
+## [17] "report_date"              "report_uid"
+```
+
 ### Read in all reports from a folder
 To read in all files from a folder we can make use of the function `read.files()` that gives a list of all files in a folder.
 
-```{r read_all_files_from_folder}
+
+```r
 list.files("reports") # get a list of all files from a folder
+```
+
+```
+##  [1] "StaffDoses_1.xls"  "StaffDoses_10.xls" "StaffDoses_11.xls"
+##  [4] "StaffDoses_12.xls" "StaffDoses_13.xls" "StaffDoses_14.xls"
+##  [7] "StaffDoses_15.xls" "StaffDoses_16.xls" "StaffDoses_17.xls"
+## [10] "StaffDoses_18.xls" "StaffDoses_19.xls" "StaffDoses_2.xls" 
+## [13] "StaffDoses_20.xls" "StaffDoses_21.xls" "StaffDoses_22.xls"
+## [16] "StaffDoses_23.xls" "StaffDoses_24.xls" "StaffDoses_25.xls"
+## [19] "StaffDoses_26.xls" "StaffDoses_27.xls" "StaffDoses_28.xls"
+## [22] "StaffDoses_3.xls"  "StaffDoses_4.xls"  "StaffDoses_5.xls" 
+## [25] "StaffDoses_6.xls"  "StaffDoses_7.xls"  "StaffDoses_8.xls" 
+## [28] "StaffDoses_9.xls"
+```
+
+```r
 all_reports_to_read_in <- list.files("reports")
 
 # number of reports in the folder:
 length(all_reports_to_read_in)
+```
 
+```
+## [1] 28
+```
+
+```r
 all_reports <- data.frame() # create a dataframe to hold all reports
 
 for (i in 1:length(all_reports_to_read_in)) { # a for-loop to read in all reports
@@ -100,10 +159,18 @@ Some data wrangling is needed to get the right data types:
 
 To fix the dates I needed a work around because my machine `locale` is set to German but the dates in the reports have abbreviated month names in English. One way to read in the data correctly with little coding is to set the `locale` on the machine to English temporarily.
 
-```{r fix_data_types, warning=FALSE}
+
+```r
 # getting locale
 loc <- Sys.getlocale("LC_TIME")
 Sys.setlocale("LC_TIME", locale = "English") 
+```
+
+```
+## [1] "English_United States.1252"
+```
+
+```r
 # the value for "locale" is depending on the operating system
 # check the help page with "?Sys.setlocale()" if you are not using Windows
 
@@ -131,15 +198,39 @@ all_reports_fixed <- all_reports %>%
   ungroup()
 
 head(all_reports_fixed)
+```
 
+```
+## # A tibble: 6 x 20
+##   customer_name     customer_uid department   department_uid name     person_uid
+##   <chr>                    <dbl> <chr>                 <dbl> <chr>         <dbl>
+## 1 Hogsmeade Royal ~          141 Nuclear Med~              1 Severus~      12368
+## 2 Hogsmeade Royal ~          141 Nuclear Med~              1 Harry P~      12369
+## 3 Hogsmeade Royal ~          141 Nuclear Med~              1 Parvati~      12370
+## 4 Hogsmeade Royal ~          141 Nuclear Med~              1 Parvati~      12370
+## 5 Hogsmeade Royal ~          141 Nuclear Med~              1 Cedric ~      12371
+## 6 Hogsmeade Royal ~          141 Nuclear Med~              1 Cedric ~      12371
+## # ... with 14 more variables: radiation_type <chr>, hp10 <dbl>, hp007 <dbl>,
+## #   user_type <chr>, dosimeter_type <chr>, dosimeter_placement <chr>,
+## #   dosimeter_uid <dbl>, measurement_period_start <date>,
+## #   measurement_period_end <date>, read_date <date>, report_date <date>,
+## #   report_uid <dbl>, hp10_status <chr>, hp007_status <chr>
+```
+
+```r
 Sys.setlocale("LC_TIME", locale = loc) # setting back the locale 
+```
+
+```
+## [1] "German_Austria.1252"
 ```
 
 
 ## Reporting
 
 ### Hp(10) - Summary Statistics by Department and Year
-```{r hp10_summary_stat}
+
+```r
 all_reports_fixed %>% 
   drop_na(hp10) %>%  # droping all rows where no dose was recorded (not really necessary, ggplot can handle NAs)
   mutate(report_year = format(report_date, "%Y")) %>% # exctracting the year from the report date
@@ -152,4 +243,6 @@ all_reports_fixed %>%
   theme_clean() +
   facet_wrap(~ department) # split up into subplots for the different departments
 ```
+
+![](hack_mp_part2_files/figure-html/hp10_summary_stat-1.png)<!-- -->
 
