@@ -4,12 +4,12 @@ author: "Michael Wieland"
 date: "`r Sys.Date()`"
 output: 
   html_document: 
-    highlight: tango
-    theme: paper
+    highlight: pygments
+    theme: flatly
     toc: yes
     toc_float: yes
     code_folding: show
-    keep_md: true
+    keep_md: yes
 ---
 
 ```{r setup, warning=FALSE, message=FALSE}
@@ -18,6 +18,7 @@ knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
 library(readxl)
 library(ggthemes)
+library(kableExtra)
 ```
 
 ## Short Description
@@ -85,7 +86,7 @@ all_reports <- data.frame() # create a dataframe to hold all reports
 
 for (i in 1:length(all_reports_to_read_in)) { # a for-loop to read in all reports
   rep <- read_xls(path = paste0("reports/", all_reports_to_read_in[i])) # reading in the i-th report into veriable "rep"
-  all_reports <- rbind(all_reports, rep)
+  all_reports <- rbind(all_reports, rep) # binding together the reports rowwise
 }  
 
 colnames(all_reports) <- report_column_names # replacing the column names with the fixed names (see above)
@@ -94,8 +95,8 @@ colnames(all_reports) <- report_column_names # replacing the column names with t
 ### Fix data types
 Some data wrangling is needed to get the right data types: 
 
-* All numerical variables are defined as `double` or `integer`,  
-* Replace "," with "." in decimal numbers so R can recognise them as numbers,  
+* All numerical variables should be defined as `double` or `integer`,  
+* Replace "," with "." in decimal numbers so R can recognise them as numbers ("English convention" for decimal numbers),  
 * Create new columns `hp10_status` and `hp007_status` before converting `hp10` and `hp007` to numeric in order not to lose information. Where `hp10` and `hp007` have the values B, NR or `NA` (B: Below Measurement Treshold; NR: Not returned; `NA`: Missing Value) we transfer those values to the new columns, if the values are numeric we set the value in the new columns to OK.  
 
 To fix the dates I needed a work around because my machine `locale` is set to German but the dates in the reports have abbreviated month names in English. One way to read in the data correctly with little coding is to set the `locale` on the machine to English temporarily.
@@ -104,15 +105,17 @@ To fix the dates I needed a work around because my machine `locale` is set to Ge
 # getting locale
 loc <- Sys.getlocale("LC_TIME")
 Sys.setlocale("LC_TIME", locale = "English") 
-# the value for "locale" is depending on the operating system
-# check the help page with "?Sys.setlocale()" if you are not using Windows
+# the value for "locale" is depending on the operating system. For Windows the value is "English".
+# check the help page with "?Sys.setlocale()" if you are not using Windows.
 
 
 all_reports_fixed <- all_reports %>% 
-  mutate(hp10 = str_replace_all(hp10, pattern = ",", replacement = ".")) %>% # replacing the colon with dots as comma sign (needed to convert to numeric later on)
-  mutate(hp007 = str_replace_all(hp007, pattern = ",", replacement = ".")) %>% # replacing the colon with dots as comma sign (needed to convert to numeric later on) 
+  # In first step we are replacing the colon with dots as comma sign (needed to convert to numeric later on)
+  # with the function mutate we create new columns based on existing ones or modify the content of existing columns
+  mutate(hp10 = str_replace_all(hp10, pattern = ",", replacement = ".")) %>% 
+  mutate(hp007 = str_replace_all(hp007, pattern = ",", replacement = ".")) %>% 
   # before we convert hp10 and hp007 to numeric we create new columns with non-numeric values of hp10 and hp007 in order not to lose information
-  # "B": Below Measurement Treshold, "NR": Not returned)
+  # "B": Below Measurement Treshold, "NR": Not returned, "NA": missing value; "OK" where a numeric value exisists for the variables hp10 and hp007)
   mutate(hp10_status = case_when(hp10 == "B" ~ "B", 
                                  hp10 == "NR" ~ "NR",
                                  is.na(hp10) ~ NA_character_, 
@@ -121,7 +124,7 @@ all_reports_fixed <- all_reports %>%
                                  hp007 == "NR" ~ "NR",
                                  is.na(hp007) ~ NA_character_, 
                                  is.numeric(as.numeric(hp007)) ~ "OK")) %>% 
-  # next we convert relevant columns to numeric, non-numeric values in hp10 and hp007 will be converted to NA automatically
+  # next we convert relevant columns to numeric (non-numeric values in hp10 and hp007 will be converted to NA automatically)
   mutate(across(c(customer_uid, department_uid, person_uid, hp10, hp007, dosimeter_uid, report_uid), as.numeric)) %>% 
   # to make sure we have no duplicated data (same report read in more than once, identified by "report_uid") 
   # we eliminate duplicates with the function "distinct"... after grouping by person_uid and dosimeter_uid
@@ -142,14 +145,50 @@ Sys.setlocale("LC_TIME", locale = loc) # setting back the locale
 ```{r hp10_summary_stat}
 all_reports_fixed %>% 
   drop_na(hp10) %>%  # droping all rows where no dose was recorded (not really necessary, ggplot can handle NAs)
-  mutate(report_year = format(report_date, "%Y")) %>% # exctracting the year from the report date
+  mutate(report_year = format(report_date, "%Y")) %>% # extracting the year from the report date
   filter(report_year %in% c("2020", "2021")) %>% # chose years 2020 and 2021
   ggplot(aes(x=report_year, y=hp10)) +
   geom_boxplot() +
   scale_y_continuous(limits = c(0,NA), # set lower bound to 0 and let ggplot automatically set upper bound
                      breaks = pretty(c(0, max(all_reports_fixed$hp10, na.rm = T)), n=10)) + # getting 10 breaks in the y-axis
-  labs(x = "", y = "Hp(10)") +
-  theme_clean() +
-  facet_wrap(~ department) # split up into subplots for the different departments
+  labs(x = "", y = "Hp(10) [mSv]", # Axis names
+       title = "Summary Statistics for monthly Hp(10) values",
+       subtitle = "  by department and year",
+       caption = "Hacking Medical Physics. Data and Idea: J. Andersson and G. Poludniowski") +
+  # tweaking the plot style (optional) with the function "theme":
+  theme(panel.background = element_blank(),
+        panel.grid.major.y = element_line(linetype = 3, color = "gray"),
+        panel.spacing.x = unit(1, "cm"),
+        strip.text = element_text(face = "bold", color = "white"),
+        strip.background = element_rect(fill = "#D47B60")) +
+  facet_wrap(~ department) # split up the data into subplots for the different departments
+```
+
+### Number of Staff Dose Readings per Dosimeter Type
+```{r nr_dose_readings}
+all_reports_fixed %>% 
+  filter(user_type == "Staff") %>% # Filter for Staff readings
+  filter(! hp007_status %in% c("NR", "B")) %>% 
+  # grouping by dosimeter type to count both types seperately
+  group_by(dosimeter_type) %>% # to count dosimeter readings depending on type
+  summarise(sum(!is.na(hp10)), length(!is.na(hp007))) %>% # counting the rows with numeric values only (that are not NA)
+    # OBS: !is.na(a) gives back TRUE if a variable is NOT NA. In R the logical value TRUE is aquivalent to 1. 
+    # Therefore summing over a vector of logical values gives the number of "TRUE".
+  kable(align = "lcc", # kable is a function to produce tables
+        col.names = c("Dosimeter Type", "Hp(10)", "Hp(0.07"), 
+        caption = "Number of dosimeter readings per dosimeter type") %>% 
+  kable_styling(bootstrap_options = c("striped", "hover")) # a function to further tweak tablbes
+```
+
+
+### Individuals who did not return their Dosimeters
+```{r not returned}
+all_reports_fixed %>% 
+  filter(hp007_status == "NR") %>% 
+  count(name) %>% 
+  kable(align = "lc", # kable is a function to produce tables
+        col.names = c("Name", "Instances"), 
+        caption = "Number of times a dosimeter was not returned per person") %>% 
+  kable_styling(bootstrap_options = c("striped", "hover")) # a function to further tweak tablbes
 ```
 
