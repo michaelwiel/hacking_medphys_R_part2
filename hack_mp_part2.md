@@ -1,7 +1,7 @@
 ---
 title: "Hacking Medical Physics with R"
 author: "Michael Wieland"
-date: "2022-03-14"
+date: "2022-03-15"
 output: 
   html_document: 
     highlight: pygments
@@ -20,12 +20,13 @@ library(tidyverse)
 library(readxl)
 library(ggthemes)
 library(kableExtra)
+library(RSQLite)
 ```
 
 ## Short Description
 This is a R Version for Part 2 of the Article Series "Hacking Medical Physics" by Jonas Andersson and Gavin Poludniowski i (GitRepo: [rvbCMTS/EMP-News](https://github.com/rvbCMTS/EMP-News.git)) in the Newsletter of the European Federation of Organisations for Medical Physics (EFOMP)^[[European Medical Physics News](https://www.efomp.org/index.php?r=fc&id=emp-news)].
 
-## Preparation
+### Ressources and Preparation
 In order to run this R-Markdown file you need to install RStudio/R ([RStudio Installer](https://www.rstudio.com/products/rstudio/download/)).  
 
 Ressources to get started with R:  
@@ -72,11 +73,10 @@ read_xls(path = "reports/StaffDoses_1.xls")
 
 ### Fixing the column names
 Reading the Excel-File with the function `read_xls` from the package `readxl` gives a decent first result. A few things should be changed though in order to work with the data properly. The variable names (column titles) should follow the following convention^[[Social Science Computing Cooperative - Naming Variables](https://sscc.wisc.edu/sscc/pubs/DWE/book/4-2-naming-variables.html)]:  
->
->* Use only lower case.  
->* Use the underscore, "_" as a replacment for spaces to separate words (called __snake coding__).
->* ...
->
+
+> * Use only lower case.  
+> * Use the underscore, "_" as a replacment for spaces to separate words (called __snake coding__).
+> * ...
 
 Assuming that the reports are always delivered in the same format and structure we can fix the column headers once and use them later on to replace the column names for all reports.
 
@@ -161,6 +161,8 @@ Some data wrangling is needed to get the right data types:
 To fix the dates I needed a work around because my machine `locale` is set to German but the dates in the reports have abbreviated month names in English. One way to read in the data correctly with little coding is to set the `locale` on the machine to English temporarily.
 
 
+
+
 ```r
 # getting locale
 loc <- Sys.getlocale("LC_TIME")
@@ -228,6 +230,10 @@ Sys.setlocale("LC_TIME", locale = loc) # setting back the locale
 ## [1] "German_Austria.1252"
 ```
 
+#--------  
+__Comment Michael: Missunderstanding regarding Status column -> Change to be equivalent to Python tutorial__  
+#--------
+
 
 ## Reporting
 
@@ -269,7 +275,7 @@ all_reports_fixed %>%
     # OBS: !is.na(a) gives back TRUE if a variable is NOT NA. In R the logical value TRUE is aquivalent to 1. 
     # Therefore summing over a vector of logical values gives the number of "TRUE".
   kable(align = "lcc", # kable is a function to produce tables
-        col.names = c("Dosimeter Type", "Hp(10)", "Hp(0.07"), 
+        col.names = c("Dosimeter Type", "Hp(10)", "Hp(0.07)"), 
         caption = "Number of dosimeter readings per dosimeter type") %>% 
   kable_styling(bootstrap_options = c("striped", "hover")) # a function to further tweak tablbes
 ```
@@ -280,7 +286,7 @@ all_reports_fixed %>%
   <tr>
    <th style="text-align:left;"> Dosimeter Type </th>
    <th style="text-align:center;"> Hp(10) </th>
-   <th style="text-align:center;"> Hp(0.07 </th>
+   <th style="text-align:center;"> Hp(0.07) </th>
   </tr>
  </thead>
 <tbody>
@@ -329,4 +335,43 @@ all_reports_fixed %>%
   </tr>
 </tbody>
 </table>
+
+
+## Using R with SQL
+
+### Ressources and Motivation
+For this part I am drawing heavily on the following two ressources:  
+
+* [RStudio - Databases using R](https://db.rstudio.com/)  
+* [datacamp.com - SQLite in R](https://www.datacamp.com/community/tutorials/sqlite-in-r)  
+
+For a limited number of files like in the example above working with a database is not necessary but databases have several advantages^[[opentextbc.ca - Database Design](https://opentextbc.ca/dbdesign01/chapter/chapter-3-characteristics-and-benefits-of-a-database)]:  
+
+>* Data Indepence (your colleagues might want to access the data with Python or Matlab)  
+>* Insulation between data and program  
+>* Support for multiple views of data (subsets of the data for different users)  
+>* Centralized control over data  
+>* Data can be shared  
+>* Redundancy can be reduced (ideally each data item is stored in only one place)  
+>* Integrity constraints (rules that dictate what can be entered or edited)  
+>* Security constraints  
+
+### Getting started
+If your data is not already available in a database you have to create one:
+
+
+
+
+## Reporting with RMarkdown
+
+
+#-------------
+
+
+
+
+
+
+
+
 

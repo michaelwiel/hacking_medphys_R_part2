@@ -11,7 +11,7 @@
 
 <meta name="author" content="Michael Wieland" />
 
-<meta name="date" content="2022-03-14" />
+<meta name="date" content="2022-03-15" />
 
 <title>Hacking Medical Physics with R</title>
 
@@ -348,7 +348,7 @@ div.tocify {
 
 <h1 class="title toc-ignore">Hacking Medical Physics with R</h1>
 <h4 class="author">Michael Wieland</h4>
-<h4 class="date">2022-03-14</h4>
+<h4 class="date">2022-03-15</h4>
 
 </div>
 
@@ -358,13 +358,13 @@ div.tocify {
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyverse)</span>
 <span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(readxl)</span>
 <span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(ggthemes)</span>
-<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(kableExtra)</span></code></pre></div>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(kableExtra)</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(RSQLite)</span></code></pre></div>
 <div id="short-description" class="section level2">
 <h2>Short Description</h2>
 <p>This is a R Version for Part 2 of the Article Series “Hacking Medical Physics” by Jonas Andersson and Gavin Poludniowski i (GitRepo: <a href="https://github.com/rvbCMTS/EMP-News.git">rvbCMTS/EMP-News</a>) in the Newsletter of the European Federation of Organisations for Medical Physics (EFOMP)<a href="#fn1" class="footnote-ref" id="fnref1"><sup>1</sup></a>.</p>
-</div>
-<div id="preparation" class="section level2">
-<h2>Preparation</h2>
+<div id="ressources-and-preparation" class="section level3">
+<h3>Ressources and Preparation</h3>
 <p>In order to run this R-Markdown file you need to install RStudio/R (<a href="https://www.rstudio.com/products/rstudio/download/">RStudio Installer</a>).</p>
 <p>Ressources to get started with R:</p>
 <ul>
@@ -378,6 +378,7 @@ div.tocify {
 </ul>
 <p>I will make heavy use of the package collection <code>tidyverse</code> and the “pipe”-operator (<code>%&gt;%</code>). To learn more have a look at: <a href="https://www.tidyverse.org/"><code>tidyverse</code> - R packages for data science</a>.<br />
 If you have not installed the packages loaded in the <code>setup code chunk</code> (see above) start with installing them via <code>Tools</code> -&gt; <code>Install Packages</code>.</p>
+</div>
 </div>
 <div id="reading-in-data" class="section level2">
 <h2>Reading in Data</h2>
@@ -407,9 +408,15 @@ If you have not installed the packages loaded in the <code>setup code chunk</cod
 </div>
 <div id="fixing-the-column-names" class="section level3">
 <h3>Fixing the column names</h3>
-<p>Reading the Excel-File with the function <code>read_xls</code> from the package <code>readxl</code> gives a decent first result. A few things should be changed though in order to work with the data properly. The variable names (column titles) should follow the following convention<a href="#fn2" class="footnote-ref" id="fnref2"><sup>2</sup></a>:<br />
-&gt; &gt;* Use only lower case.<br />
-&gt;* Use the underscore, &quot;_&quot; as a replacment for spaces to separate words (called <strong>snake coding</strong>). &gt;* … &gt;</p>
+<p>Reading the Excel-File with the function <code>read_xls</code> from the package <code>readxl</code> gives a decent first result. A few things should be changed though in order to work with the data properly. The variable names (column titles) should follow the following convention<a href="#fn2" class="footnote-ref" id="fnref2"><sup>2</sup></a>:</p>
+<blockquote>
+<ul>
+<li>Use only lower case.<br />
+</li>
+<li>Use the underscore, &quot;_&quot; as a replacment for spaces to separate words (called <strong>snake coding</strong>).</li>
+<li>…</li>
+</ul>
+</blockquote>
 <p>Assuming that the reports are always delivered in the same format and structure we can fix the column headers once and use them later on to replace the column names for all reports.</p>
 <div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>report_column_names <span class="ot">&lt;-</span> <span class="fu">read_xls</span>(<span class="at">path =</span> <span class="st">&quot;reports/StaffDoses_1.xls&quot;</span>,</span>
 <span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>         <span class="at">n_max =</span> <span class="dv">0</span>) <span class="sc">%&gt;%</span> <span class="co"># to extract the column names we don&#39;t need any data </span></span>
@@ -521,6 +528,9 @@ If you have not installed the packages loaded in the <code>setup code chunk</cod
 ## #   report_uid &lt;dbl&gt;, hp10_status &lt;chr&gt;, hp007_status &lt;chr&gt;</code></pre>
 <div class="sourceCode" id="cb15"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="fu">Sys.setlocale</span>(<span class="st">&quot;LC_TIME&quot;</span>, <span class="at">locale =</span> loc) <span class="co"># setting back the locale </span></span></code></pre></div>
 <pre><code>## [1] &quot;German_Austria.1252&quot;</code></pre>
+<p>#——–<br />
+<strong>Comment Michael: Missunderstanding regarding Status column -&gt; Change to be equivalent to Python tutorial</strong><br />
+#——–</p>
 </div>
 </div>
 <div id="reporting" class="section level2">
@@ -559,7 +569,7 @@ If you have not installed the packages loaded in the <code>setup code chunk</cod
 <span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a>    <span class="co"># OBS: !is.na(a) gives back TRUE if a variable is NOT NA. In R the logical value TRUE is aquivalent to 1. </span></span>
 <span id="cb18-8"><a href="#cb18-8" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Therefore summing over a vector of logical values gives the number of &quot;TRUE&quot;.</span></span>
 <span id="cb18-9"><a href="#cb18-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">kable</span>(<span class="at">align =</span> <span class="st">&quot;lcc&quot;</span>, <span class="co"># kable is a function to produce tables</span></span>
-<span id="cb18-10"><a href="#cb18-10" aria-hidden="true" tabindex="-1"></a>        <span class="at">col.names =</span> <span class="fu">c</span>(<span class="st">&quot;Dosimeter Type&quot;</span>, <span class="st">&quot;Hp(10)&quot;</span>, <span class="st">&quot;Hp(0.07&quot;</span>), </span>
+<span id="cb18-10"><a href="#cb18-10" aria-hidden="true" tabindex="-1"></a>        <span class="at">col.names =</span> <span class="fu">c</span>(<span class="st">&quot;Dosimeter Type&quot;</span>, <span class="st">&quot;Hp(10)&quot;</span>, <span class="st">&quot;Hp(0.07)&quot;</span>), </span>
 <span id="cb18-11"><a href="#cb18-11" aria-hidden="true" tabindex="-1"></a>        <span class="at">caption =</span> <span class="st">&quot;Number of dosimeter readings per dosimeter type&quot;</span>) <span class="sc">%&gt;%</span> </span>
 <span id="cb18-12"><a href="#cb18-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">kable_styling</span>(<span class="at">bootstrap_options =</span> <span class="fu">c</span>(<span class="st">&quot;striped&quot;</span>, <span class="st">&quot;hover&quot;</span>)) <span class="co"># a function to further tweak tablbes</span></span></code></pre></div>
 <table class="table table-striped table-hover" style="margin-left: auto; margin-right: auto;">
@@ -575,7 +585,7 @@ Dosimeter Type
 Hp(10)
 </th>
 <th style="text-align:center;">
-Hp(0.07
+Hp(0.07)
 </th>
 </tr>
 </thead>
@@ -649,11 +659,52 @@ Tom Marvolo Riddle
 </table>
 </div>
 </div>
+<div id="using-r-with-sql" class="section level2">
+<h2>Using R with SQL</h2>
+<div id="ressources-and-motivation" class="section level3">
+<h3>Ressources and Motivation</h3>
+<p>For this part I am drawing heavily on the following two ressources:</p>
+<ul>
+<li><a href="https://db.rstudio.com/">RStudio - Databases using R</a><br />
+</li>
+<li><a href="https://www.datacamp.com/community/tutorials/sqlite-in-r">datacamp.com - SQLite in R</a></li>
+</ul>
+<p>For a limited number of files like in the example above working with a database is not necessary but databases have several advantages<a href="#fn3" class="footnote-ref" id="fnref3"><sup>3</sup></a>:</p>
+<blockquote>
+<ul>
+<li>Data Indepence (your colleagues might want to access the data with Python or Matlab)<br />
+</li>
+<li>Insulation between data and program<br />
+</li>
+<li>Support for multiple views of data (subsets of the data for different users)<br />
+</li>
+<li>Centralized control over data<br />
+</li>
+<li>Data can be shared<br />
+</li>
+<li>Redundancy can be reduced (ideally each data item is stored in only one place)<br />
+</li>
+<li>Integrity constraints (rules that dictate what can be entered or edited)<br />
+</li>
+<li>Security constraints</li>
+</ul>
+</blockquote>
+</div>
+<div id="getting-started" class="section level3">
+<h3>Getting started</h3>
+<p>If your data is not already available in a database you have to create one:</p>
+</div>
+</div>
+<div id="reporting-with-rmarkdown" class="section level2">
+<h2>Reporting with RMarkdown</h2>
+<p>#————-</p>
+</div>
 <div class="footnotes">
 <hr />
 <ol>
 <li id="fn1"><p><a href="https://www.efomp.org/index.php?r=fc&amp;id=emp-news">European Medical Physics News</a><a href="#fnref1" class="footnote-back">↩︎</a></p></li>
 <li id="fn2"><p><a href="https://sscc.wisc.edu/sscc/pubs/DWE/book/4-2-naming-variables.html">Social Science Computing Cooperative - Naming Variables</a><a href="#fnref2" class="footnote-back">↩︎</a></p></li>
+<li id="fn3"><p><a href="https://opentextbc.ca/dbdesign01/chapter/chapter-3-characteristics-and-benefits-of-a-database">opentextbc.ca - Database Design</a><a href="#fnref3" class="footnote-back">↩︎</a></p></li>
 </ol>
 </div>
 

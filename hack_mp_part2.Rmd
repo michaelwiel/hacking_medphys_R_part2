@@ -19,12 +19,13 @@ library(tidyverse)
 library(readxl)
 library(ggthemes)
 library(kableExtra)
+library(RSQLite)
 ```
 
 ## Short Description
 This is a R Version for Part 2 of the Article Series "Hacking Medical Physics" by Jonas Andersson and Gavin Poludniowski i (GitRepo: [rvbCMTS/EMP-News](https://github.com/rvbCMTS/EMP-News.git)) in the Newsletter of the European Federation of Organisations for Medical Physics (EFOMP)^[[European Medical Physics News](https://www.efomp.org/index.php?r=fc&id=emp-news)].
 
-## Preparation
+### Ressources and Preparation
 In order to run this R-Markdown file you need to install RStudio/R ([RStudio Installer](https://www.rstudio.com/products/rstudio/download/)).  
 
 Ressources to get started with R:  
@@ -49,11 +50,10 @@ read_xls(path = "reports/StaffDoses_1.xls")
 
 ### Fixing the column names
 Reading the Excel-File with the function `read_xls` from the package `readxl` gives a decent first result. A few things should be changed though in order to work with the data properly. The variable names (column titles) should follow the following convention^[[Social Science Computing Cooperative - Naming Variables](https://sscc.wisc.edu/sscc/pubs/DWE/book/4-2-naming-variables.html)]:  
->
->* Use only lower case.  
->* Use the underscore, "_" as a replacment for spaces to separate words (called __snake coding__).
->* ...
->
+
+> * Use only lower case.  
+> * Use the underscore, "_" as a replacment for spaces to separate words (called __snake coding__).
+> * ...
 
 Assuming that the reports are always delivered in the same format and structure we can fix the column headers once and use them later on to replace the column names for all reports.
 
@@ -101,6 +101,8 @@ Some data wrangling is needed to get the right data types:
 
 To fix the dates I needed a work around because my machine `locale` is set to German but the dates in the reports have abbreviated month names in English. One way to read in the data correctly with little coding is to set the `locale` on the machine to English temporarily.
 
+
+
 ```{r fix_data_types, warning=FALSE}
 # getting locale
 loc <- Sys.getlocale("LC_TIME")
@@ -137,6 +139,10 @@ head(all_reports_fixed)
 
 Sys.setlocale("LC_TIME", locale = loc) # setting back the locale 
 ```
+
+#--------  
+__Comment Michael: Missunderstanding regarding Status column -> Change to be equivalent to Python tutorial__  
+#--------
 
 
 ## Reporting
@@ -175,7 +181,7 @@ all_reports_fixed %>%
     # OBS: !is.na(a) gives back TRUE if a variable is NOT NA. In R the logical value TRUE is aquivalent to 1. 
     # Therefore summing over a vector of logical values gives the number of "TRUE".
   kable(align = "lcc", # kable is a function to produce tables
-        col.names = c("Dosimeter Type", "Hp(10)", "Hp(0.07"), 
+        col.names = c("Dosimeter Type", "Hp(10)", "Hp(0.07)"), 
         caption = "Number of dosimeter readings per dosimeter type") %>% 
   kable_styling(bootstrap_options = c("striped", "hover")) # a function to further tweak tablbes
 ```
@@ -192,3 +198,96 @@ all_reports_fixed %>%
   kable_styling(bootstrap_options = c("striped", "hover")) # a function to further tweak tablbes
 ```
 
+
+## Using R with SQL
+
+### Ressources and Motivation
+For this part I am drawing heavily on the following two ressources:  
+
+* [RStudio - Databases using R](https://db.rstudio.com/)  
+* [datacamp.com - SQLite in R](https://www.datacamp.com/community/tutorials/sqlite-in-r)  
+
+For a limited number of files like in the example above working with a database is not necessary but databases have several advantages^[[opentextbc.ca - Database Design](https://opentextbc.ca/dbdesign01/chapter/chapter-3-characteristics-and-benefits-of-a-database)]:  
+
+>* Data Indepence (your colleagues might want to access the data with Python or Matlab)  
+>* Insulation between data and program  
+>* Support for multiple views of data (subsets of the data for different users)  
+>* Centralized control over data  
+>* Data can be shared  
+>* Redundancy can be reduced (ideally each data item is stored in only one place)  
+>* Integrity constraints (rules that dictate what can be entered or edited)  
+>* Security constraints  
+
+### Getting started
+If your data is not already available in a database you have to create one:
+
+```{r creating_a_db}
+
+```
+
+
+## Reporting with RMarkdown
+
+
+#-------------
+```{r test, eval=FALSE, echo=FALSE}
+# Testing SQLite with datacamp tutorial
+# https://www.datacamp.com/community/tutorials/sqlite-in-r
+
+data("mtcars")
+mtcars$car_names <- rownames(mtcars)
+rownames(mtcars) <- c()
+head(mtcars)
+# Create a connection to our new database, CarsDB.db
+# you can check that the .db file has been created on your working directory
+connection <- dbConnect(RSQLite::SQLite(), "CarsDB.db")
+
+# Write the mtcars dataset into a table names mtcars_data
+dbWriteTable(conn = connection, name = "cars_data", value = mtcars)
+# List all the tables available in the database
+dbListTables(conn)
+
+
+# appending data from different files
+# Create toy data frames
+car <- c('Camaro', 'California', 'Mustang', 'Explorer')
+make <- c('Chevrolet','Ferrari','Ford','Ford')
+df1 <- data.frame(car,make)
+car <- c('Corolla', 'Lancer', 'Sportage', 'XE')
+make <- c('Toyota','Mitsubishi','Kia','Jaguar')
+df2 <- data.frame(car,make)
+# Add them to a list
+dfList <- list(df1,df2)
+# Write a table by appending the data frames inside the list
+for(k in 1:length(dfList)){
+    dbWriteTable(connection, "Cars_and_Makes", dfList[[k]], append = TRUE)
+}
+# List all the Tables
+dbListTables(connection)
+
+# check to see if data is in table
+dbGetQuery(connection, statement = "SELECT * FROM Cars_and_Makes")
+```
+
+```{r test2, eval=FALSE, echo=FALSE}
+# Query examples
+dbGetQuery(connection, "SELECT * from cars_data LIMIT 5")
+dbGetQuery(connection, "SELECT car_names, mpg, cyl, disp from cars_data WHERE gear = 4")
+dbGetQuery(connection, "SELECT car_names, hp, cyl FROM cars_data WHERE car_names LIKE 'M%' AND cyl IN (6,8)")
+dbGetQuery(connection, "SELECT cyl, AVG(hp) AS 'average_hp', AVG(mpg) AS 'average_mpg' FROM cars_data
+           GROUP BY cyl
+           ORDER BY average_hp")
+```
+
+```{r test3, eval=FALSE, echo=FALSE}
+# Close the database connection to CarsDB
+dbDisconnect(conn)
+```
+
+```{r test4, eval=FALSE, echo=FALSE}
+
+```
+
+```{r test5, eval=FALSE, echo=FALSE}
+
+```
