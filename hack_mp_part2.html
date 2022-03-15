@@ -11,7 +11,7 @@
 
 <meta name="author" content="Michael Wieland" />
 
-<meta name="date" content="2022-03-15" />
+<meta name="date" content="2022-03-16" />
 
 <title>Hacking Medical Physics with R</title>
 
@@ -348,7 +348,7 @@ div.tocify {
 
 <h1 class="title toc-ignore">Hacking Medical Physics with R</h1>
 <h4 class="author">Michael Wieland</h4>
-<h4 class="date">2022-03-15</h4>
+<h4 class="date">2022-03-16</h4>
 
 </div>
 
@@ -359,7 +359,9 @@ div.tocify {
 <span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(readxl)</span>
 <span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(ggthemes)</span>
 <span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(kableExtra)</span>
-<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(RSQLite)</span></code></pre></div>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(DBI)</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="co">#library(RSQLite)</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="co"># https://cran.r-project.org/web/packages/RSQLite/vignettes/RSQLite.html</span></span></code></pre></div>
 <div id="short-description" class="section level2">
 <h2>Short Description</h2>
 <p>This is a R Version for Part 2 of the Article Series “Hacking Medical Physics” by Jonas Andersson and Gavin Poludniowski i (GitRepo: <a href="https://github.com/rvbCMTS/EMP-News.git">rvbCMTS/EMP-News</a>) in the Newsletter of the European Federation of Organisations for Medical Physics (EFOMP)<a href="#fn1" class="footnote-ref" id="fnref1"><sup>1</sup></a>.</p>
@@ -419,17 +421,18 @@ If you have not installed the packages loaded in the <code>setup code chunk</cod
 </blockquote>
 <p>Assuming that the reports are always delivered in the same format and structure we can fix the column headers once and use them later on to replace the column names for all reports.</p>
 <div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>report_column_names <span class="ot">&lt;-</span> <span class="fu">read_xls</span>(<span class="at">path =</span> <span class="st">&quot;reports/StaffDoses_1.xls&quot;</span>,</span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>         <span class="at">n_max =</span> <span class="dv">0</span>) <span class="sc">%&gt;%</span> <span class="co"># to extract the column names we don&#39;t need any data </span></span>
-<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">colnames</span>() <span class="sc">%&gt;%</span> <span class="co"># exctracting the column names as a vector</span></span>
-<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tolower</span>() <span class="sc">%&gt;%</span> <span class="co"># convert upper case to lower case</span></span>
-<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>  <span class="co"># next we use the function &quot;gsub&quot;:</span></span>
-<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>    <span class="co"># https://statisticsglobe.com/sub-gsub-r-function-example</span></span>
-<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>    <span class="co"># https://rstudio-pubs-static.s3.amazonaws.com/74603_76cd14d5983f47408fdf0b323550b846.html</span></span>
-<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">gsub</span>(<span class="at">pattern =</span> <span class="st">&quot; &quot;</span>, <span class="at">replacement =</span> <span class="st">&quot;_&quot;</span>) <span class="sc">%&gt;%</span> <span class="co"># replacing blanks with underscores</span></span>
-<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">gsub</span>(<span class="at">pattern =</span> <span class="st">&quot;[().]&quot;</span>, <span class="at">replacement =</span> <span class="st">&quot;&quot;</span>)  <span class="co"># replacing round brackets and dots; </span></span>
-<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>    <span class="co"># the square-brackets function as list operator (all characters inside the square-brackets are identified)</span></span>
-<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>report_column_names</span></code></pre></div>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>                                <span class="at">n_max =</span> <span class="dv">0</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  <span class="co"># to extract the column names we don&#39;t need any data therefore we read in n=0 lines</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">colnames</span>() <span class="sc">%&gt;%</span> <span class="co"># extracting the column names as a vector</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tolower</span>() <span class="sc">%&gt;%</span> <span class="co"># convert upper case to lower case</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>  <span class="co"># next we use the function &quot;gsub&quot;:</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>    <span class="co"># https://statisticsglobe.com/sub-gsub-r-function-example</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>    <span class="co"># https://rstudio-pubs-static.s3.amazonaws.com/74603_76cd14d5983f47408fdf0b323550b846.html</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">gsub</span>(<span class="at">pattern =</span> <span class="st">&quot; &quot;</span>, <span class="at">replacement =</span> <span class="st">&quot;_&quot;</span>) <span class="sc">%&gt;%</span> <span class="co"># replacing blanks with underscores</span></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">gsub</span>(<span class="at">pattern =</span> <span class="st">&quot;[().]&quot;</span>, <span class="at">replacement =</span> <span class="st">&quot;&quot;</span>)  <span class="co"># deleting round brackets and dots; </span></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>    <span class="co"># the square-brackets function as list operator (all characters inside the square-brackets are identified)</span></span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>report_column_names</span></code></pre></div>
 <pre><code>##  [1] &quot;customer_name&quot;            &quot;customer_uid&quot;            
 ##  [3] &quot;department&quot;               &quot;department_uid&quot;          
 ##  [5] &quot;name&quot;                     &quot;person_uid&quot;              
@@ -454,19 +457,20 @@ If you have not installed the packages loaded in the <code>setup code chunk</cod
 ## [22] &quot;StaffDoses_3.xls&quot;  &quot;StaffDoses_4.xls&quot;  &quot;StaffDoses_5.xls&quot; 
 ## [25] &quot;StaffDoses_6.xls&quot;  &quot;StaffDoses_7.xls&quot;  &quot;StaffDoses_8.xls&quot; 
 ## [28] &quot;StaffDoses_9.xls&quot;</code></pre>
-<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>all_reports_to_read_in <span class="ot">&lt;-</span> <span class="fu">list.files</span>(<span class="st">&quot;reports&quot;</span>)</span>
+<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>all_reports_to_read_in <span class="ot">&lt;-</span> <span class="fu">list.files</span>(<span class="st">&quot;reports&quot;</span>) <span class="co"># read the list of files as a character vector</span></span>
 <span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="co"># number of reports in the folder:</span></span>
 <span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="fu">length</span>(all_reports_to_read_in)</span></code></pre></div>
 <pre><code>## [1] 28</code></pre>
-<div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>all_reports <span class="ot">&lt;-</span> <span class="fu">data.frame</span>() <span class="co"># create a dataframe to hold all reports</span></span>
+<div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>all_reports <span class="ot">&lt;-</span> <span class="fu">data.frame</span>() <span class="co"># create an empty dataframe to hold all reports</span></span>
 <span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (i <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span><span class="fu">length</span>(all_reports_to_read_in)) { <span class="co"># a for-loop to read in all reports</span></span>
-<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>  rep <span class="ot">&lt;-</span> <span class="fu">read_xls</span>(<span class="at">path =</span> <span class="fu">paste0</span>(<span class="st">&quot;reports/&quot;</span>, all_reports_to_read_in[i])) <span class="co"># reading in the i-th report into veriable &quot;rep&quot;</span></span>
-<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>  all_reports <span class="ot">&lt;-</span> <span class="fu">rbind</span>(all_reports, rep) <span class="co"># binding together the reports rowwise</span></span>
-<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>}  </span>
-<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a><span class="fu">colnames</span>(all_reports) <span class="ot">&lt;-</span> report_column_names <span class="co"># replacing the column names with the fixed names (see above)</span></span></code></pre></div>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>  <span class="co"># reading in the i-th report into variable &quot;rep&quot;</span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>  rep <span class="ot">&lt;-</span> <span class="fu">read_xls</span>(<span class="at">path =</span> <span class="fu">paste0</span>(<span class="st">&quot;reports/&quot;</span>, all_reports_to_read_in[i])) </span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>  all_reports <span class="ot">&lt;-</span> <span class="fu">rbind</span>(all_reports, rep) <span class="co"># binding together the reports rowwise</span></span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>}  </span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a><span class="fu">colnames</span>(all_reports) <span class="ot">&lt;-</span> report_column_names <span class="co"># replacing the column names with the fixed names (see above)</span></span></code></pre></div>
 </div>
 <div id="fix-data-types" class="section level3">
 <h3>Fix data types</h3>
@@ -478,10 +482,10 @@ If you have not installed the packages loaded in the <code>setup code chunk</cod
 </li>
 <li>Create new columns <code>hp10_status</code> and <code>hp007_status</code> before converting <code>hp10</code> and <code>hp007</code> to numeric in order not to lose information. Where <code>hp10</code> and <code>hp007</code> have the values B, NR or <code>NA</code> (B: Below Measurement Treshold; NR: Not returned; <code>NA</code>: Missing Value) we transfer those values to the new columns, if the values are numeric we set the value in the new columns to OK.</li>
 </ul>
-<p>To fix the dates I needed a work around because my machine <code>locale</code> is set to German but the dates in the reports have abbreviated month names in English. One way to read in the data correctly with little coding is to set the <code>locale</code> on the machine to English temporarily.</p>
+<p>To fix the dates I needed a work around because my machine <code>locale</code> is set to German but the dates in the reports have abbreviated month names in English. One way to read in the data correctly with little coding is to set the <code>locale</code> on the machine to English temporarily. For date-time conversion to and from character see <a href="https://www.rdocumentation.org/packages/base/versions/3.6.2/topics/strptime"><code>strptime</code></a>.</p>
 <div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="co"># getting locale</span></span>
-<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>loc <span class="ot">&lt;-</span> <span class="fu">Sys.getlocale</span>(<span class="st">&quot;LC_TIME&quot;</span>)</span>
-<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a><span class="fu">Sys.setlocale</span>(<span class="st">&quot;LC_TIME&quot;</span>, <span class="at">locale =</span> <span class="st">&quot;English&quot;</span>) </span></code></pre></div>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>loc <span class="ot">&lt;-</span> <span class="fu">Sys.getlocale</span>(<span class="st">&quot;LC_TIME&quot;</span>) <span class="co"># storing the machine locale setting for time and dates in variable &quot;loc&quot;</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a><span class="fu">Sys.setlocale</span>(<span class="st">&quot;LC_TIME&quot;</span>, <span class="at">locale =</span> <span class="st">&quot;English&quot;</span>) <span class="co"># setting the machine locale for time and dates to &quot;English&quot;</span></span></code></pre></div>
 <pre><code>## [1] &quot;English_United States.1252&quot;</code></pre>
 <div class="sourceCode" id="cb13"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="co"># the value for &quot;locale&quot; is depending on the operating system. For Windows the value is &quot;English&quot;.</span></span>
 <span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="co"># check the help page with &quot;?Sys.setlocale()&quot; if you are not using Windows.</span></span>
@@ -492,27 +496,23 @@ If you have not installed the packages loaded in the <code>setup code chunk</cod
 <span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>  <span class="co"># with the function mutate we create new columns based on existing ones or modify the content of existing columns</span></span>
 <span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">hp10 =</span> <span class="fu">str_replace_all</span>(hp10, <span class="at">pattern =</span> <span class="st">&quot;,&quot;</span>, <span class="at">replacement =</span> <span class="st">&quot;.&quot;</span>)) <span class="sc">%&gt;%</span> </span>
 <span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">hp007 =</span> <span class="fu">str_replace_all</span>(hp007, <span class="at">pattern =</span> <span class="st">&quot;,&quot;</span>, <span class="at">replacement =</span> <span class="st">&quot;.&quot;</span>)) <span class="sc">%&gt;%</span> </span>
-<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a>  <span class="co"># before we convert hp10 and hp007 to numeric we create new columns with non-numeric values of hp10 and hp007 in order not to lose information</span></span>
-<span id="cb13-11"><a href="#cb13-11" aria-hidden="true" tabindex="-1"></a>  <span class="co"># &quot;B&quot;: Below Measurement Treshold, &quot;NR&quot;: Not returned, &quot;NA&quot;: missing value; &quot;OK&quot; where a numeric value exisists for the variables hp10 and hp007)</span></span>
-<span id="cb13-12"><a href="#cb13-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">hp10_status =</span> <span class="fu">case_when</span>(hp10 <span class="sc">==</span> <span class="st">&quot;B&quot;</span> <span class="sc">~</span> <span class="st">&quot;B&quot;</span>, </span>
-<span id="cb13-13"><a href="#cb13-13" aria-hidden="true" tabindex="-1"></a>                                 hp10 <span class="sc">==</span> <span class="st">&quot;NR&quot;</span> <span class="sc">~</span> <span class="st">&quot;NR&quot;</span>,</span>
-<span id="cb13-14"><a href="#cb13-14" aria-hidden="true" tabindex="-1"></a>                                 <span class="fu">is.na</span>(hp10) <span class="sc">~</span> <span class="cn">NA_character_</span>, </span>
-<span id="cb13-15"><a href="#cb13-15" aria-hidden="true" tabindex="-1"></a>                                 <span class="fu">is.numeric</span>(<span class="fu">as.numeric</span>(hp10)) <span class="sc">~</span> <span class="st">&quot;OK&quot;</span>),</span>
-<span id="cb13-16"><a href="#cb13-16" aria-hidden="true" tabindex="-1"></a>         <span class="at">hp007_status =</span> <span class="fu">case_when</span>(hp007 <span class="sc">==</span> <span class="st">&quot;B&quot;</span> <span class="sc">~</span> <span class="st">&quot;B&quot;</span>, </span>
-<span id="cb13-17"><a href="#cb13-17" aria-hidden="true" tabindex="-1"></a>                                 hp007 <span class="sc">==</span> <span class="st">&quot;NR&quot;</span> <span class="sc">~</span> <span class="st">&quot;NR&quot;</span>,</span>
-<span id="cb13-18"><a href="#cb13-18" aria-hidden="true" tabindex="-1"></a>                                 <span class="fu">is.na</span>(hp007) <span class="sc">~</span> <span class="cn">NA_character_</span>, </span>
-<span id="cb13-19"><a href="#cb13-19" aria-hidden="true" tabindex="-1"></a>                                 <span class="fu">is.numeric</span>(<span class="fu">as.numeric</span>(hp007)) <span class="sc">~</span> <span class="st">&quot;OK&quot;</span>)) <span class="sc">%&gt;%</span> </span>
-<span id="cb13-20"><a href="#cb13-20" aria-hidden="true" tabindex="-1"></a>  <span class="co"># next we convert relevant columns to numeric (non-numeric values in hp10 and hp007 will be converted to NA automatically)</span></span>
-<span id="cb13-21"><a href="#cb13-21" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="fu">across</span>(<span class="fu">c</span>(customer_uid, department_uid, person_uid, hp10, hp007, dosimeter_uid, report_uid), as.numeric)) <span class="sc">%&gt;%</span> </span>
-<span id="cb13-22"><a href="#cb13-22" aria-hidden="true" tabindex="-1"></a>  <span class="co"># to make sure we have no duplicated data (same report read in more than once, identified by &quot;report_uid&quot;) </span></span>
-<span id="cb13-23"><a href="#cb13-23" aria-hidden="true" tabindex="-1"></a>  <span class="co"># we eliminate duplicates with the function &quot;distinct&quot;... after grouping by person_uid and dosimeter_uid</span></span>
-<span id="cb13-24"><a href="#cb13-24" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="fu">across</span>(<span class="fu">c</span>(measurement_period_start<span class="sc">:</span>report_date), as.Date, <span class="at">format =</span> <span class="st">&quot;%d-%b-%Y&quot;</span>)) <span class="sc">%&gt;%</span> </span>
-<span id="cb13-25"><a href="#cb13-25" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(person_uid, dosimeter_uid) <span class="sc">%&gt;%</span> </span>
-<span id="cb13-26"><a href="#cb13-26" aria-hidden="true" tabindex="-1"></a>  <span class="fu">distinct</span>(report_uid, <span class="at">.keep_all =</span> <span class="cn">TRUE</span>) <span class="sc">%&gt;%</span></span>
-<span id="cb13-27"><a href="#cb13-27" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ungroup</span>()</span>
-<span id="cb13-28"><a href="#cb13-28" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-29"><a href="#cb13-29" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(all_reports_fixed)</span></code></pre></div>
-<pre><code>## # A tibble: 6 x 20
+<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a>  <span class="co"># before we convert hp10 and hp007 to numeric we create new columns with non-numeric values of hp007 in order not to lose information</span></span>
+<span id="cb13-11"><a href="#cb13-11" aria-hidden="true" tabindex="-1"></a>  <span class="co"># &quot;B&quot;: Below Measurement Threshold, &quot;NR&quot;: Not returned, &quot;NA&quot;: missing value; &quot;OK&quot; where a numeric value exists for the variables hp007)</span></span>
+<span id="cb13-12"><a href="#cb13-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">status =</span> <span class="fu">case_when</span>(hp007 <span class="sc">==</span> <span class="st">&quot;B&quot;</span> <span class="sc">~</span> <span class="st">&quot;B&quot;</span>,</span>
+<span id="cb13-13"><a href="#cb13-13" aria-hidden="true" tabindex="-1"></a>                            hp007 <span class="sc">==</span> <span class="st">&quot;NR&quot;</span> <span class="sc">~</span> <span class="st">&quot;NR&quot;</span>,</span>
+<span id="cb13-14"><a href="#cb13-14" aria-hidden="true" tabindex="-1"></a>                            <span class="fu">is.na</span>(hp007) <span class="sc">~</span> <span class="cn">NA_character_</span>,</span>
+<span id="cb13-15"><a href="#cb13-15" aria-hidden="true" tabindex="-1"></a>                            <span class="fu">is.numeric</span>(<span class="fu">as.numeric</span>(hp007)) <span class="sc">~</span> <span class="st">&quot;OK&quot;</span>)) <span class="sc">%&gt;%</span> </span>
+<span id="cb13-16"><a href="#cb13-16" aria-hidden="true" tabindex="-1"></a>  <span class="co"># next we convert relevant columns to numeric (non-numeric values in hp10 and hp007 will be converted to NA automatically)</span></span>
+<span id="cb13-17"><a href="#cb13-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="fu">across</span>(<span class="fu">c</span>(customer_uid, department_uid, person_uid, hp10, hp007, dosimeter_uid, report_uid), as.numeric)) <span class="sc">%&gt;%</span> </span>
+<span id="cb13-18"><a href="#cb13-18" aria-hidden="true" tabindex="-1"></a>  <span class="co"># to make sure we have no duplicated data (same report read in more than once, identified by &quot;report_uid&quot;) </span></span>
+<span id="cb13-19"><a href="#cb13-19" aria-hidden="true" tabindex="-1"></a>  <span class="co"># we eliminate duplicates with the function &quot;distinct&quot;... after grouping by person_uid and dosimeter_uid</span></span>
+<span id="cb13-20"><a href="#cb13-20" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="fu">across</span>(<span class="fu">c</span>(measurement_period_start<span class="sc">:</span>report_date), as.Date, <span class="at">format =</span> <span class="st">&quot;%d-%b-%Y&quot;</span>)) <span class="sc">%&gt;%</span> </span>
+<span id="cb13-21"><a href="#cb13-21" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(person_uid, dosimeter_uid) <span class="sc">%&gt;%</span> </span>
+<span id="cb13-22"><a href="#cb13-22" aria-hidden="true" tabindex="-1"></a>  <span class="fu">distinct</span>(report_uid, <span class="at">.keep_all =</span> <span class="cn">TRUE</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb13-23"><a href="#cb13-23" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ungroup</span>()</span>
+<span id="cb13-24"><a href="#cb13-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-25"><a href="#cb13-25" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(all_reports_fixed)</span></code></pre></div>
+<pre><code>## # A tibble: 6 x 19
 ##   customer_name     customer_uid department   department_uid name     person_uid
 ##   &lt;chr&gt;                    &lt;dbl&gt; &lt;chr&gt;                 &lt;dbl&gt; &lt;chr&gt;         &lt;dbl&gt;
 ## 1 Hogsmeade Royal ~          141 Nuclear Med~              1 Severus~      12368
@@ -521,16 +521,16 @@ If you have not installed the packages loaded in the <code>setup code chunk</cod
 ## 4 Hogsmeade Royal ~          141 Nuclear Med~              1 Parvati~      12370
 ## 5 Hogsmeade Royal ~          141 Nuclear Med~              1 Cedric ~      12371
 ## 6 Hogsmeade Royal ~          141 Nuclear Med~              1 Cedric ~      12371
-## # ... with 14 more variables: radiation_type &lt;chr&gt;, hp10 &lt;dbl&gt;, hp007 &lt;dbl&gt;,
+## # ... with 13 more variables: radiation_type &lt;chr&gt;, hp10 &lt;dbl&gt;, hp007 &lt;dbl&gt;,
 ## #   user_type &lt;chr&gt;, dosimeter_type &lt;chr&gt;, dosimeter_placement &lt;chr&gt;,
 ## #   dosimeter_uid &lt;dbl&gt;, measurement_period_start &lt;date&gt;,
 ## #   measurement_period_end &lt;date&gt;, read_date &lt;date&gt;, report_date &lt;date&gt;,
-## #   report_uid &lt;dbl&gt;, hp10_status &lt;chr&gt;, hp007_status &lt;chr&gt;</code></pre>
+## #   report_uid &lt;dbl&gt;, status &lt;chr&gt;</code></pre>
 <div class="sourceCode" id="cb15"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="fu">Sys.setlocale</span>(<span class="st">&quot;LC_TIME&quot;</span>, <span class="at">locale =</span> loc) <span class="co"># setting back the locale </span></span></code></pre></div>
 <pre><code>## [1] &quot;German_Austria.1252&quot;</code></pre>
 <p>#——–<br />
-<strong>Comment Michael: Missunderstanding regarding Status column -&gt; Change to be equivalent to Python tutorial</strong><br />
-#——–</p>
+<strong>Comment Michael: Discussion necessary regarding status column</strong></p>
+<p>#——–</p>
 </div>
 </div>
 <div id="reporting" class="section level2">
@@ -544,7 +544,7 @@ If you have not installed the packages loaded in the <code>setup code chunk</cod
 <span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x=</span>report_year, <span class="at">y=</span>hp10)) <span class="sc">+</span></span>
 <span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_boxplot</span>() <span class="sc">+</span></span>
 <span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_y_continuous</span>(<span class="at">limits =</span> <span class="fu">c</span>(<span class="dv">0</span>,<span class="cn">NA</span>), <span class="co"># set lower bound to 0 and let ggplot automatically set upper bound</span></span>
-<span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a>                     <span class="at">breaks =</span> <span class="fu">pretty</span>(<span class="fu">c</span>(<span class="dv">0</span>, <span class="fu">max</span>(all_reports_fixed<span class="sc">$</span>hp10, <span class="at">na.rm =</span> T)), <span class="at">n=</span><span class="dv">10</span>)) <span class="sc">+</span> <span class="co"># getting 10 breaks in the y-axis</span></span>
+<span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a>                     <span class="at">breaks =</span> <span class="fu">pretty</span>(<span class="fu">c</span>(<span class="dv">0</span>, <span class="fu">max</span>(all_reports_fixed<span class="sc">$</span>hp10, <span class="at">na.rm =</span> T)), <span class="at">n=</span><span class="dv">10</span>)) <span class="sc">+</span> <span class="co"># getting 10 breaks in the y-axis from 0 to maximum value of hp10</span></span>
 <span id="cb17-9"><a href="#cb17-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">&quot;&quot;</span>, <span class="at">y =</span> <span class="st">&quot;Hp(10) [mSv]&quot;</span>, <span class="co"># Axis names</span></span>
 <span id="cb17-10"><a href="#cb17-10" aria-hidden="true" tabindex="-1"></a>       <span class="at">title =</span> <span class="st">&quot;Summary Statistics for monthly Hp(10) values&quot;</span>,</span>
 <span id="cb17-11"><a href="#cb17-11" aria-hidden="true" tabindex="-1"></a>       <span class="at">subtitle =</span> <span class="st">&quot;  by department and year&quot;</span>,</span>
@@ -562,8 +562,8 @@ If you have not installed the packages loaded in the <code>setup code chunk</cod
 <h3>Number of Staff Dose Readings per Dosimeter Type</h3>
 <div class="sourceCode" id="cb18"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>all_reports_fixed <span class="sc">%&gt;%</span> </span>
 <span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(user_type <span class="sc">==</span> <span class="st">&quot;Staff&quot;</span>) <span class="sc">%&gt;%</span> <span class="co"># Filter for Staff readings</span></span>
-<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="sc">!</span> hp007_status <span class="sc">%in%</span> <span class="fu">c</span>(<span class="st">&quot;NR&quot;</span>, <span class="st">&quot;B&quot;</span>)) <span class="sc">%&gt;%</span> </span>
-<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>  <span class="co"># grouping by dosimeter type to count both types seperately</span></span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="sc">!</span> status <span class="sc">%in%</span> <span class="fu">c</span>(<span class="st">&quot;NR&quot;</span>, <span class="st">&quot;B&quot;</span>)) <span class="sc">%&gt;%</span> </span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>  <span class="co"># grouping by dosimeter type to count both types separately</span></span>
 <span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(dosimeter_type) <span class="sc">%&gt;%</span> <span class="co"># to count dosimeter readings depending on type</span></span>
 <span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(<span class="fu">sum</span>(<span class="sc">!</span><span class="fu">is.na</span>(hp10)), <span class="fu">length</span>(<span class="sc">!</span><span class="fu">is.na</span>(hp007))) <span class="sc">%&gt;%</span> <span class="co"># counting the rows with numeric values only (that are not NA)</span></span>
 <span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a>    <span class="co"># OBS: !is.na(a) gives back TRUE if a variable is NOT NA. In R the logical value TRUE is aquivalent to 1. </span></span>
@@ -618,7 +618,7 @@ Ring
 <div id="individuals-who-did-not-return-their-dosimeters" class="section level3">
 <h3>Individuals who did not return their Dosimeters</h3>
 <div class="sourceCode" id="cb19"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>all_reports_fixed <span class="sc">%&gt;%</span> </span>
-<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(hp007_status <span class="sc">==</span> <span class="st">&quot;NR&quot;</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(status <span class="sc">==</span> <span class="st">&quot;NR&quot;</span>) <span class="sc">%&gt;%</span> </span>
 <span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">count</span>(name) <span class="sc">%&gt;%</span> </span>
 <span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">kable</span>(<span class="at">align =</span> <span class="st">&quot;lc&quot;</span>, <span class="co"># kable is a function to produce tables</span></span>
 <span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a>        <span class="at">col.names =</span> <span class="fu">c</span>(<span class="st">&quot;Name&quot;</span>, <span class="st">&quot;Instances&quot;</span>), </span>
@@ -667,7 +667,7 @@ Tom Marvolo Riddle
 <ul>
 <li><a href="https://db.rstudio.com/">RStudio - Databases using R</a><br />
 </li>
-<li><a href="https://www.datacamp.com/community/tutorials/sqlite-in-r">datacamp.com - SQLite in R</a></li>
+<li><a href="https://datasciencesphere.com/database/sqlite-database-r/">Data Science Sphere - R SQLite Database Tutorial</a></li>
 </ul>
 <p>For a limited number of files like in the example above working with a database is not necessary but databases have several advantages<a href="#fn3" class="footnote-ref" id="fnref3"><sup>3</sup></a>:</p>
 <blockquote>
@@ -690,9 +690,54 @@ Tom Marvolo Riddle
 </ul>
 </blockquote>
 </div>
-<div id="getting-started" class="section level3">
-<h3>Getting started</h3>
-<p>If your data is not already available in a database you have to create one:</p>
+<div id="creating-or-opening-a-connection-to-a-database" class="section level3">
+<h3>Creating (or opening a connection to) a Database</h3>
+<p>With the funciton <code>dbConnect</code> you create a database file or open a connection to an already existing database.<br />
+Check out <a href="https://rsqlite.r-dbi.org/reference/sqlite">RSQLite Packages Vignette</a> and have a look at the optional arguments. The argument “flags” for example specifies the connection mode:</p>
+<ul>
+<li>SQLITE_RWC: open the database in read/write mode and create the database file if it does not already exist [STANDARD];<br />
+</li>
+<li>SQLITE_RW: open the database in read/write mode. Raise an error if the file does not already exist;<br />
+</li>
+<li>SQLITE_RO: open the database in read only mode. Raise an error if the file does not already exist.</li>
+</ul>
+<p>Since a database can hold many different kinds of data, not only personnel dosimeter readings, I will call my DB <code>medical_physics_db.sqlite</code>.</p>
+<div class="sourceCode" id="cb20"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>mp_db_conn <span class="ot">&lt;-</span> <span class="fu">dbConnect</span>(<span class="at">drv =</span> RSQLite<span class="sc">::</span><span class="fu">SQLite</span>(), <span class="at">dbname =</span> <span class="st">&quot;medical_physics_db.sqlite&quot;</span>)</span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a><span class="co"># opening the connection and creating a connection object called &quot;staff_dose_db_conn&quot; that represents the database.</span></span></code></pre></div>
+</div>
+<div id="creating-a-table-for-the-dosimeter-data" class="section level3">
+<h3>Creating a Table for the Dosimeter Data</h3>
+<p>In a database all data is stored in tables. For simplicity we will create a single table for the staff dosimeter readings and don’t go into details of optimal table design like <a href="https://opentextbc.ca/dbdesign01/chapter/chapter-11-functional-dependencies/">functional dependencies</a>, <a href="https://www.sqlitetutorial.net/sqlite-primary-key/">(primary/foreign) keys</a>, other constraints like <a href="https://www.sqlitetutorial.net/sqlite-unique-constraint/">UNIQUE</a>, and <a href="https://en.wikipedia.org/wiki/Database_normalization">Normalization</a>. <br></p>
+<p>Although you can create a table with an existing dataframe with <code>dbCreateTable</code> we will start by creating the table by hand with the same structure as in the Python tutorial:</p>
+<div class="sourceCode" id="cb21"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="fu">dbSendQuery</span>(<span class="at">conn =</span> mp_db_conn,</span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>            <span class="st">&quot;CREATE TABLE IF NOT EXISTS staffdose (</span></span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a><span class="st">                id INTEGER NOT NULL PRIMARY KEY,</span></span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a><span class="st">                Customer_name VARCHAR,</span></span>
+<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a><span class="st">                Customer_UID INTEGER,</span></span>
+<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a><span class="st">                Department VARCHAR,</span></span>
+<span id="cb21-7"><a href="#cb21-7" aria-hidden="true" tabindex="-1"></a><span class="st">                Department_UID INTEGER,</span></span>
+<span id="cb21-8"><a href="#cb21-8" aria-hidden="true" tabindex="-1"></a><span class="st">                Name VARCHAR,</span></span>
+<span id="cb21-9"><a href="#cb21-9" aria-hidden="true" tabindex="-1"></a><span class="st">                Person_UID INTEGER,</span></span>
+<span id="cb21-10"><a href="#cb21-10" aria-hidden="true" tabindex="-1"></a><span class="st">                Radiation_type VARCHAR,</span></span>
+<span id="cb21-11"><a href="#cb21-11" aria-hidden="true" tabindex="-1"></a><span class="st">                Hp10 DOUBLE,</span></span>
+<span id="cb21-12"><a href="#cb21-12" aria-hidden="true" tabindex="-1"></a><span class="st">                Hp007 DOUBLE,</span></span>
+<span id="cb21-13"><a href="#cb21-13" aria-hidden="true" tabindex="-1"></a><span class="st">                User_type VARCHAR,</span></span>
+<span id="cb21-14"><a href="#cb21-14" aria-hidden="true" tabindex="-1"></a><span class="st">                Dosimeter_type VARCHAR,</span></span>
+<span id="cb21-15"><a href="#cb21-15" aria-hidden="true" tabindex="-1"></a><span class="st">                Dosimeter_placement VARCHAR,</span></span>
+<span id="cb21-16"><a href="#cb21-16" aria-hidden="true" tabindex="-1"></a><span class="st">                Dosimeter_UID INTEGER,</span></span>
+<span id="cb21-17"><a href="#cb21-17" aria-hidden="true" tabindex="-1"></a><span class="st">                Measurement_period_start TEXT,</span></span>
+<span id="cb21-18"><a href="#cb21-18" aria-hidden="true" tabindex="-1"></a><span class="st">                Measurement_period_end TEXT,</span></span>
+<span id="cb21-19"><a href="#cb21-19" aria-hidden="true" tabindex="-1"></a><span class="st">                Read_date TEXT,</span></span>
+<span id="cb21-20"><a href="#cb21-20" aria-hidden="true" tabindex="-1"></a><span class="st">                Report_date TEXT,</span></span>
+<span id="cb21-21"><a href="#cb21-21" aria-hidden="true" tabindex="-1"></a><span class="st">                Report_UID DOUBLE,</span></span>
+<span id="cb21-22"><a href="#cb21-22" aria-hidden="true" tabindex="-1"></a><span class="st">                Status VARCHAR,</span></span>
+<span id="cb21-23"><a href="#cb21-23" aria-hidden="true" tabindex="-1"></a><span class="st">                UNIQUE(Report_UID, Person_UID, Dosimeter_placement)&quot;</span>)</span></code></pre></div>
+<p>#————–<br />
+Better to have date as TEXT?<br />
+<a href="https://www.sqlitetutorial.net/sqlite-date/" class="uri">https://www.sqlitetutorial.net/sqlite-date/</a><br />
+<a href="https://www.sqlitetutorial.net/sqlite-date-functions/sqlite-date-function/" class="uri">https://www.sqlitetutorial.net/sqlite-date-functions/sqlite-date-function/</a><br />
+<a href="https://www.sqlite.org/lang_datefunc.html" class="uri">https://www.sqlite.org/lang_datefunc.html</a><br />
+#————–</p>
 </div>
 </div>
 <div id="reporting-with-rmarkdown" class="section level2">

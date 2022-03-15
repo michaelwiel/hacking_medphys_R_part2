@@ -1,7 +1,7 @@
 ---
 title: "Hacking Medical Physics with R"
 author: "Michael Wieland"
-date: "2022-03-15"
+date: "2022-03-16"
 output: 
   html_document: 
     highlight: pygments
@@ -20,7 +20,9 @@ library(tidyverse)
 library(readxl)
 library(ggthemes)
 library(kableExtra)
-library(RSQLite)
+library(DBI)
+#library(RSQLite)
+# https://cran.r-project.org/web/packages/RSQLite/vignettes/RSQLite.html
 ```
 
 ## Short Description
@@ -83,14 +85,15 @@ Assuming that the reports are always delivered in the same format and structure 
 
 ```r
 report_column_names <- read_xls(path = "reports/StaffDoses_1.xls",
-         n_max = 0) %>% # to extract the column names we don't need any data 
-  colnames() %>% # exctracting the column names as a vector
+                                n_max = 0) %>% 
+  # to extract the column names we don't need any data therefore we read in n=0 lines
+  colnames() %>% # extracting the column names as a vector
   tolower() %>% # convert upper case to lower case
   # next we use the function "gsub":
     # https://statisticsglobe.com/sub-gsub-r-function-example
     # https://rstudio-pubs-static.s3.amazonaws.com/74603_76cd14d5983f47408fdf0b323550b846.html
   gsub(pattern = " ", replacement = "_") %>% # replacing blanks with underscores
-  gsub(pattern = "[().]", replacement = "")  # replacing round brackets and dots; 
+  gsub(pattern = "[().]", replacement = "")  # deleting round brackets and dots; 
     # the square-brackets function as list operator (all characters inside the square-brackets are identified)
 
 report_column_names
@@ -130,7 +133,7 @@ list.files("reports") # get a list of all files from a folder
 ```
 
 ```r
-all_reports_to_read_in <- list.files("reports")
+all_reports_to_read_in <- list.files("reports") # read the list of files as a character vector
 
 # number of reports in the folder:
 length(all_reports_to_read_in)
@@ -141,10 +144,11 @@ length(all_reports_to_read_in)
 ```
 
 ```r
-all_reports <- data.frame() # create a dataframe to hold all reports
+all_reports <- data.frame() # create an empty dataframe to hold all reports
 
 for (i in 1:length(all_reports_to_read_in)) { # a for-loop to read in all reports
-  rep <- read_xls(path = paste0("reports/", all_reports_to_read_in[i])) # reading in the i-th report into veriable "rep"
+  # reading in the i-th report into variable "rep"
+  rep <- read_xls(path = paste0("reports/", all_reports_to_read_in[i])) 
   all_reports <- rbind(all_reports, rep) # binding together the reports rowwise
 }  
 
@@ -158,15 +162,15 @@ Some data wrangling is needed to get the right data types:
 * Replace "," with "." in decimal numbers so R can recognise them as numbers ("English convention" for decimal numbers),  
 * Create new columns `hp10_status` and `hp007_status` before converting `hp10` and `hp007` to numeric in order not to lose information. Where `hp10` and `hp007` have the values B, NR or `NA` (B: Below Measurement Treshold; NR: Not returned; `NA`: Missing Value) we transfer those values to the new columns, if the values are numeric we set the value in the new columns to OK.  
 
-To fix the dates I needed a work around because my machine `locale` is set to German but the dates in the reports have abbreviated month names in English. One way to read in the data correctly with little coding is to set the `locale` on the machine to English temporarily.
+To fix the dates I needed a work around because my machine `locale` is set to German but the dates in the reports have abbreviated month names in English. One way to read in the data correctly with little coding is to set the `locale` on the machine to English temporarily. For date-time conversion to and from character see [`strptime`](https://www.rdocumentation.org/packages/base/versions/3.6.2/topics/strptime).
 
 
 
 
 ```r
 # getting locale
-loc <- Sys.getlocale("LC_TIME")
-Sys.setlocale("LC_TIME", locale = "English") 
+loc <- Sys.getlocale("LC_TIME") # storing the machine locale setting for time and dates in variable "loc"
+Sys.setlocale("LC_TIME", locale = "English") # setting the machine locale for time and dates to "English"
 ```
 
 ```
@@ -183,16 +187,12 @@ all_reports_fixed <- all_reports %>%
   # with the function mutate we create new columns based on existing ones or modify the content of existing columns
   mutate(hp10 = str_replace_all(hp10, pattern = ",", replacement = ".")) %>% 
   mutate(hp007 = str_replace_all(hp007, pattern = ",", replacement = ".")) %>% 
-  # before we convert hp10 and hp007 to numeric we create new columns with non-numeric values of hp10 and hp007 in order not to lose information
-  # "B": Below Measurement Treshold, "NR": Not returned, "NA": missing value; "OK" where a numeric value exisists for the variables hp10 and hp007)
-  mutate(hp10_status = case_when(hp10 == "B" ~ "B", 
-                                 hp10 == "NR" ~ "NR",
-                                 is.na(hp10) ~ NA_character_, 
-                                 is.numeric(as.numeric(hp10)) ~ "OK"),
-         hp007_status = case_when(hp007 == "B" ~ "B", 
-                                 hp007 == "NR" ~ "NR",
-                                 is.na(hp007) ~ NA_character_, 
-                                 is.numeric(as.numeric(hp007)) ~ "OK")) %>% 
+  # before we convert hp10 and hp007 to numeric we create new columns with non-numeric values of hp007 in order not to lose information
+  # "B": Below Measurement Threshold, "NR": Not returned, "NA": missing value; "OK" where a numeric value exists for the variables hp007)
+  mutate(status = case_when(hp007 == "B" ~ "B",
+                            hp007 == "NR" ~ "NR",
+                            is.na(hp007) ~ NA_character_,
+                            is.numeric(as.numeric(hp007)) ~ "OK")) %>% 
   # next we convert relevant columns to numeric (non-numeric values in hp10 and hp007 will be converted to NA automatically)
   mutate(across(c(customer_uid, department_uid, person_uid, hp10, hp007, dosimeter_uid, report_uid), as.numeric)) %>% 
   # to make sure we have no duplicated data (same report read in more than once, identified by "report_uid") 
@@ -206,7 +206,7 @@ head(all_reports_fixed)
 ```
 
 ```
-## # A tibble: 6 x 20
+## # A tibble: 6 x 19
 ##   customer_name     customer_uid department   department_uid name     person_uid
 ##   <chr>                    <dbl> <chr>                 <dbl> <chr>         <dbl>
 ## 1 Hogsmeade Royal ~          141 Nuclear Med~              1 Severus~      12368
@@ -215,11 +215,11 @@ head(all_reports_fixed)
 ## 4 Hogsmeade Royal ~          141 Nuclear Med~              1 Parvati~      12370
 ## 5 Hogsmeade Royal ~          141 Nuclear Med~              1 Cedric ~      12371
 ## 6 Hogsmeade Royal ~          141 Nuclear Med~              1 Cedric ~      12371
-## # ... with 14 more variables: radiation_type <chr>, hp10 <dbl>, hp007 <dbl>,
+## # ... with 13 more variables: radiation_type <chr>, hp10 <dbl>, hp007 <dbl>,
 ## #   user_type <chr>, dosimeter_type <chr>, dosimeter_placement <chr>,
 ## #   dosimeter_uid <dbl>, measurement_period_start <date>,
 ## #   measurement_period_end <date>, read_date <date>, report_date <date>,
-## #   report_uid <dbl>, hp10_status <chr>, hp007_status <chr>
+## #   report_uid <dbl>, status <chr>
 ```
 
 ```r
@@ -231,7 +231,9 @@ Sys.setlocale("LC_TIME", locale = loc) # setting back the locale
 ```
 
 #--------  
-__Comment Michael: Missunderstanding regarding Status column -> Change to be equivalent to Python tutorial__  
+__Comment Michael: Discussion necessary regarding status column__  
+
+
 #--------
 
 
@@ -247,7 +249,7 @@ all_reports_fixed %>%
   ggplot(aes(x=report_year, y=hp10)) +
   geom_boxplot() +
   scale_y_continuous(limits = c(0,NA), # set lower bound to 0 and let ggplot automatically set upper bound
-                     breaks = pretty(c(0, max(all_reports_fixed$hp10, na.rm = T)), n=10)) + # getting 10 breaks in the y-axis
+                     breaks = pretty(c(0, max(all_reports_fixed$hp10, na.rm = T)), n=10)) + # getting 10 breaks in the y-axis from 0 to maximum value of hp10
   labs(x = "", y = "Hp(10) [mSv]", # Axis names
        title = "Summary Statistics for monthly Hp(10) values",
        subtitle = "  by department and year",
@@ -268,8 +270,8 @@ all_reports_fixed %>%
 ```r
 all_reports_fixed %>% 
   filter(user_type == "Staff") %>% # Filter for Staff readings
-  filter(! hp007_status %in% c("NR", "B")) %>% 
-  # grouping by dosimeter type to count both types seperately
+  filter(! status %in% c("NR", "B")) %>% 
+  # grouping by dosimeter type to count both types separately
   group_by(dosimeter_type) %>% # to count dosimeter readings depending on type
   summarise(sum(!is.na(hp10)), length(!is.na(hp007))) %>% # counting the rows with numeric values only (that are not NA)
     # OBS: !is.na(a) gives back TRUE if a variable is NOT NA. In R the logical value TRUE is aquivalent to 1. 
@@ -308,7 +310,7 @@ all_reports_fixed %>%
 
 ```r
 all_reports_fixed %>% 
-  filter(hp007_status == "NR") %>% 
+  filter(status == "NR") %>% 
   count(name) %>% 
   kable(align = "lc", # kable is a function to produce tables
         col.names = c("Name", "Instances"), 
@@ -343,7 +345,7 @@ all_reports_fixed %>%
 For this part I am drawing heavily on the following two ressources:  
 
 * [RStudio - Databases using R](https://db.rstudio.com/)  
-* [datacamp.com - SQLite in R](https://www.datacamp.com/community/tutorials/sqlite-in-r)  
+* [Data Science Sphere - R SQLite Database Tutorial](https://datasciencesphere.com/database/sqlite-database-r/)  
 
 For a limited number of files like in the example above working with a database is not necessary but databases have several advantages^[[opentextbc.ca - Database Design](https://opentextbc.ca/dbdesign01/chapter/chapter-3-characteristics-and-benefits-of-a-database)]:  
 
@@ -356,11 +358,62 @@ For a limited number of files like in the example above working with a database 
 >* Integrity constraints (rules that dictate what can be entered or edited)  
 >* Security constraints  
 
-### Getting started
-If your data is not already available in a database you have to create one:
+
+### Creating (or opening a connection to) a Database
+With the funciton `dbConnect` you create a database file or open a connection to an already existing database.  
+Check out [RSQLite Packages Vignette](https://rsqlite.r-dbi.org/reference/sqlite) and have a look at the optional arguments. The argument "flags" for example specifies the connection mode:  
+
+* SQLITE_RWC: open the database in read/write mode and create the database file if it does not already exist [STANDARD];  
+* SQLITE_RW: open the database in read/write mode. Raise an error if the file does not already exist;  
+* SQLITE_RO: open the database in read only mode. Raise an error if the file does not already exist.  
+
+Since a database can hold many different kinds of data, not only personnel dosimeter readings, I will call my DB `medical_physics_db.sqlite`.
+
+```r
+mp_db_conn <- dbConnect(drv = RSQLite::SQLite(), dbname = "medical_physics_db.sqlite")
+# opening the connection and creating a connection object called "staff_dose_db_conn" that represents the database.
+```
 
 
+### Creating a Table for the Dosimeter Data
+In a database all data is stored in tables. For simplicity we will create a single table for the staff dosimeter readings and don't go into details of optimal table design like [functional dependencies](https://opentextbc.ca/dbdesign01/chapter/chapter-11-functional-dependencies/), [(primary/foreign) keys](https://www.sqlitetutorial.net/sqlite-primary-key/), other constraints like [UNIQUE](https://www.sqlitetutorial.net/sqlite-unique-constraint/), and [Normalization](https://en.wikipedia.org/wiki/Database_normalization). 
+<br>
 
+Although you can create a table with an existing dataframe with `dbCreateTable` we will start by creating the table by hand with the same structure as in the Python tutorial:
+
+
+```r
+dbSendQuery(conn = mp_db_conn,
+            "CREATE TABLE IF NOT EXISTS staffdose (
+                id INTEGER NOT NULL PRIMARY KEY,
+                Customer_name VARCHAR,
+                Customer_UID INTEGER,
+                Department VARCHAR,
+                Department_UID INTEGER,
+                Name VARCHAR,
+                Person_UID INTEGER,
+                Radiation_type VARCHAR,
+                Hp10 DOUBLE,
+                Hp007 DOUBLE,
+                User_type VARCHAR,
+                Dosimeter_type VARCHAR,
+                Dosimeter_placement VARCHAR,
+                Dosimeter_UID INTEGER,
+                Measurement_period_start TEXT,
+                Measurement_period_end TEXT,
+                Read_date TEXT,
+                Report_date TEXT,
+                Report_UID DOUBLE,
+                Status VARCHAR,
+                UNIQUE(Report_UID, Person_UID, Dosimeter_placement)")
+```
+
+#--------------  
+Better to have date as TEXT?  
+https://www.sqlitetutorial.net/sqlite-date/  
+https://www.sqlitetutorial.net/sqlite-date-functions/sqlite-date-function/  
+https://www.sqlite.org/lang_datefunc.html  
+#--------------
 
 ## Reporting with RMarkdown
 
