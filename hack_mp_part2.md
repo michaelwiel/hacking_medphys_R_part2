@@ -1,7 +1,7 @@
 ---
 title: "Hacking Medical Physics with R"
 author: "Michael Wieland"
-date: "2022-03-16"
+date: "2022-03-17"
 output: 
   html_document: 
     highlight: pygments
@@ -73,6 +73,13 @@ read_xls(path = "reports/StaffDoses_1.xls")
 ## #   Read date <chr>, Report date <chr>, Report UID <chr>
 ```
 
+Note for R Newcomers: If you know the order of the arguments of a function you don't have to supply the argument names. If you open the help for the function `read_xls` by typing `?read_xls` in the console the description of the function includes the list of arguments:  
+<br>
+`read_xls(path, sheet = NULL, range = NULL, col_names = TRUE, col_types = NULL, na = "", trim_ws = TRUE, skip = 0, n_max = Inf, guess_max = min(1000, n_max), progress = readxl_progress(), .name_repair = "unique")`  
+<br>
+Since `path` is the first argument we could also read in the data by just writing `read_xls("reports/StaffDoses_1.xls")`. It is of course faster but on the other side makes the code harder to read if you don't know the function. The second thing to note is that there are a lot of other mandatory arguments but they all have default value. `col_names` is set to `TRUE` by default and this will cause the function to regard the first line in the excel file as column names and not as data.  
+
+
 ### Fixing the column names
 Reading the Excel-File with the function `read_xls` from the package `readxl` gives a decent first result. A few things should be changed though in order to work with the data properly. The variable names (column titles) should follow the following convention^[[Social Science Computing Cooperative - Naming Variables](https://sscc.wisc.edu/sscc/pubs/DWE/book/4-2-naming-variables.html)]:  
 
@@ -116,7 +123,7 @@ To read in all files from a folder we can make use of the function `read.files()
 
 
 ```r
-list.files("reports") # get a list of all files from a folder
+list.files(path = "reports") # get a list of all files from a folder
 ```
 
 ```
@@ -342,14 +349,16 @@ all_reports_fixed %>%
 ## Using R with SQL
 
 ### Ressources and Motivation
-For this part I am drawing heavily on the following two ressources:  
+For this part I am drawing heavily on the following ressources:  
 
 * [RStudio - Databases using R](https://db.rstudio.com/)  
-* [Data Science Sphere - R SQLite Database Tutorial](https://datasciencesphere.com/database/sqlite-database-r/)  
+* [Simona Picardi - Reproducible Data Science - Chapter 07 - Interfacing Databases in R with RSQLite](https://ecorepsci.github.io/reproducible-science/rsqlite.html)  
+* [SQLite Tutorial](https://www.sqlitetutorial.net/)  
+
 
 For a limited number of files like in the example above working with a database is not necessary but databases have several advantages^[[opentextbc.ca - Database Design](https://opentextbc.ca/dbdesign01/chapter/chapter-3-characteristics-and-benefits-of-a-database)]:  
 
->* Data Indepence (your colleagues might want to access the data with Python or Matlab)  
+>* Data Independance (your colleagues might want to access the data with Python or Matlab)  
 >* Insulation between data and program  
 >* Support for multiple views of data (subsets of the data for different users)  
 >* Centralized control over data  
@@ -358,10 +367,11 @@ For a limited number of files like in the example above working with a database 
 >* Integrity constraints (rules that dictate what can be entered or edited)  
 >* Security constraints  
 
+If you are new to SQL and you want to have a possibilty to "look into" a SQLite database check out the leightweight and open source GUI [SQLiteStudio](https://sqlitestudio.pl/).
 
 ### Creating (or opening a connection to) a Database
 With the funciton `dbConnect` you create a database file or open a connection to an already existing database.  
-Check out [RSQLite Packages Vignette](https://rsqlite.r-dbi.org/reference/sqlite) and have a look at the optional arguments. The argument "flags" for example specifies the connection mode:  
+See [RSQLite Packages Vignette](https://rsqlite.r-dbi.org/reference/sqlite) for a list of optional arguments. The argument "flags" for example specifies the connection mode:  
 
 * SQLITE_RWC: open the database in read/write mode and create the database file if it does not already exist [STANDARD];  
 * SQLITE_RW: open the database in read/write mode. Raise an error if the file does not already exist;  
@@ -370,7 +380,8 @@ Check out [RSQLite Packages Vignette](https://rsqlite.r-dbi.org/reference/sqlite
 Since a database can hold many different kinds of data, not only personnel dosimeter readings, I will call my DB `medical_physics_db.sqlite`.
 
 ```r
-mp_db_conn <- dbConnect(drv = RSQLite::SQLite(), dbname = "medical_physics_db.sqlite")
+mp_db_conn <- dbConnect(drv = RSQLite::SQLite(), 
+                        dbname = "medical_physics_db.sqlite")
 # opening the connection and creating a connection object called "staff_dose_db_conn" that represents the database.
 ```
 
@@ -379,52 +390,268 @@ mp_db_conn <- dbConnect(drv = RSQLite::SQLite(), dbname = "medical_physics_db.sq
 In a database all data is stored in tables. For simplicity we will create a single table for the staff dosimeter readings and don't go into details of optimal table design like [functional dependencies](https://opentextbc.ca/dbdesign01/chapter/chapter-11-functional-dependencies/), [(primary/foreign) keys](https://www.sqlitetutorial.net/sqlite-primary-key/), other constraints like [UNIQUE](https://www.sqlitetutorial.net/sqlite-unique-constraint/), and [Normalization](https://en.wikipedia.org/wiki/Database_normalization). 
 <br>
 
-Although you can create a table with an existing dataframe with `dbCreateTable` we will start by creating the table by hand with the same structure as in the Python tutorial:
+Before we create our final personnel dosimeter table we are going to have a look at some useful functions and runs a view tests.
+
+To see the content of the database, i.e. which tables the database holds:
+
+```r
+# get a list of tables that already exist in the database
+dbListTables(conn = mp_db_conn)
+```
+
+```
+## Error in h(simpleError(msg, call)): Fehler bei der Auswertung des Argumentes 'conn' bei der Methodenauswahl für Funktion 'dbListTables': Objekt 'mp_db_conn' nicht gefunden
+```
+
+```r
+# since we started from scratch there are no tables 
+```
+
+The easiest way to create a table is by using the function `dbWriteTable` which takes a dataframe as argument and builds a table from it in the database. As dataframe we will use a subset (first 10 rows) of the cleaned data we already prepared before. 
 
 
 ```r
-dbSendQuery(conn = mp_db_conn,
-            "CREATE TABLE IF NOT EXISTS staffdose (
-                id INTEGER NOT NULL PRIMARY KEY,
-                Customer_name VARCHAR,
-                Customer_UID INTEGER,
-                Department VARCHAR,
-                Department_UID INTEGER,
-                Name VARCHAR,
-                Person_UID INTEGER,
-                Radiation_type VARCHAR,
-                Hp10 DOUBLE,
-                Hp007 DOUBLE,
-                User_type VARCHAR,
-                Dosimeter_type VARCHAR,
-                Dosimeter_placement VARCHAR,
-                Dosimeter_UID INTEGER,
-                Measurement_period_start TEXT,
-                Measurement_period_end TEXT,
-                Read_date TEXT,
-                Report_date TEXT,
-                Report_UID DOUBLE,
-                Status VARCHAR,
-                UNIQUE(Report_UID, Person_UID, Dosimeter_placement)")
+# In SQL there are several possibilities to handle date, I prefer "text"; 
+# details see here: https://www.sqlite.org/lang_datefunc.html 
+# Therefore we first change the datatype of the date columns to text
+all_reports_fixed_dateastext <- all_reports_fixed %>% 
+  mutate(across(c(measurement_period_start:report_date), as.character))
+
+arf_rows01to10 <- all_reports_fixed_dateastext[1:10,]
+
+
+# If you try to create a table with a name that is already used by a table in the database you will get an error message. In order to be able to run this tutorial more than once we use the statement "DROP TABLE IF EXISTS"  to delete the table if it already exists.
+dbExecute(mp_db_conn, "DROP TABLE IF EXISTS test01")
 ```
 
-#--------------  
-Better to have date as TEXT?  
-https://www.sqlitetutorial.net/sqlite-date/  
-https://www.sqlitetutorial.net/sqlite-date-functions/sqlite-date-function/  
-https://www.sqlite.org/lang_datefunc.html  
-#--------------
+```
+## Error in h(simpleError(msg, call)): Fehler bei der Auswertung des Argumentes 'conn' bei der Methodenauswahl für Funktion 'dbExecute': Objekt 'mp_db_conn' nicht gefunden
+```
+
+```r
+# creating a table from a dataframe
+dbWriteTable(conn = mp_db_conn,
+              name = "test01",
+              value  = arf_rows01to10)
+```
+
+```
+## Error in h(simpleError(msg, call)): Fehler bei der Auswertung des Argumentes 'conn' bei der Methodenauswahl für Funktion 'dbWriteTable': Objekt 'mp_db_conn' nicht gefunden
+```
+
+```r
+#check if it worked:
+dbListTables(conn = mp_db_conn)
+```
+
+```
+## Error in h(simpleError(msg, call)): Fehler bei der Auswertung des Argumentes 'conn' bei der Methodenauswahl für Funktion 'dbListTables': Objekt 'mp_db_conn' nicht gefunden
+```
+
+```r
+# Now you should get the output "test01"
+```
+
+Now we send our first database queries to view the table:
+
+
+```r
+dbGetQuery(conn = mp_db_conn,
+           statement = "SELECT * FROM test01")
+```
+
+```
+## Error in h(simpleError(msg, call)): Fehler bei der Auswertung des Argumentes 'conn' bei der Methodenauswahl für Funktion 'dbGetQuery': Objekt 'mp_db_conn' nicht gefunden
+```
+
+```r
+# "SELECT *": Select all columns 
+
+# See the structure of the table by using built in pragma statements
+# https://www.sqlite.org/pragma.html) in a query
+dbGetQuery(conn = mp_db_conn,
+           statement = "pragma table_info('test01')")
+```
+
+```
+## Error in h(simpleError(msg, call)): Fehler bei der Auswertung des Argumentes 'conn' bei der Methodenauswahl für Funktion 'dbGetQuery': Objekt 'mp_db_conn' nicht gefunden
+```
+
+As you can see from the output of the last command we don't have a primary key (all "pk" are set to 0) and neither have we set a UNIQUE constraint. Lets see what happens if we add some more data. This time we create a dataframe with rows 9 to 12 from `all_reports_fixed_dateastext`. Rows 9 and 10 are already in the database and rows 11 and 12 are new data.
+
+
+```r
+arf_rows09to12 <- all_reports_fixed_dateastext[9:12,]
+
+dbWriteTable(conn = mp_db_conn,
+             name = "test01",
+             value = arf_rows09to12,
+             append = TRUE) 
+```
+
+```
+## Error in h(simpleError(msg, call)): Fehler bei der Auswertung des Argumentes 'conn' bei der Methodenauswahl für Funktion 'dbWriteTable': Objekt 'mp_db_conn' nicht gefunden
+```
+
+```r
+# if there is already a table with the given name we have to set one of the arguments "append" or "overwrite" to true, otherwise we will get an error message
+
+dbGetQuery(conn = mp_db_conn,
+           statement = "SELECT * FROM test01")
+```
+
+```
+## Error in h(simpleError(msg, call)): Fehler bei der Auswertung des Argumentes 'conn' bei der Methodenauswahl für Funktion 'dbGetQuery': Objekt 'mp_db_conn' nicht gefunden
+```
+
+Now we have 14 rows in the table which means that we created duplicates by adding rows 9 and 10 again.
+In order to avoid duplicates we need constraints like a `PRIMARY KEY` and/or a `UNIQUE` constraint.  
+<br>
+There are different strategies to implement constraints but for consistency reasons we will build the table analogous to the Python tutorial "by hand": As `PRIMARY KEY` we add an `id`-column which we will fill with `AUTOINCREMENT` and set a `UNIQUE`-constraint with `report_uid, person_uid, dosimeter_placement`:
+
+
+```r
+# First we clean up the database by deleting the test01-table
+dbExecute(mp_db_conn, "DROP TABLE IF EXISTS test01")
+```
+
+```
+## Error in h(simpleError(msg, call)): Fehler bei der Auswertung des Argumentes 'conn' bei der Methodenauswahl für Funktion 'dbExecute': Objekt 'mp_db_conn' nicht gefunden
+```
+
+```r
+# check if database is empty
+dbListTables(mp_db_conn)
+```
+
+```
+## Error in h(simpleError(msg, call)): Fehler bei der Auswertung des Argumentes 'conn' bei der Methodenauswahl für Funktion 'dbListTables': Objekt 'mp_db_conn' nicht gefunden
+```
+
+```r
+# since we started from scratch there are no tables 
+
+# for reproducibility reasons we run the following command
+dbExecute(conn = mp_db_conn, 
+          "DROP TABLE IF EXISTS staffdose")
+```
+
+```
+## Error in h(simpleError(msg, call)): Fehler bei der Auswertung des Argumentes 'conn' bei der Methodenauswahl für Funktion 'dbExecute': Objekt 'mp_db_conn' nicht gefunden
+```
+
+```r
+dbExecute(conn = mp_db_conn,
+            "CREATE TABLE staffdose (
+                id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+                customer_name VARCHAR,
+                customer_uid INTEGER,
+                department VARCHAR,
+                department_uid INTEGER,
+                name VARCHAR,
+                person_uid INTEGER,
+                radiation_type VARCHAR,
+                hp10 DOUBLE,
+                hp007 DOUBLE,
+                user_type VARCHAR,
+                dosimeter_type VARCHAR,
+                dosimeter_placement VARCHAR,
+                dosimeter_uid INTEGER,
+                measurement_period_start TEXT,
+                measurement_period_end TEXT,
+                read_date TEXT,
+                report_date TEXT,
+                report_uid DOUBLE,
+                status VARCHAR,
+                UNIQUE(report_uid, person_uid, dosimeter_placement)
+            );")
+```
+
+```
+## Error in h(simpleError(msg, call)): Fehler bei der Auswertung des Argumentes 'conn' bei der Methodenauswahl für Funktion 'dbExecute': Objekt 'mp_db_conn' nicht gefunden
+```
+
+```r
+# check if it worked
+dbListTables(mp_db_conn)
+```
+
+```
+## Error in h(simpleError(msg, call)): Fehler bei der Auswertung des Argumentes 'conn' bei der Methodenauswahl für Funktion 'dbListTables': Objekt 'mp_db_conn' nicht gefunden
+```
+
+```r
+# for info on the automatically created table "sqlite_sequence" see: https://www.sqlite.org/autoinc.html
+
+# check the structure of the table:
+dbGetQuery(mp_db_conn, 
+           "pragma table_info('staffdose')") %>% 
+  head(1)
+```
+
+```
+## Error in h(simpleError(msg, call)): Fehler bei der Auswertung des Argumentes 'conn' bei der Methodenauswahl für Funktion 'dbGetQuery': Objekt 'mp_db_conn' nicht gefunden
+```
+
+```r
+# the id-column should have the values 1 for "notnull" and "pk" (primary key)
+```
+
+Lets try again, add data and then add a dataset with some duplicates:
+
+
+```r
+# adding data
+dbWriteTable(conn = mp_db_conn,
+             name = "staffdose",
+             value = arf_rows01to10,
+             append = TRUE)
+```
+
+```
+## Error in h(simpleError(msg, call)): Fehler bei der Auswertung des Argumentes 'conn' bei der Methodenauswahl für Funktion 'dbWriteTable': Objekt 'mp_db_conn' nicht gefunden
+```
+
+```r
+# check if data was added
+dbGetQuery(conn = mp_db_conn,
+           statement = "SELECT * from staffdose")
+```
+
+```
+## Error in h(simpleError(msg, call)): Fehler bei der Auswertung des Argumentes 'conn' bei der Methodenauswahl für Funktion 'dbGetQuery': Objekt 'mp_db_conn' nicht gefunden
+```
+
+```r
+# add dataset with duplicates
+dbWriteTable(conn = mp_db_conn,
+             name = "staffdose",
+             value = arf_rows09to12,
+             append = TRUE)
+```
+
+```
+## Error in h(simpleError(msg, call)): Fehler bei der Auswertung des Argumentes 'conn' bei der Methodenauswahl für Funktion 'dbWriteTable': Objekt 'mp_db_conn' nicht gefunden
+```
+
+Now you should get an error message like `UNIQUE constraint failed: staffdose.report_uid, staffdose.person_uid, staffdose.dosimeter_placement`. Now duplicates are prevented but unfortunately there is no easy way to just add unique data. For details and source of the following work around see forum thread "[RStudio Community - Creating and populating a SQLite database via R - How to ignore duplicate rows?](https://community.rstudio.com/t/creating-and-populating-a-sqlite-database-via-r-how-to-ignore-duplicate-rows/85470/3)".
+
+
+When we are finished we clsoe the connection to the database:
+
+```r
+dbDisconnect(mp_db_conn)
+```
+
+```
+## Error in h(simpleError(msg, call)): Fehler bei der Auswertung des Argumentes 'conn' bei der Methodenauswahl für Funktion 'dbDisconnect': Objekt 'mp_db_conn' nicht gefunden
+```
+
+
 
 ## Reporting with RMarkdown
 
 
+
 #-------------
-
-
-
-
-
-
-
-
-
+## TESTING

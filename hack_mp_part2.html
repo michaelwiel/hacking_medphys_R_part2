@@ -11,7 +11,7 @@
 
 <meta name="author" content="Michael Wieland" />
 
-<meta name="date" content="2022-03-16" />
+<meta name="date" content="2022-03-17" />
 
 <title>Hacking Medical Physics with R</title>
 
@@ -348,7 +348,7 @@ div.tocify {
 
 <h1 class="title toc-ignore">Hacking Medical Physics with R</h1>
 <h4 class="author">Michael Wieland</h4>
-<h4 class="date">2022-03-16</h4>
+<h4 class="date">2022-03-17</h4>
 
 </div>
 
@@ -407,6 +407,9 @@ If you have not installed the packages loaded in the <code>setup code chunk</cod
 ## #   Dosimeter placement &lt;chr&gt;, Dosimeter UID &lt;chr&gt;,
 ## #   Measurement period (start) &lt;chr&gt;, Measurement period (end) &lt;chr&gt;,
 ## #   Read date &lt;chr&gt;, Report date &lt;chr&gt;, Report UID &lt;chr&gt;</code></pre>
+<p>Note for R Newcomers: If you know the order of the arguments of a function you don’t have to supply the argument names. If you open the help for the function <code>read_xls</code> by typing <code>?read_xls</code> in the console the description of the function includes the list of arguments:<br />
+<br> <code>read_xls(path, sheet = NULL, range = NULL, col_names = TRUE, col_types = NULL, na = &quot;&quot;, trim_ws = TRUE, skip = 0, n_max = Inf, guess_max = min(1000, n_max), progress = readxl_progress(), .name_repair = &quot;unique&quot;)</code><br />
+<br> Since <code>path</code> is the first argument we could also read in the data by just writing <code>read_xls(&quot;reports/StaffDoses_1.xls&quot;)</code>. It is of course faster but on the other side makes the code harder to read if you don’t know the function. The second thing to note is that there are a lot of other mandatory arguments but they all have default value. <code>col_names</code> is set to <code>TRUE</code> by default and this will cause the function to regard the first line in the excel file as column names and not as data.</p>
 </div>
 <div id="fixing-the-column-names" class="section level3">
 <h3>Fixing the column names</h3>
@@ -446,7 +449,7 @@ If you have not installed the packages loaded in the <code>setup code chunk</cod
 <div id="read-in-all-reports-from-a-folder" class="section level3">
 <h3>Read in all reports from a folder</h3>
 <p>To read in all files from a folder we can make use of the function <code>read.files()</code> that gives a list of all files in a folder.</p>
-<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="fu">list.files</span>(<span class="st">&quot;reports&quot;</span>) <span class="co"># get a list of all files from a folder</span></span></code></pre></div>
+<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="fu">list.files</span>(<span class="at">path =</span> <span class="st">&quot;reports&quot;</span>) <span class="co"># get a list of all files from a folder</span></span></code></pre></div>
 <pre><code>##  [1] &quot;StaffDoses_1.xls&quot;  &quot;StaffDoses_10.xls&quot; &quot;StaffDoses_11.xls&quot;
 ##  [4] &quot;StaffDoses_12.xls&quot; &quot;StaffDoses_13.xls&quot; &quot;StaffDoses_14.xls&quot;
 ##  [7] &quot;StaffDoses_15.xls&quot; &quot;StaffDoses_16.xls&quot; &quot;StaffDoses_17.xls&quot;
@@ -663,16 +666,18 @@ Tom Marvolo Riddle
 <h2>Using R with SQL</h2>
 <div id="ressources-and-motivation" class="section level3">
 <h3>Ressources and Motivation</h3>
-<p>For this part I am drawing heavily on the following two ressources:</p>
+<p>For this part I am drawing heavily on the following ressources:</p>
 <ul>
 <li><a href="https://db.rstudio.com/">RStudio - Databases using R</a><br />
 </li>
-<li><a href="https://datasciencesphere.com/database/sqlite-database-r/">Data Science Sphere - R SQLite Database Tutorial</a></li>
+<li><a href="https://ecorepsci.github.io/reproducible-science/rsqlite.html">Simona Picardi - Reproducible Data Science - Chapter 07 - Interfacing Databases in R with RSQLite</a><br />
+</li>
+<li><a href="https://www.sqlitetutorial.net/">SQLite Tutorial</a></li>
 </ul>
 <p>For a limited number of files like in the example above working with a database is not necessary but databases have several advantages<a href="#fn3" class="footnote-ref" id="fnref3"><sup>3</sup></a>:</p>
 <blockquote>
 <ul>
-<li>Data Indepence (your colleagues might want to access the data with Python or Matlab)<br />
+<li>Data Independance (your colleagues might want to access the data with Python or Matlab)<br />
 </li>
 <li>Insulation between data and program<br />
 </li>
@@ -689,11 +694,12 @@ Tom Marvolo Riddle
 <li>Security constraints</li>
 </ul>
 </blockquote>
+<p>If you are new to SQL and you want to have a possibilty to “look into” a SQLite database check out the leightweight and open source GUI <a href="https://sqlitestudio.pl/">SQLiteStudio</a>.</p>
 </div>
 <div id="creating-or-opening-a-connection-to-a-database" class="section level3">
 <h3>Creating (or opening a connection to) a Database</h3>
 <p>With the funciton <code>dbConnect</code> you create a database file or open a connection to an already existing database.<br />
-Check out <a href="https://rsqlite.r-dbi.org/reference/sqlite">RSQLite Packages Vignette</a> and have a look at the optional arguments. The argument “flags” for example specifies the connection mode:</p>
+See <a href="https://rsqlite.r-dbi.org/reference/sqlite">RSQLite Packages Vignette</a> for a list of optional arguments. The argument “flags” for example specifies the connection mode:</p>
 <ul>
 <li>SQLITE_RWC: open the database in read/write mode and create the database file if it does not already exist [STANDARD];<br />
 </li>
@@ -702,47 +708,141 @@ Check out <a href="https://rsqlite.r-dbi.org/reference/sqlite">RSQLite Packages 
 <li>SQLITE_RO: open the database in read only mode. Raise an error if the file does not already exist.</li>
 </ul>
 <p>Since a database can hold many different kinds of data, not only personnel dosimeter readings, I will call my DB <code>medical_physics_db.sqlite</code>.</p>
-<div class="sourceCode" id="cb20"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>mp_db_conn <span class="ot">&lt;-</span> <span class="fu">dbConnect</span>(<span class="at">drv =</span> RSQLite<span class="sc">::</span><span class="fu">SQLite</span>(), <span class="at">dbname =</span> <span class="st">&quot;medical_physics_db.sqlite&quot;</span>)</span>
-<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a><span class="co"># opening the connection and creating a connection object called &quot;staff_dose_db_conn&quot; that represents the database.</span></span></code></pre></div>
+<div class="sourceCode" id="cb20"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>mp_db_conn <span class="ot">&lt;-</span> <span class="fu">dbConnect</span>(<span class="at">drv =</span> RSQLite<span class="sc">::</span><span class="fu">SQLite</span>(), </span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>                        <span class="at">dbname =</span> <span class="st">&quot;medical_physics_db.sqlite&quot;</span>)</span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a><span class="co"># opening the connection and creating a connection object called &quot;staff_dose_db_conn&quot; that represents the database.</span></span></code></pre></div>
 </div>
 <div id="creating-a-table-for-the-dosimeter-data" class="section level3">
 <h3>Creating a Table for the Dosimeter Data</h3>
 <p>In a database all data is stored in tables. For simplicity we will create a single table for the staff dosimeter readings and don’t go into details of optimal table design like <a href="https://opentextbc.ca/dbdesign01/chapter/chapter-11-functional-dependencies/">functional dependencies</a>, <a href="https://www.sqlitetutorial.net/sqlite-primary-key/">(primary/foreign) keys</a>, other constraints like <a href="https://www.sqlitetutorial.net/sqlite-unique-constraint/">UNIQUE</a>, and <a href="https://en.wikipedia.org/wiki/Database_normalization">Normalization</a>. <br></p>
-<p>Although you can create a table with an existing dataframe with <code>dbCreateTable</code> we will start by creating the table by hand with the same structure as in the Python tutorial:</p>
-<div class="sourceCode" id="cb21"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="fu">dbSendQuery</span>(<span class="at">conn =</span> mp_db_conn,</span>
-<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>            <span class="st">&quot;CREATE TABLE IF NOT EXISTS staffdose (</span></span>
-<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a><span class="st">                id INTEGER NOT NULL PRIMARY KEY,</span></span>
-<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a><span class="st">                Customer_name VARCHAR,</span></span>
-<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a><span class="st">                Customer_UID INTEGER,</span></span>
-<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a><span class="st">                Department VARCHAR,</span></span>
-<span id="cb21-7"><a href="#cb21-7" aria-hidden="true" tabindex="-1"></a><span class="st">                Department_UID INTEGER,</span></span>
-<span id="cb21-8"><a href="#cb21-8" aria-hidden="true" tabindex="-1"></a><span class="st">                Name VARCHAR,</span></span>
-<span id="cb21-9"><a href="#cb21-9" aria-hidden="true" tabindex="-1"></a><span class="st">                Person_UID INTEGER,</span></span>
-<span id="cb21-10"><a href="#cb21-10" aria-hidden="true" tabindex="-1"></a><span class="st">                Radiation_type VARCHAR,</span></span>
-<span id="cb21-11"><a href="#cb21-11" aria-hidden="true" tabindex="-1"></a><span class="st">                Hp10 DOUBLE,</span></span>
-<span id="cb21-12"><a href="#cb21-12" aria-hidden="true" tabindex="-1"></a><span class="st">                Hp007 DOUBLE,</span></span>
-<span id="cb21-13"><a href="#cb21-13" aria-hidden="true" tabindex="-1"></a><span class="st">                User_type VARCHAR,</span></span>
-<span id="cb21-14"><a href="#cb21-14" aria-hidden="true" tabindex="-1"></a><span class="st">                Dosimeter_type VARCHAR,</span></span>
-<span id="cb21-15"><a href="#cb21-15" aria-hidden="true" tabindex="-1"></a><span class="st">                Dosimeter_placement VARCHAR,</span></span>
-<span id="cb21-16"><a href="#cb21-16" aria-hidden="true" tabindex="-1"></a><span class="st">                Dosimeter_UID INTEGER,</span></span>
-<span id="cb21-17"><a href="#cb21-17" aria-hidden="true" tabindex="-1"></a><span class="st">                Measurement_period_start TEXT,</span></span>
-<span id="cb21-18"><a href="#cb21-18" aria-hidden="true" tabindex="-1"></a><span class="st">                Measurement_period_end TEXT,</span></span>
-<span id="cb21-19"><a href="#cb21-19" aria-hidden="true" tabindex="-1"></a><span class="st">                Read_date TEXT,</span></span>
-<span id="cb21-20"><a href="#cb21-20" aria-hidden="true" tabindex="-1"></a><span class="st">                Report_date TEXT,</span></span>
-<span id="cb21-21"><a href="#cb21-21" aria-hidden="true" tabindex="-1"></a><span class="st">                Report_UID DOUBLE,</span></span>
-<span id="cb21-22"><a href="#cb21-22" aria-hidden="true" tabindex="-1"></a><span class="st">                Status VARCHAR,</span></span>
-<span id="cb21-23"><a href="#cb21-23" aria-hidden="true" tabindex="-1"></a><span class="st">                UNIQUE(Report_UID, Person_UID, Dosimeter_placement)&quot;</span>)</span></code></pre></div>
-<p>#————–<br />
-Better to have date as TEXT?<br />
-<a href="https://www.sqlitetutorial.net/sqlite-date/" class="uri">https://www.sqlitetutorial.net/sqlite-date/</a><br />
-<a href="https://www.sqlitetutorial.net/sqlite-date-functions/sqlite-date-function/" class="uri">https://www.sqlitetutorial.net/sqlite-date-functions/sqlite-date-function/</a><br />
-<a href="https://www.sqlite.org/lang_datefunc.html" class="uri">https://www.sqlite.org/lang_datefunc.html</a><br />
-#————–</p>
+<p>Before we create our final personnel dosimeter table we are going to have a look at some useful functions and runs a view tests.</p>
+<p>To see the content of the database, i.e. which tables the database holds:</p>
+<div class="sourceCode" id="cb21"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="co"># get a list of tables that already exist in the database</span></span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a><span class="fu">dbListTables</span>(<span class="at">conn =</span> mp_db_conn)</span></code></pre></div>
+<pre><code>## Error in h(simpleError(msg, call)): Fehler bei der Auswertung des Argumentes &#39;conn&#39; bei der Methodenauswahl für Funktion &#39;dbListTables&#39;: Objekt &#39;mp_db_conn&#39; nicht gefunden</code></pre>
+<div class="sourceCode" id="cb23"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="co"># since we started from scratch there are no tables </span></span></code></pre></div>
+<p>The easiest way to create a table is by using the function <code>dbWriteTable</code> which takes a dataframe as argument and builds a table from it in the database. As dataframe we will use a subset (first 10 rows) of the cleaned data we already prepared before.</p>
+<div class="sourceCode" id="cb24"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="co"># In SQL there are several possibilities to handle date, I prefer &quot;text&quot;; </span></span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a><span class="co"># details see here: https://www.sqlite.org/lang_datefunc.html </span></span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Therefore we first change the datatype of the date columns to text</span></span>
+<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a>all_reports_fixed_dateastext <span class="ot">&lt;-</span> all_reports_fixed <span class="sc">%&gt;%</span> </span>
+<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="fu">across</span>(<span class="fu">c</span>(measurement_period_start<span class="sc">:</span>report_date), as.character))</span>
+<span id="cb24-6"><a href="#cb24-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-7"><a href="#cb24-7" aria-hidden="true" tabindex="-1"></a>arf_rows01to10 <span class="ot">&lt;-</span> all_reports_fixed_dateastext[<span class="dv">1</span><span class="sc">:</span><span class="dv">10</span>,]</span>
+<span id="cb24-8"><a href="#cb24-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-9"><a href="#cb24-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-10"><a href="#cb24-10" aria-hidden="true" tabindex="-1"></a><span class="co"># If you try to create a table with a name that is already used by a table in the database you will get an error message. In order to be able to run this tutorial more than once we use the statement &quot;DROP TABLE IF EXISTS&quot;  to delete the table if it already exists.</span></span>
+<span id="cb24-11"><a href="#cb24-11" aria-hidden="true" tabindex="-1"></a><span class="fu">dbExecute</span>(mp_db_conn, <span class="st">&quot;DROP TABLE IF EXISTS test01&quot;</span>)</span></code></pre></div>
+<pre><code>## Error in h(simpleError(msg, call)): Fehler bei der Auswertung des Argumentes &#39;conn&#39; bei der Methodenauswahl für Funktion &#39;dbExecute&#39;: Objekt &#39;mp_db_conn&#39; nicht gefunden</code></pre>
+<div class="sourceCode" id="cb26"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="co"># creating a table from a dataframe</span></span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a><span class="fu">dbWriteTable</span>(<span class="at">conn =</span> mp_db_conn,</span>
+<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a>              <span class="at">name =</span> <span class="st">&quot;test01&quot;</span>,</span>
+<span id="cb26-4"><a href="#cb26-4" aria-hidden="true" tabindex="-1"></a>              <span class="at">value  =</span> arf_rows01to10)</span></code></pre></div>
+<pre><code>## Error in h(simpleError(msg, call)): Fehler bei der Auswertung des Argumentes &#39;conn&#39; bei der Methodenauswahl für Funktion &#39;dbWriteTable&#39;: Objekt &#39;mp_db_conn&#39; nicht gefunden</code></pre>
+<div class="sourceCode" id="cb28"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="co">#check if it worked:</span></span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a><span class="fu">dbListTables</span>(<span class="at">conn =</span> mp_db_conn)</span></code></pre></div>
+<pre><code>## Error in h(simpleError(msg, call)): Fehler bei der Auswertung des Argumentes &#39;conn&#39; bei der Methodenauswahl für Funktion &#39;dbListTables&#39;: Objekt &#39;mp_db_conn&#39; nicht gefunden</code></pre>
+<div class="sourceCode" id="cb30"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Now you should get the output &quot;test01&quot;</span></span></code></pre></div>
+<p>Now we send our first database queries to view the table:</p>
+<div class="sourceCode" id="cb31"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="fu">dbGetQuery</span>(<span class="at">conn =</span> mp_db_conn,</span>
+<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a>           <span class="at">statement =</span> <span class="st">&quot;SELECT * FROM test01&quot;</span>)</span></code></pre></div>
+<pre><code>## Error in h(simpleError(msg, call)): Fehler bei der Auswertung des Argumentes &#39;conn&#39; bei der Methodenauswahl für Funktion &#39;dbGetQuery&#39;: Objekt &#39;mp_db_conn&#39; nicht gefunden</code></pre>
+<div class="sourceCode" id="cb33"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a><span class="co"># &quot;SELECT *&quot;: Select all columns </span></span>
+<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb33-3"><a href="#cb33-3" aria-hidden="true" tabindex="-1"></a><span class="co"># See the structure of the table by using built in pragma statements</span></span>
+<span id="cb33-4"><a href="#cb33-4" aria-hidden="true" tabindex="-1"></a><span class="co"># https://www.sqlite.org/pragma.html) in a query</span></span>
+<span id="cb33-5"><a href="#cb33-5" aria-hidden="true" tabindex="-1"></a><span class="fu">dbGetQuery</span>(<span class="at">conn =</span> mp_db_conn,</span>
+<span id="cb33-6"><a href="#cb33-6" aria-hidden="true" tabindex="-1"></a>           <span class="at">statement =</span> <span class="st">&quot;pragma table_info(&#39;test01&#39;)&quot;</span>)</span></code></pre></div>
+<pre><code>## Error in h(simpleError(msg, call)): Fehler bei der Auswertung des Argumentes &#39;conn&#39; bei der Methodenauswahl für Funktion &#39;dbGetQuery&#39;: Objekt &#39;mp_db_conn&#39; nicht gefunden</code></pre>
+<p>As you can see from the output of the last command we don’t have a primary key (all “pk” are set to 0) and neither have we set a UNIQUE constraint. Lets see what happens if we add some more data. This time we create a dataframe with rows 9 to 12 from <code>all_reports_fixed_dateastext</code>. Rows 9 and 10 are already in the database and rows 11 and 12 are new data.</p>
+<div class="sourceCode" id="cb35"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a>arf_rows09to12 <span class="ot">&lt;-</span> all_reports_fixed_dateastext[<span class="dv">9</span><span class="sc">:</span><span class="dv">12</span>,]</span>
+<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb35-3"><a href="#cb35-3" aria-hidden="true" tabindex="-1"></a><span class="fu">dbWriteTable</span>(<span class="at">conn =</span> mp_db_conn,</span>
+<span id="cb35-4"><a href="#cb35-4" aria-hidden="true" tabindex="-1"></a>             <span class="at">name =</span> <span class="st">&quot;test01&quot;</span>,</span>
+<span id="cb35-5"><a href="#cb35-5" aria-hidden="true" tabindex="-1"></a>             <span class="at">value =</span> arf_rows09to12,</span>
+<span id="cb35-6"><a href="#cb35-6" aria-hidden="true" tabindex="-1"></a>             <span class="at">append =</span> <span class="cn">TRUE</span>) </span></code></pre></div>
+<pre><code>## Error in h(simpleError(msg, call)): Fehler bei der Auswertung des Argumentes &#39;conn&#39; bei der Methodenauswahl für Funktion &#39;dbWriteTable&#39;: Objekt &#39;mp_db_conn&#39; nicht gefunden</code></pre>
+<div class="sourceCode" id="cb37"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a><span class="co"># if there is already a table with the given name we have to set one of the arguments &quot;append&quot; or &quot;overwrite&quot; to true, otherwise we will get an error message</span></span>
+<span id="cb37-2"><a href="#cb37-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb37-3"><a href="#cb37-3" aria-hidden="true" tabindex="-1"></a><span class="fu">dbGetQuery</span>(<span class="at">conn =</span> mp_db_conn,</span>
+<span id="cb37-4"><a href="#cb37-4" aria-hidden="true" tabindex="-1"></a>           <span class="at">statement =</span> <span class="st">&quot;SELECT * FROM test01&quot;</span>)</span></code></pre></div>
+<pre><code>## Error in h(simpleError(msg, call)): Fehler bei der Auswertung des Argumentes &#39;conn&#39; bei der Methodenauswahl für Funktion &#39;dbGetQuery&#39;: Objekt &#39;mp_db_conn&#39; nicht gefunden</code></pre>
+<p>Now we have 14 rows in the table which means that we created duplicates by adding rows 9 and 10 again. In order to avoid duplicates we need constraints like a <code>PRIMARY KEY</code> and/or a <code>UNIQUE</code> constraint.<br />
+<br> There are different strategies to implement constraints but for consistency reasons we will build the table analogous to the Python tutorial “by hand”: As <code>PRIMARY KEY</code> we add an <code>id</code>-column which we will fill with <code>AUTOINCREMENT</code> and set a <code>UNIQUE</code>-constraint with <code>report_uid, person_uid, dosimeter_placement</code>:</p>
+<div class="sourceCode" id="cb39"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a><span class="co"># First we clean up the database by deleting the test01-table</span></span>
+<span id="cb39-2"><a href="#cb39-2" aria-hidden="true" tabindex="-1"></a><span class="fu">dbExecute</span>(mp_db_conn, <span class="st">&quot;DROP TABLE IF EXISTS test01&quot;</span>)</span></code></pre></div>
+<pre><code>## Error in h(simpleError(msg, call)): Fehler bei der Auswertung des Argumentes &#39;conn&#39; bei der Methodenauswahl für Funktion &#39;dbExecute&#39;: Objekt &#39;mp_db_conn&#39; nicht gefunden</code></pre>
+<div class="sourceCode" id="cb41"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a><span class="co"># check if database is empty</span></span>
+<span id="cb41-2"><a href="#cb41-2" aria-hidden="true" tabindex="-1"></a><span class="fu">dbListTables</span>(mp_db_conn)</span></code></pre></div>
+<pre><code>## Error in h(simpleError(msg, call)): Fehler bei der Auswertung des Argumentes &#39;conn&#39; bei der Methodenauswahl für Funktion &#39;dbListTables&#39;: Objekt &#39;mp_db_conn&#39; nicht gefunden</code></pre>
+<div class="sourceCode" id="cb43"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb43-1"><a href="#cb43-1" aria-hidden="true" tabindex="-1"></a><span class="co"># since we started from scratch there are no tables </span></span>
+<span id="cb43-2"><a href="#cb43-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb43-3"><a href="#cb43-3" aria-hidden="true" tabindex="-1"></a><span class="co"># for reproducibility reasons we run the following command</span></span>
+<span id="cb43-4"><a href="#cb43-4" aria-hidden="true" tabindex="-1"></a><span class="fu">dbExecute</span>(<span class="at">conn =</span> mp_db_conn, </span>
+<span id="cb43-5"><a href="#cb43-5" aria-hidden="true" tabindex="-1"></a>          <span class="st">&quot;DROP TABLE IF EXISTS staffdose&quot;</span>)</span></code></pre></div>
+<pre><code>## Error in h(simpleError(msg, call)): Fehler bei der Auswertung des Argumentes &#39;conn&#39; bei der Methodenauswahl für Funktion &#39;dbExecute&#39;: Objekt &#39;mp_db_conn&#39; nicht gefunden</code></pre>
+<div class="sourceCode" id="cb45"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb45-1"><a href="#cb45-1" aria-hidden="true" tabindex="-1"></a><span class="fu">dbExecute</span>(<span class="at">conn =</span> mp_db_conn,</span>
+<span id="cb45-2"><a href="#cb45-2" aria-hidden="true" tabindex="-1"></a>            <span class="st">&quot;CREATE TABLE staffdose (</span></span>
+<span id="cb45-3"><a href="#cb45-3" aria-hidden="true" tabindex="-1"></a><span class="st">                id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,</span></span>
+<span id="cb45-4"><a href="#cb45-4" aria-hidden="true" tabindex="-1"></a><span class="st">                customer_name VARCHAR,</span></span>
+<span id="cb45-5"><a href="#cb45-5" aria-hidden="true" tabindex="-1"></a><span class="st">                customer_uid INTEGER,</span></span>
+<span id="cb45-6"><a href="#cb45-6" aria-hidden="true" tabindex="-1"></a><span class="st">                department VARCHAR,</span></span>
+<span id="cb45-7"><a href="#cb45-7" aria-hidden="true" tabindex="-1"></a><span class="st">                department_uid INTEGER,</span></span>
+<span id="cb45-8"><a href="#cb45-8" aria-hidden="true" tabindex="-1"></a><span class="st">                name VARCHAR,</span></span>
+<span id="cb45-9"><a href="#cb45-9" aria-hidden="true" tabindex="-1"></a><span class="st">                person_uid INTEGER,</span></span>
+<span id="cb45-10"><a href="#cb45-10" aria-hidden="true" tabindex="-1"></a><span class="st">                radiation_type VARCHAR,</span></span>
+<span id="cb45-11"><a href="#cb45-11" aria-hidden="true" tabindex="-1"></a><span class="st">                hp10 DOUBLE,</span></span>
+<span id="cb45-12"><a href="#cb45-12" aria-hidden="true" tabindex="-1"></a><span class="st">                hp007 DOUBLE,</span></span>
+<span id="cb45-13"><a href="#cb45-13" aria-hidden="true" tabindex="-1"></a><span class="st">                user_type VARCHAR,</span></span>
+<span id="cb45-14"><a href="#cb45-14" aria-hidden="true" tabindex="-1"></a><span class="st">                dosimeter_type VARCHAR,</span></span>
+<span id="cb45-15"><a href="#cb45-15" aria-hidden="true" tabindex="-1"></a><span class="st">                dosimeter_placement VARCHAR,</span></span>
+<span id="cb45-16"><a href="#cb45-16" aria-hidden="true" tabindex="-1"></a><span class="st">                dosimeter_uid INTEGER,</span></span>
+<span id="cb45-17"><a href="#cb45-17" aria-hidden="true" tabindex="-1"></a><span class="st">                measurement_period_start TEXT,</span></span>
+<span id="cb45-18"><a href="#cb45-18" aria-hidden="true" tabindex="-1"></a><span class="st">                measurement_period_end TEXT,</span></span>
+<span id="cb45-19"><a href="#cb45-19" aria-hidden="true" tabindex="-1"></a><span class="st">                read_date TEXT,</span></span>
+<span id="cb45-20"><a href="#cb45-20" aria-hidden="true" tabindex="-1"></a><span class="st">                report_date TEXT,</span></span>
+<span id="cb45-21"><a href="#cb45-21" aria-hidden="true" tabindex="-1"></a><span class="st">                report_uid DOUBLE,</span></span>
+<span id="cb45-22"><a href="#cb45-22" aria-hidden="true" tabindex="-1"></a><span class="st">                status VARCHAR,</span></span>
+<span id="cb45-23"><a href="#cb45-23" aria-hidden="true" tabindex="-1"></a><span class="st">                UNIQUE(report_uid, person_uid, dosimeter_placement)</span></span>
+<span id="cb45-24"><a href="#cb45-24" aria-hidden="true" tabindex="-1"></a><span class="st">            );&quot;</span>)</span></code></pre></div>
+<pre><code>## Error in h(simpleError(msg, call)): Fehler bei der Auswertung des Argumentes &#39;conn&#39; bei der Methodenauswahl für Funktion &#39;dbExecute&#39;: Objekt &#39;mp_db_conn&#39; nicht gefunden</code></pre>
+<div class="sourceCode" id="cb47"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb47-1"><a href="#cb47-1" aria-hidden="true" tabindex="-1"></a><span class="co"># check if it worked</span></span>
+<span id="cb47-2"><a href="#cb47-2" aria-hidden="true" tabindex="-1"></a><span class="fu">dbListTables</span>(mp_db_conn)</span></code></pre></div>
+<pre><code>## Error in h(simpleError(msg, call)): Fehler bei der Auswertung des Argumentes &#39;conn&#39; bei der Methodenauswahl für Funktion &#39;dbListTables&#39;: Objekt &#39;mp_db_conn&#39; nicht gefunden</code></pre>
+<div class="sourceCode" id="cb49"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb49-1"><a href="#cb49-1" aria-hidden="true" tabindex="-1"></a><span class="co"># for info on the automatically created table &quot;sqlite_sequence&quot; see: https://www.sqlite.org/autoinc.html</span></span>
+<span id="cb49-2"><a href="#cb49-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb49-3"><a href="#cb49-3" aria-hidden="true" tabindex="-1"></a><span class="co"># check the structure of the table:</span></span>
+<span id="cb49-4"><a href="#cb49-4" aria-hidden="true" tabindex="-1"></a><span class="fu">dbGetQuery</span>(mp_db_conn, </span>
+<span id="cb49-5"><a href="#cb49-5" aria-hidden="true" tabindex="-1"></a>           <span class="st">&quot;pragma table_info(&#39;staffdose&#39;)&quot;</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb49-6"><a href="#cb49-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">head</span>(<span class="dv">1</span>)</span></code></pre></div>
+<pre><code>## Error in h(simpleError(msg, call)): Fehler bei der Auswertung des Argumentes &#39;conn&#39; bei der Methodenauswahl für Funktion &#39;dbGetQuery&#39;: Objekt &#39;mp_db_conn&#39; nicht gefunden</code></pre>
+<div class="sourceCode" id="cb51"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb51-1"><a href="#cb51-1" aria-hidden="true" tabindex="-1"></a><span class="co"># the id-column should have the values 1 for &quot;notnull&quot; and &quot;pk&quot; (primary key)</span></span></code></pre></div>
+<p>Lets try again, add data and then add a dataset with some duplicates:</p>
+<div class="sourceCode" id="cb52"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb52-1"><a href="#cb52-1" aria-hidden="true" tabindex="-1"></a><span class="co"># adding data</span></span>
+<span id="cb52-2"><a href="#cb52-2" aria-hidden="true" tabindex="-1"></a><span class="fu">dbWriteTable</span>(<span class="at">conn =</span> mp_db_conn,</span>
+<span id="cb52-3"><a href="#cb52-3" aria-hidden="true" tabindex="-1"></a>             <span class="at">name =</span> <span class="st">&quot;staffdose&quot;</span>,</span>
+<span id="cb52-4"><a href="#cb52-4" aria-hidden="true" tabindex="-1"></a>             <span class="at">value =</span> arf_rows01to10,</span>
+<span id="cb52-5"><a href="#cb52-5" aria-hidden="true" tabindex="-1"></a>             <span class="at">append =</span> <span class="cn">TRUE</span>)</span></code></pre></div>
+<pre><code>## Error in h(simpleError(msg, call)): Fehler bei der Auswertung des Argumentes &#39;conn&#39; bei der Methodenauswahl für Funktion &#39;dbWriteTable&#39;: Objekt &#39;mp_db_conn&#39; nicht gefunden</code></pre>
+<div class="sourceCode" id="cb54"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb54-1"><a href="#cb54-1" aria-hidden="true" tabindex="-1"></a><span class="co"># check if data was added</span></span>
+<span id="cb54-2"><a href="#cb54-2" aria-hidden="true" tabindex="-1"></a><span class="fu">dbGetQuery</span>(<span class="at">conn =</span> mp_db_conn,</span>
+<span id="cb54-3"><a href="#cb54-3" aria-hidden="true" tabindex="-1"></a>           <span class="at">statement =</span> <span class="st">&quot;SELECT * from staffdose&quot;</span>)</span></code></pre></div>
+<pre><code>## Error in h(simpleError(msg, call)): Fehler bei der Auswertung des Argumentes &#39;conn&#39; bei der Methodenauswahl für Funktion &#39;dbGetQuery&#39;: Objekt &#39;mp_db_conn&#39; nicht gefunden</code></pre>
+<div class="sourceCode" id="cb56"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb56-1"><a href="#cb56-1" aria-hidden="true" tabindex="-1"></a><span class="co"># add dataset with duplicates</span></span>
+<span id="cb56-2"><a href="#cb56-2" aria-hidden="true" tabindex="-1"></a><span class="fu">dbWriteTable</span>(<span class="at">conn =</span> mp_db_conn,</span>
+<span id="cb56-3"><a href="#cb56-3" aria-hidden="true" tabindex="-1"></a>             <span class="at">name =</span> <span class="st">&quot;staffdose&quot;</span>,</span>
+<span id="cb56-4"><a href="#cb56-4" aria-hidden="true" tabindex="-1"></a>             <span class="at">value =</span> arf_rows09to12,</span>
+<span id="cb56-5"><a href="#cb56-5" aria-hidden="true" tabindex="-1"></a>             <span class="at">append =</span> <span class="cn">TRUE</span>)</span></code></pre></div>
+<pre><code>## Error in h(simpleError(msg, call)): Fehler bei der Auswertung des Argumentes &#39;conn&#39; bei der Methodenauswahl für Funktion &#39;dbWriteTable&#39;: Objekt &#39;mp_db_conn&#39; nicht gefunden</code></pre>
+<p>Now you should get an error message like <code>UNIQUE constraint failed: staffdose.report_uid, staffdose.person_uid, staffdose.dosimeter_placement</code>. Now duplicates are prevented but unfortunately there is no easy way to just add unique data. For details and source of the following work around see forum thread “<a href="https://community.rstudio.com/t/creating-and-populating-a-sqlite-database-via-r-how-to-ignore-duplicate-rows/85470/3">RStudio Community - Creating and populating a SQLite database via R - How to ignore duplicate rows?</a>”.</p>
+<p>When we are finished we clsoe the connection to the database:</p>
+<div class="sourceCode" id="cb58"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb58-1"><a href="#cb58-1" aria-hidden="true" tabindex="-1"></a><span class="fu">dbDisconnect</span>(mp_db_conn)</span></code></pre></div>
+<pre><code>## Error in h(simpleError(msg, call)): Fehler bei der Auswertung des Argumentes &#39;conn&#39; bei der Methodenauswahl für Funktion &#39;dbDisconnect&#39;: Objekt &#39;mp_db_conn&#39; nicht gefunden</code></pre>
 </div>
 </div>
 <div id="reporting-with-rmarkdown" class="section level2">
 <h2>Reporting with RMarkdown</h2>
-<p>#————-</p>
+<p>#————- ## TESTING</p>
 </div>
 <div class="footnotes">
 <hr />

@@ -1,0 +1,38 @@
+---
+title: "test_knit_sql"
+author: "Michael Wieland"
+date: "17 3 2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(tidyverse)
+library(readxl)
+library(ggthemes)
+library(kableExtra)
+library(DBI)
+```
+
+```{r c1}
+con <- dbConnect(RSQLite::SQLite(), ":memory:")
+dbWriteTable(con, "iris", iris)
+dbGetQuery(con, "SELECT * FROM iris LIMIT 10")
+```
+
+Testing SQL engine in knitr: 
+https://bookdown.org/yihui/rmarkdown/language-engines.html  
+
+```{sql connection = con, output.var = 'x'}
+SELECT * FROM iris LIMIT 5;
+```
+
+```{r c2}
+x
+```
+
+```{r cfinal}
+dbDisconnect(con)
+```
+
