@@ -1,7 +1,7 @@
 ---
 title: "Hacking Medical Physics with R"
 author: "Michael Wieland"
-date: "2022-03-17"
+date: "2022-03-18"
 output: 
   html_document: 
     highlight: pygments
@@ -20,6 +20,7 @@ library(tidyverse)
 library(readxl)
 library(ggthemes)
 library(kableExtra)
+library(tibble)
 library(DBI)
 #library(RSQLite)
 # https://cran.r-project.org/web/packages/RSQLite/vignettes/RSQLite.html
@@ -101,7 +102,7 @@ report_column_names <- read_xls(path = "reports/StaffDoses_1.xls",
     # https://rstudio-pubs-static.s3.amazonaws.com/74603_76cd14d5983f47408fdf0b323550b846.html
   gsub(pattern = " ", replacement = "_") %>% # replacing blanks with underscores
   gsub(pattern = "[().]", replacement = "")  # deleting round brackets and dots; 
-    # the square-brackets function as list operator (all characters inside the square-brackets are identified)
+  # the square-brackets function as list operator (all characters inside the square-brackets are identified)
 
 report_column_names
 ```
@@ -190,19 +191,27 @@ Sys.setlocale("LC_TIME", locale = "English") # setting the machine locale for ti
 
 
 all_reports_fixed <- all_reports %>% 
-  # In first step we are replacing the colon with dots as comma sign (needed to convert to numeric later on)
-  # with the function mutate we create new columns based on existing ones or modify the content of existing columns
+  # In first step we are replacing the colon with dots as comma sign 
+    # (needed to convert to numeric later on)
+  # with the function mutate we create new columns based on existing ones 
+    # or modify the content of existing columns
   mutate(hp10 = str_replace_all(hp10, pattern = ",", replacement = ".")) %>% 
   mutate(hp007 = str_replace_all(hp007, pattern = ",", replacement = ".")) %>% 
-  # before we convert hp10 and hp007 to numeric we create new columns with non-numeric values of hp007 in order not to lose information
-  # "B": Below Measurement Threshold, "NR": Not returned, "NA": missing value; "OK" where a numeric value exists for the variables hp007)
+  # before we convert hp10 and hp007 to numeric we create a new column 
+    # with non-numeric values of hp007 in order not to lose information
+    # "B": Below Measurement Threshold, 
+    # "NR": Not returned, 
+    # "NA": missing value; 
+    # "OK" where a numeric value exists for the variables hp007)
   mutate(status = case_when(hp007 == "B" ~ "B",
                             hp007 == "NR" ~ "NR",
                             is.na(hp007) ~ NA_character_,
                             is.numeric(as.numeric(hp007)) ~ "OK")) %>% 
-  # next we convert relevant columns to numeric (non-numeric values in hp10 and hp007 will be converted to NA automatically)
+  # next we convert relevant columns to numeric 
+    # (non-numeric values in hp10 and hp007 will be converted to NA automatically)
   mutate(across(c(customer_uid, department_uid, person_uid, hp10, hp007, dosimeter_uid, report_uid), as.numeric)) %>% 
-  # to make sure we have no duplicated data (same report read in more than once, identified by "report_uid") 
+  # to make sure we have no duplicated data 
+    # (same report read in more than once, identified by "report_uid") 
   # we eliminate duplicates with the function "distinct"... after grouping by person_uid and dosimeter_uid
   mutate(across(c(measurement_period_start:report_date), as.Date, format = "%d-%b-%Y")) %>% 
   group_by(person_uid, dosimeter_uid) %>% 
@@ -250,13 +259,15 @@ __Comment Michael: Discussion necessary regarding status column__
 
 ```r
 all_reports_fixed %>% 
-  drop_na(hp10) %>%  # droping all rows where no dose was recorded (not really necessary, ggplot can handle NAs)
+  drop_na(hp10) %>%  # droping all rows where no dose was recorded (altough ggplot can handle NAs)
   mutate(report_year = format(report_date, "%Y")) %>% # extracting the year from the report date
   filter(report_year %in% c("2020", "2021")) %>% # chose years 2020 and 2021
   ggplot(aes(x=report_year, y=hp10)) +
   geom_boxplot() +
-  scale_y_continuous(limits = c(0,NA), # set lower bound to 0 and let ggplot automatically set upper bound
-                     breaks = pretty(c(0, max(all_reports_fixed$hp10, na.rm = T)), n=10)) + # getting 10 breaks in the y-axis from 0 to maximum value of hp10
+  scale_y_continuous(limits = c(0,NA), 
+                      # set lower bound to 0 and let ggplot automatically set upper bound
+                     breaks = pretty(c(0, max(all_reports_fixed$hp10, na.rm = T)), n=10)) + 
+                      # getting 10 breaks in the y-axis from 0 to maximum value of hp10
   labs(x = "", y = "Hp(10) [mSv]", # Axis names
        title = "Summary Statistics for monthly Hp(10) values",
        subtitle = "  by department and year",
@@ -280,13 +291,15 @@ all_reports_fixed %>%
   filter(! status %in% c("NR", "B")) %>% 
   # grouping by dosimeter type to count both types separately
   group_by(dosimeter_type) %>% # to count dosimeter readings depending on type
-  summarise(sum(!is.na(hp10)), length(!is.na(hp007))) %>% # counting the rows with numeric values only (that are not NA)
-    # OBS: !is.na(a) gives back TRUE if a variable is NOT NA. In R the logical value TRUE is aquivalent to 1. 
-    # Therefore summing over a vector of logical values gives the number of "TRUE".
+  summarise(sum(!is.na(hp10)), length(!is.na(hp007))) %>% 
+   # counting the rows with numeric values only (that are not NA)
+    # OBS: !is.na(a) gives back TRUE if a variable is NOT NA. 
+          # In R the logical value TRUE is equivalent to 1. 
+    # Therefore summing over a vector of logical values gives the number of "TRUE"s.
   kable(align = "lcc", # kable is a function to produce tables
         col.names = c("Dosimeter Type", "Hp(10)", "Hp(0.07)"), 
         caption = "Number of dosimeter readings per dosimeter type") %>% 
-  kable_styling(bootstrap_options = c("striped", "hover")) # a function to further tweak tablbes
+  kable_styling(bootstrap_options = c("striped", "hover")) # a function to further tweak tables
 ```
 
 <table class="table table-striped table-hover" style="margin-left: auto; margin-right: auto;">
@@ -322,7 +335,7 @@ all_reports_fixed %>%
   kable(align = "lc", # kable is a function to produce tables
         col.names = c("Name", "Instances"), 
         caption = "Number of times a dosimeter was not returned per person") %>% 
-  kable_styling(bootstrap_options = c("striped", "hover")) # a function to further tweak tablbes
+  kable_styling(bootstrap_options = c("striped", "hover")) # a function to further tweak tables
 ```
 
 <table class="table table-striped table-hover" style="margin-left: auto; margin-right: auto;">
@@ -382,7 +395,8 @@ Since a database can hold many different kinds of data, not only personnel dosim
 ```r
 mp_db_conn <- dbConnect(drv = RSQLite::SQLite(), 
                         dbname = "medical_physics_db.sqlite")
-# opening the connection and creating a connection object called "staff_dose_db_conn" that represents the database.
+# opening the connection and 
+# creating a connection object called "staff_dose_db_conn" that represents the database.
 ```
 
 
@@ -390,6 +404,7 @@ mp_db_conn <- dbConnect(drv = RSQLite::SQLite(),
 In a database all data is stored in tables. For simplicity we will create a single table for the staff dosimeter readings and don't go into details of optimal table design like [functional dependencies](https://opentextbc.ca/dbdesign01/chapter/chapter-11-functional-dependencies/), [(primary/foreign) keys](https://www.sqlitetutorial.net/sqlite-primary-key/), other constraints like [UNIQUE](https://www.sqlitetutorial.net/sqlite-unique-constraint/), and [Normalization](https://en.wikipedia.org/wiki/Database_normalization). 
 <br>
 
+#### Our First Table
 Before we create our final personnel dosimeter table we are going to have a look at some useful functions and runs a view tests.
 
 To see the content of the database, i.e. which tables the database holds:
@@ -400,7 +415,7 @@ dbListTables(conn = mp_db_conn)
 ```
 
 ```
-## Error in h(simpleError(msg, call)): Fehler bei der Auswertung des Argumentes 'conn' bei der Methodenauswahl für Funktion 'dbListTables': Objekt 'mp_db_conn' nicht gefunden
+## [1] "sqlite_sequence" "staffdose"
 ```
 
 ```r
@@ -420,12 +435,14 @@ all_reports_fixed_dateastext <- all_reports_fixed %>%
 arf_rows01to10 <- all_reports_fixed_dateastext[1:10,]
 
 
-# If you try to create a table with a name that is already used by a table in the database you will get an error message. In order to be able to run this tutorial more than once we use the statement "DROP TABLE IF EXISTS"  to delete the table if it already exists.
+# If you try to create a table with a name that is already used by a table in the database 
+# you will get an error message. In order to be able to run this tutorial more than once we 
+# use the statement "DROP TABLE IF EXISTS"  to delete the table if it already exists.
 dbExecute(mp_db_conn, "DROP TABLE IF EXISTS test01")
 ```
 
 ```
-## Error in h(simpleError(msg, call)): Fehler bei der Auswertung des Argumentes 'conn' bei der Methodenauswahl für Funktion 'dbExecute': Objekt 'mp_db_conn' nicht gefunden
+## [1] 0
 ```
 
 ```r
@@ -433,19 +450,13 @@ dbExecute(mp_db_conn, "DROP TABLE IF EXISTS test01")
 dbWriteTable(conn = mp_db_conn,
               name = "test01",
               value  = arf_rows01to10)
-```
 
-```
-## Error in h(simpleError(msg, call)): Fehler bei der Auswertung des Argumentes 'conn' bei der Methodenauswahl für Funktion 'dbWriteTable': Objekt 'mp_db_conn' nicht gefunden
-```
-
-```r
 #check if it worked:
 dbListTables(conn = mp_db_conn)
 ```
 
 ```
-## Error in h(simpleError(msg, call)): Fehler bei der Auswertung des Argumentes 'conn' bei der Methodenauswahl für Funktion 'dbListTables': Objekt 'mp_db_conn' nicht gefunden
+## [1] "sqlite_sequence" "staffdose"       "test01"
 ```
 
 ```r
@@ -457,16 +468,52 @@ Now we send our first database queries to view the table:
 
 ```r
 dbGetQuery(conn = mp_db_conn,
-           statement = "SELECT * FROM test01")
+           statement = "SELECT * FROM test01") %>% # "SELECT *": to select all columns 
+  tibble::tibble()
 ```
 
 ```
-## Error in h(simpleError(msg, call)): Fehler bei der Auswertung des Argumentes 'conn' bei der Methodenauswahl für Funktion 'dbGetQuery': Objekt 'mp_db_conn' nicht gefunden
+## # A tibble: 10 x 19
+##    customer_name    customer_uid department    department_uid name    person_uid
+##    <chr>                   <dbl> <chr>                  <dbl> <chr>        <dbl>
+##  1 Hogsmeade Royal~          141 Nuclear Medi~              1 Severu~      12368
+##  2 Hogsmeade Royal~          141 Nuclear Medi~              1 Harry ~      12369
+##  3 Hogsmeade Royal~          141 Nuclear Medi~              1 Parvat~      12370
+##  4 Hogsmeade Royal~          141 Nuclear Medi~              1 Parvat~      12370
+##  5 Hogsmeade Royal~          141 Nuclear Medi~              1 Cedric~      12371
+##  6 Hogsmeade Royal~          141 Nuclear Medi~              1 Cedric~      12371
+##  7 Hogsmeade Royal~          141 Nuclear Medi~              1 Ron We~      12372
+##  8 Hogsmeade Royal~          141 Nuclear Medi~              1 Tom Ma~      12373
+##  9 Hogsmeade Royal~          141 Diagnostic R~              2 Hermio~      12374
+## 10 Hogsmeade Royal~          141 Diagnostic R~              2 Albus ~      12375
+## # ... with 13 more variables: radiation_type <chr>, hp10 <dbl>, hp007 <dbl>,
+## #   user_type <chr>, dosimeter_type <chr>, dosimeter_placement <chr>,
+## #   dosimeter_uid <dbl>, measurement_period_start <chr>,
+## #   measurement_period_end <chr>, read_date <chr>, report_date <chr>,
+## #   report_uid <dbl>, status <chr>
 ```
 
 ```r
-# "SELECT *": Select all columns 
+# Lets select a subset of columns
+dbGetQuery(conn = mp_db_conn,
+           statement = "SELECT name, person_uid, dosimeter_uid, report_uid, report_date FROM test01")
+```
 
+```
+##                  name person_uid dosimeter_uid report_uid report_date
+## 1       Severus Snape      12368         90072       1137  2019-12-28
+## 2        Harry Potter      12369         90073       1137  2019-12-28
+## 3       Parvati Patil      12370         90075       1137  2019-12-28
+## 4       Parvati Patil      12370         90076       1137  2019-12-28
+## 5      Cedric Diggory      12371         90077       1137  2019-12-28
+## 6      Cedric Diggory      12371         90078       1137  2019-12-28
+## 7         Ron Weasley      12372         90079       1137  2019-12-28
+## 8  Tom Marvolo Riddle      12373         90080       1137  2019-12-28
+## 9   Hermione Grainger      12374         90081       1137  2019-12-28
+## 10   Albus Dumbledore      12375         90082       1137  2019-12-28
+```
+
+```r
 # See the structure of the table by using built in pragma statements
 # https://www.sqlite.org/pragma.html) in a query
 dbGetQuery(conn = mp_db_conn,
@@ -474,10 +521,29 @@ dbGetQuery(conn = mp_db_conn,
 ```
 
 ```
-## Error in h(simpleError(msg, call)): Fehler bei der Auswertung des Argumentes 'conn' bei der Methodenauswahl für Funktion 'dbGetQuery': Objekt 'mp_db_conn' nicht gefunden
+##    cid                     name type notnull dflt_value pk
+## 1    0            customer_name TEXT       0         NA  0
+## 2    1             customer_uid REAL       0         NA  0
+## 3    2               department TEXT       0         NA  0
+## 4    3           department_uid REAL       0         NA  0
+## 5    4                     name TEXT       0         NA  0
+## 6    5               person_uid REAL       0         NA  0
+## 7    6           radiation_type TEXT       0         NA  0
+## 8    7                     hp10 REAL       0         NA  0
+## 9    8                    hp007 REAL       0         NA  0
+## 10   9                user_type TEXT       0         NA  0
+## 11  10           dosimeter_type TEXT       0         NA  0
+## 12  11      dosimeter_placement TEXT       0         NA  0
+## 13  12            dosimeter_uid REAL       0         NA  0
+## 14  13 measurement_period_start TEXT       0         NA  0
+## 15  14   measurement_period_end TEXT       0         NA  0
+## 16  15                read_date TEXT       0         NA  0
+## 17  16              report_date TEXT       0         NA  0
+## 18  17               report_uid REAL       0         NA  0
+## 19  18                   status TEXT       0         NA  0
 ```
 
-As you can see from the output of the last command we don't have a primary key (all "pk" are set to 0) and neither have we set a UNIQUE constraint. Lets see what happens if we add some more data. This time we create a dataframe with rows 9 to 12 from `all_reports_fixed_dateastext`. Rows 9 and 10 are already in the database and rows 11 and 12 are new data.
+As you can see from the output we don't have a primary key (all "pk" are set to 0) and neither have we set a UNIQUE constraint. Lets see what happens if we add some more data. This time we create a dataframe with rows 9 to 12 from `all_reports_fixed_dateastext`. Rows 9 and 10 are already in the database and rows 11 and 12 are new data.
 
 
 ```r
@@ -487,27 +553,40 @@ dbWriteTable(conn = mp_db_conn,
              name = "test01",
              value = arf_rows09to12,
              append = TRUE) 
-```
-
-```
-## Error in h(simpleError(msg, call)): Fehler bei der Auswertung des Argumentes 'conn' bei der Methodenauswahl für Funktion 'dbWriteTable': Objekt 'mp_db_conn' nicht gefunden
-```
-
-```r
-# if there is already a table with the given name we have to set one of the arguments "append" or "overwrite" to true, otherwise we will get an error message
+# if there is already a table with the given name we have to 
+# set one of the arguments "append" or "overwrite" to true, 
+# otherwise we will get an error message
 
 dbGetQuery(conn = mp_db_conn,
-           statement = "SELECT * FROM test01")
+           statement = "SELECT name, person_uid, dosimeter_uid, report_uid report_date FROM test01") %>% 
+  tibble()
 ```
 
 ```
-## Error in h(simpleError(msg, call)): Fehler bei der Auswertung des Argumentes 'conn' bei der Methodenauswahl für Funktion 'dbGetQuery': Objekt 'mp_db_conn' nicht gefunden
+## # A tibble: 14 x 4
+##    name               person_uid dosimeter_uid report_date
+##    <chr>                   <dbl>         <dbl>       <dbl>
+##  1 Severus Snape           12368         90072        1137
+##  2 Harry Potter            12369         90073        1137
+##  3 Parvati Patil           12370         90075        1137
+##  4 Parvati Patil           12370         90076        1137
+##  5 Cedric Diggory          12371         90077        1137
+##  6 Cedric Diggory          12371         90078        1137
+##  7 Ron Weasley             12372         90079        1137
+##  8 Tom Marvolo Riddle      12373         90080        1137
+##  9 Hermione Grainger       12374         90081        1137
+## 10 Albus Dumbledore        12375         90082        1137
+## 11 Hermione Grainger       12374         90081        1137
+## 12 Albus Dumbledore        12375         90082        1137
+## 13 Filius Flitwick         12376         90083        1137
+## 14 Neville Longbottom      12377         90084        1137
 ```
 
-Now we have 14 rows in the table which means that we created duplicates by adding rows 9 and 10 again.
-In order to avoid duplicates we need constraints like a `PRIMARY KEY` and/or a `UNIQUE` constraint.  
+Now we have 14 rows in the table which means that we created duplicates by adding rows 9 and 10 again (Entries for the dosimeter readings of Hermione and Albus from December 2019).  
 <br>
-There are different strategies to implement constraints but for consistency reasons we will build the table analogous to the Python tutorial "by hand": As `PRIMARY KEY` we add an `id`-column which we will fill with `AUTOINCREMENT` and set a `UNIQUE`-constraint with `report_uid, person_uid, dosimeter_placement`:
+In order to avoid duplicates we need constraints like a `PRIMARY KEY` and/or a `UNIQUE` constraint.
+There are different strategies to implement constraints but for consistency reasons we will build the table analogous to the Python tutorial "by hand":  
+As `PRIMARY KEY` we add an `id`-column which we will fill with `AUTOINCREMENT` and set a `UNIQUE`-constraint with `report_uid, person_uid, dosimeter_placement`:
 
 
 ```r
@@ -516,7 +595,7 @@ dbExecute(mp_db_conn, "DROP TABLE IF EXISTS test01")
 ```
 
 ```
-## Error in h(simpleError(msg, call)): Fehler bei der Auswertung des Argumentes 'conn' bei der Methodenauswahl für Funktion 'dbExecute': Objekt 'mp_db_conn' nicht gefunden
+## [1] 0
 ```
 
 ```r
@@ -525,22 +604,21 @@ dbListTables(mp_db_conn)
 ```
 
 ```
-## Error in h(simpleError(msg, call)): Fehler bei der Auswertung des Argumentes 'conn' bei der Methodenauswahl für Funktion 'dbListTables': Objekt 'mp_db_conn' nicht gefunden
+## [1] "sqlite_sequence" "staffdose"
 ```
 
 ```r
-# since we started from scratch there are no tables 
-
 # for reproducibility reasons we run the following command
 dbExecute(conn = mp_db_conn, 
           "DROP TABLE IF EXISTS staffdose")
 ```
 
 ```
-## Error in h(simpleError(msg, call)): Fehler bei der Auswertung des Argumentes 'conn' bei der Methodenauswahl für Funktion 'dbExecute': Objekt 'mp_db_conn' nicht gefunden
+## [1] 0
 ```
 
 ```r
+# creating the table
 dbExecute(conn = mp_db_conn,
             "CREATE TABLE staffdose (
                 id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
@@ -568,7 +646,7 @@ dbExecute(conn = mp_db_conn,
 ```
 
 ```
-## Error in h(simpleError(msg, call)): Fehler bei der Auswertung des Argumentes 'conn' bei der Methodenauswahl für Funktion 'dbExecute': Objekt 'mp_db_conn' nicht gefunden
+## [1] 0
 ```
 
 ```r
@@ -577,20 +655,24 @@ dbListTables(mp_db_conn)
 ```
 
 ```
-## Error in h(simpleError(msg, call)): Fehler bei der Auswertung des Argumentes 'conn' bei der Methodenauswahl für Funktion 'dbListTables': Objekt 'mp_db_conn' nicht gefunden
+## [1] "sqlite_sequence" "staffdose"
 ```
 
 ```r
-# for info on the automatically created table "sqlite_sequence" see: https://www.sqlite.org/autoinc.html
+# you can see that there are two tables:
+# - "staffdose" (the one we defined) and 
+# "sqlite_sequence" automatically created because we used "AUTOINCREMENT"
+# for info on "sqlite_sequence" see: https://www.sqlite.org/autoinc.html
 
-# check the structure of the table:
+# check if "id" is the primary key of the table:
 dbGetQuery(mp_db_conn, 
            "pragma table_info('staffdose')") %>% 
   head(1)
 ```
 
 ```
-## Error in h(simpleError(msg, call)): Fehler bei der Auswertung des Argumentes 'conn' bei der Methodenauswahl für Funktion 'dbGetQuery': Objekt 'mp_db_conn' nicht gefunden
+##   cid name    type notnull dflt_value pk
+## 1   0   id INTEGER       1         NA  1
 ```
 
 ```r
@@ -606,20 +688,24 @@ dbWriteTable(conn = mp_db_conn,
              name = "staffdose",
              value = arf_rows01to10,
              append = TRUE)
-```
 
-```
-## Error in h(simpleError(msg, call)): Fehler bei der Auswertung des Argumentes 'conn' bei der Methodenauswahl für Funktion 'dbWriteTable': Objekt 'mp_db_conn' nicht gefunden
-```
-
-```r
 # check if data was added
 dbGetQuery(conn = mp_db_conn,
-           statement = "SELECT * from staffdose")
+           statement = "SELECT name, person_uid, dosimeter_uid, report_uid report_date FROM staffdose")
 ```
 
 ```
-## Error in h(simpleError(msg, call)): Fehler bei der Auswertung des Argumentes 'conn' bei der Methodenauswahl für Funktion 'dbGetQuery': Objekt 'mp_db_conn' nicht gefunden
+##                  name person_uid dosimeter_uid report_date
+## 1       Severus Snape      12368         90072        1137
+## 2        Harry Potter      12369         90073        1137
+## 3       Parvati Patil      12370         90075        1137
+## 4       Parvati Patil      12370         90076        1137
+## 5      Cedric Diggory      12371         90077        1137
+## 6      Cedric Diggory      12371         90078        1137
+## 7         Ron Weasley      12372         90079        1137
+## 8  Tom Marvolo Riddle      12373         90080        1137
+## 9   Hermione Grainger      12374         90081        1137
+## 10   Albus Dumbledore      12375         90082        1137
 ```
 
 ```r
@@ -631,20 +717,19 @@ dbWriteTable(conn = mp_db_conn,
 ```
 
 ```
-## Error in h(simpleError(msg, call)): Fehler bei der Auswertung des Argumentes 'conn' bei der Methodenauswahl für Funktion 'dbWriteTable': Objekt 'mp_db_conn' nicht gefunden
+## Error: UNIQUE constraint failed: staffdose.report_uid, staffdose.person_uid, staffdose.dosimeter_placement
 ```
 
-Now you should get an error message like `UNIQUE constraint failed: staffdose.report_uid, staffdose.person_uid, staffdose.dosimeter_placement`. Now duplicates are prevented but unfortunately there is no easy way to just add unique data. For details and source of the following work around see forum thread "[RStudio Community - Creating and populating a SQLite database via R - How to ignore duplicate rows?](https://community.rstudio.com/t/creating-and-populating-a-sqlite-database-via-r-how-to-ignore-duplicate-rows/85470/3)".
+Now you should get an error message like: 
+`UNIQUE constraint failed: staffdose.report_uid, staffdose.person_uid, staffdose.dosimeter_placement`.  
+<br>
+We have achieved our goal to prevent duplicates but unfortunately there is no easy way to just add unique data. To solve this problem we need a workaround. For details and source of the following approach see the forum thread "[RStudio Community - Creating and populating a SQLite database via R - How to ignore duplicate rows?](https://community.rstudio.com/t/creating-and-populating-a-sqlite-database-via-r-how-to-ignore-duplicate-rows/85470/3)".
 
 
-When we are finished we clsoe the connection to the database:
+When we are finished we close the connection to the database:
 
 ```r
 dbDisconnect(mp_db_conn)
-```
-
-```
-## Error in h(simpleError(msg, call)): Fehler bei der Auswertung des Argumentes 'conn' bei der Methodenauswahl für Funktion 'dbDisconnect': Objekt 'mp_db_conn' nicht gefunden
 ```
 
 

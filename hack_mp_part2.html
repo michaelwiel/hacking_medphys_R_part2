@@ -11,7 +11,7 @@
 
 <meta name="author" content="Michael Wieland" />
 
-<meta name="date" content="2022-03-17" />
+<meta name="date" content="2022-03-18" />
 
 <title>Hacking Medical Physics with R</title>
 
@@ -348,7 +348,7 @@ div.tocify {
 
 <h1 class="title toc-ignore">Hacking Medical Physics with R</h1>
 <h4 class="author">Michael Wieland</h4>
-<h4 class="date">2022-03-17</h4>
+<h4 class="date">2022-03-18</h4>
 
 </div>
 
@@ -359,9 +359,10 @@ div.tocify {
 <span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(readxl)</span>
 <span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(ggthemes)</span>
 <span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(kableExtra)</span>
-<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(DBI)</span>
-<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="co">#library(RSQLite)</span></span>
-<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="co"># https://cran.r-project.org/web/packages/RSQLite/vignettes/RSQLite.html</span></span></code></pre></div>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tibble)</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(DBI)</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="co">#library(RSQLite)</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="co"># https://cran.r-project.org/web/packages/RSQLite/vignettes/RSQLite.html</span></span></code></pre></div>
 <div id="short-description" class="section level2">
 <h2>Short Description</h2>
 <p>This is a R Version for Part 2 of the Article Series “Hacking Medical Physics” by Jonas Andersson and Gavin Poludniowski i (GitRepo: <a href="https://github.com/rvbCMTS/EMP-News.git">rvbCMTS/EMP-News</a>) in the Newsletter of the European Federation of Organisations for Medical Physics (EFOMP)<a href="#fn1" class="footnote-ref" id="fnref1"><sup>1</sup></a>.</p>
@@ -433,7 +434,7 @@ If you have not installed the packages loaded in the <code>setup code chunk</cod
 <span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>    <span class="co"># https://rstudio-pubs-static.s3.amazonaws.com/74603_76cd14d5983f47408fdf0b323550b846.html</span></span>
 <span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">gsub</span>(<span class="at">pattern =</span> <span class="st">&quot; &quot;</span>, <span class="at">replacement =</span> <span class="st">&quot;_&quot;</span>) <span class="sc">%&gt;%</span> <span class="co"># replacing blanks with underscores</span></span>
 <span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">gsub</span>(<span class="at">pattern =</span> <span class="st">&quot;[().]&quot;</span>, <span class="at">replacement =</span> <span class="st">&quot;&quot;</span>)  <span class="co"># deleting round brackets and dots; </span></span>
-<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>    <span class="co"># the square-brackets function as list operator (all characters inside the square-brackets are identified)</span></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>  <span class="co"># the square-brackets function as list operator (all characters inside the square-brackets are identified)</span></span>
 <span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>report_column_names</span></code></pre></div>
 <pre><code>##  [1] &quot;customer_name&quot;            &quot;customer_uid&quot;            
@@ -495,26 +496,34 @@ If you have not installed the packages loaded in the <code>setup code chunk</cod
 <span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>all_reports_fixed <span class="ot">&lt;-</span> all_reports <span class="sc">%&gt;%</span> </span>
-<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>  <span class="co"># In first step we are replacing the colon with dots as comma sign (needed to convert to numeric later on)</span></span>
-<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>  <span class="co"># with the function mutate we create new columns based on existing ones or modify the content of existing columns</span></span>
-<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">hp10 =</span> <span class="fu">str_replace_all</span>(hp10, <span class="at">pattern =</span> <span class="st">&quot;,&quot;</span>, <span class="at">replacement =</span> <span class="st">&quot;.&quot;</span>)) <span class="sc">%&gt;%</span> </span>
-<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">hp007 =</span> <span class="fu">str_replace_all</span>(hp007, <span class="at">pattern =</span> <span class="st">&quot;,&quot;</span>, <span class="at">replacement =</span> <span class="st">&quot;.&quot;</span>)) <span class="sc">%&gt;%</span> </span>
-<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a>  <span class="co"># before we convert hp10 and hp007 to numeric we create new columns with non-numeric values of hp007 in order not to lose information</span></span>
-<span id="cb13-11"><a href="#cb13-11" aria-hidden="true" tabindex="-1"></a>  <span class="co"># &quot;B&quot;: Below Measurement Threshold, &quot;NR&quot;: Not returned, &quot;NA&quot;: missing value; &quot;OK&quot; where a numeric value exists for the variables hp007)</span></span>
-<span id="cb13-12"><a href="#cb13-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">status =</span> <span class="fu">case_when</span>(hp007 <span class="sc">==</span> <span class="st">&quot;B&quot;</span> <span class="sc">~</span> <span class="st">&quot;B&quot;</span>,</span>
-<span id="cb13-13"><a href="#cb13-13" aria-hidden="true" tabindex="-1"></a>                            hp007 <span class="sc">==</span> <span class="st">&quot;NR&quot;</span> <span class="sc">~</span> <span class="st">&quot;NR&quot;</span>,</span>
-<span id="cb13-14"><a href="#cb13-14" aria-hidden="true" tabindex="-1"></a>                            <span class="fu">is.na</span>(hp007) <span class="sc">~</span> <span class="cn">NA_character_</span>,</span>
-<span id="cb13-15"><a href="#cb13-15" aria-hidden="true" tabindex="-1"></a>                            <span class="fu">is.numeric</span>(<span class="fu">as.numeric</span>(hp007)) <span class="sc">~</span> <span class="st">&quot;OK&quot;</span>)) <span class="sc">%&gt;%</span> </span>
-<span id="cb13-16"><a href="#cb13-16" aria-hidden="true" tabindex="-1"></a>  <span class="co"># next we convert relevant columns to numeric (non-numeric values in hp10 and hp007 will be converted to NA automatically)</span></span>
-<span id="cb13-17"><a href="#cb13-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="fu">across</span>(<span class="fu">c</span>(customer_uid, department_uid, person_uid, hp10, hp007, dosimeter_uid, report_uid), as.numeric)) <span class="sc">%&gt;%</span> </span>
-<span id="cb13-18"><a href="#cb13-18" aria-hidden="true" tabindex="-1"></a>  <span class="co"># to make sure we have no duplicated data (same report read in more than once, identified by &quot;report_uid&quot;) </span></span>
-<span id="cb13-19"><a href="#cb13-19" aria-hidden="true" tabindex="-1"></a>  <span class="co"># we eliminate duplicates with the function &quot;distinct&quot;... after grouping by person_uid and dosimeter_uid</span></span>
-<span id="cb13-20"><a href="#cb13-20" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="fu">across</span>(<span class="fu">c</span>(measurement_period_start<span class="sc">:</span>report_date), as.Date, <span class="at">format =</span> <span class="st">&quot;%d-%b-%Y&quot;</span>)) <span class="sc">%&gt;%</span> </span>
-<span id="cb13-21"><a href="#cb13-21" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(person_uid, dosimeter_uid) <span class="sc">%&gt;%</span> </span>
-<span id="cb13-22"><a href="#cb13-22" aria-hidden="true" tabindex="-1"></a>  <span class="fu">distinct</span>(report_uid, <span class="at">.keep_all =</span> <span class="cn">TRUE</span>) <span class="sc">%&gt;%</span></span>
-<span id="cb13-23"><a href="#cb13-23" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ungroup</span>()</span>
-<span id="cb13-24"><a href="#cb13-24" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-25"><a href="#cb13-25" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(all_reports_fixed)</span></code></pre></div>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>  <span class="co"># In first step we are replacing the colon with dots as comma sign </span></span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>    <span class="co"># (needed to convert to numeric later on)</span></span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a>  <span class="co"># with the function mutate we create new columns based on existing ones </span></span>
+<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a>    <span class="co"># or modify the content of existing columns</span></span>
+<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">hp10 =</span> <span class="fu">str_replace_all</span>(hp10, <span class="at">pattern =</span> <span class="st">&quot;,&quot;</span>, <span class="at">replacement =</span> <span class="st">&quot;.&quot;</span>)) <span class="sc">%&gt;%</span> </span>
+<span id="cb13-11"><a href="#cb13-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">hp007 =</span> <span class="fu">str_replace_all</span>(hp007, <span class="at">pattern =</span> <span class="st">&quot;,&quot;</span>, <span class="at">replacement =</span> <span class="st">&quot;.&quot;</span>)) <span class="sc">%&gt;%</span> </span>
+<span id="cb13-12"><a href="#cb13-12" aria-hidden="true" tabindex="-1"></a>  <span class="co"># before we convert hp10 and hp007 to numeric we create a new column </span></span>
+<span id="cb13-13"><a href="#cb13-13" aria-hidden="true" tabindex="-1"></a>    <span class="co"># with non-numeric values of hp007 in order not to lose information</span></span>
+<span id="cb13-14"><a href="#cb13-14" aria-hidden="true" tabindex="-1"></a>    <span class="co"># &quot;B&quot;: Below Measurement Threshold, </span></span>
+<span id="cb13-15"><a href="#cb13-15" aria-hidden="true" tabindex="-1"></a>    <span class="co"># &quot;NR&quot;: Not returned, </span></span>
+<span id="cb13-16"><a href="#cb13-16" aria-hidden="true" tabindex="-1"></a>    <span class="co"># &quot;NA&quot;: missing value; </span></span>
+<span id="cb13-17"><a href="#cb13-17" aria-hidden="true" tabindex="-1"></a>    <span class="co"># &quot;OK&quot; where a numeric value exists for the variables hp007)</span></span>
+<span id="cb13-18"><a href="#cb13-18" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">status =</span> <span class="fu">case_when</span>(hp007 <span class="sc">==</span> <span class="st">&quot;B&quot;</span> <span class="sc">~</span> <span class="st">&quot;B&quot;</span>,</span>
+<span id="cb13-19"><a href="#cb13-19" aria-hidden="true" tabindex="-1"></a>                            hp007 <span class="sc">==</span> <span class="st">&quot;NR&quot;</span> <span class="sc">~</span> <span class="st">&quot;NR&quot;</span>,</span>
+<span id="cb13-20"><a href="#cb13-20" aria-hidden="true" tabindex="-1"></a>                            <span class="fu">is.na</span>(hp007) <span class="sc">~</span> <span class="cn">NA_character_</span>,</span>
+<span id="cb13-21"><a href="#cb13-21" aria-hidden="true" tabindex="-1"></a>                            <span class="fu">is.numeric</span>(<span class="fu">as.numeric</span>(hp007)) <span class="sc">~</span> <span class="st">&quot;OK&quot;</span>)) <span class="sc">%&gt;%</span> </span>
+<span id="cb13-22"><a href="#cb13-22" aria-hidden="true" tabindex="-1"></a>  <span class="co"># next we convert relevant columns to numeric </span></span>
+<span id="cb13-23"><a href="#cb13-23" aria-hidden="true" tabindex="-1"></a>    <span class="co"># (non-numeric values in hp10 and hp007 will be converted to NA automatically)</span></span>
+<span id="cb13-24"><a href="#cb13-24" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="fu">across</span>(<span class="fu">c</span>(customer_uid, department_uid, person_uid, hp10, hp007, dosimeter_uid, report_uid), as.numeric)) <span class="sc">%&gt;%</span> </span>
+<span id="cb13-25"><a href="#cb13-25" aria-hidden="true" tabindex="-1"></a>  <span class="co"># to make sure we have no duplicated data </span></span>
+<span id="cb13-26"><a href="#cb13-26" aria-hidden="true" tabindex="-1"></a>    <span class="co"># (same report read in more than once, identified by &quot;report_uid&quot;) </span></span>
+<span id="cb13-27"><a href="#cb13-27" aria-hidden="true" tabindex="-1"></a>  <span class="co"># we eliminate duplicates with the function &quot;distinct&quot;... after grouping by person_uid and dosimeter_uid</span></span>
+<span id="cb13-28"><a href="#cb13-28" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="fu">across</span>(<span class="fu">c</span>(measurement_period_start<span class="sc">:</span>report_date), as.Date, <span class="at">format =</span> <span class="st">&quot;%d-%b-%Y&quot;</span>)) <span class="sc">%&gt;%</span> </span>
+<span id="cb13-29"><a href="#cb13-29" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(person_uid, dosimeter_uid) <span class="sc">%&gt;%</span> </span>
+<span id="cb13-30"><a href="#cb13-30" aria-hidden="true" tabindex="-1"></a>  <span class="fu">distinct</span>(report_uid, <span class="at">.keep_all =</span> <span class="cn">TRUE</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb13-31"><a href="#cb13-31" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ungroup</span>()</span>
+<span id="cb13-32"><a href="#cb13-32" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-33"><a href="#cb13-33" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(all_reports_fixed)</span></code></pre></div>
 <pre><code>## # A tibble: 6 x 19
 ##   customer_name     customer_uid department   department_uid name     person_uid
 ##   &lt;chr&gt;                    &lt;dbl&gt; &lt;chr&gt;                 &lt;dbl&gt; &lt;chr&gt;         &lt;dbl&gt;
@@ -541,24 +550,26 @@ If you have not installed the packages loaded in the <code>setup code chunk</cod
 <div id="hp10---summary-statistics-by-department-and-year" class="section level3">
 <h3>Hp(10) - Summary Statistics by Department and Year</h3>
 <div class="sourceCode" id="cb17"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>all_reports_fixed <span class="sc">%&gt;%</span> </span>
-<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">drop_na</span>(hp10) <span class="sc">%&gt;%</span>  <span class="co"># droping all rows where no dose was recorded (not really necessary, ggplot can handle NAs)</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">drop_na</span>(hp10) <span class="sc">%&gt;%</span>  <span class="co"># droping all rows where no dose was recorded (altough ggplot can handle NAs)</span></span>
 <span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">report_year =</span> <span class="fu">format</span>(report_date, <span class="st">&quot;%Y&quot;</span>)) <span class="sc">%&gt;%</span> <span class="co"># extracting the year from the report date</span></span>
 <span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(report_year <span class="sc">%in%</span> <span class="fu">c</span>(<span class="st">&quot;2020&quot;</span>, <span class="st">&quot;2021&quot;</span>)) <span class="sc">%&gt;%</span> <span class="co"># chose years 2020 and 2021</span></span>
 <span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x=</span>report_year, <span class="at">y=</span>hp10)) <span class="sc">+</span></span>
 <span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_boxplot</span>() <span class="sc">+</span></span>
-<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_y_continuous</span>(<span class="at">limits =</span> <span class="fu">c</span>(<span class="dv">0</span>,<span class="cn">NA</span>), <span class="co"># set lower bound to 0 and let ggplot automatically set upper bound</span></span>
-<span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a>                     <span class="at">breaks =</span> <span class="fu">pretty</span>(<span class="fu">c</span>(<span class="dv">0</span>, <span class="fu">max</span>(all_reports_fixed<span class="sc">$</span>hp10, <span class="at">na.rm =</span> T)), <span class="at">n=</span><span class="dv">10</span>)) <span class="sc">+</span> <span class="co"># getting 10 breaks in the y-axis from 0 to maximum value of hp10</span></span>
-<span id="cb17-9"><a href="#cb17-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">&quot;&quot;</span>, <span class="at">y =</span> <span class="st">&quot;Hp(10) [mSv]&quot;</span>, <span class="co"># Axis names</span></span>
-<span id="cb17-10"><a href="#cb17-10" aria-hidden="true" tabindex="-1"></a>       <span class="at">title =</span> <span class="st">&quot;Summary Statistics for monthly Hp(10) values&quot;</span>,</span>
-<span id="cb17-11"><a href="#cb17-11" aria-hidden="true" tabindex="-1"></a>       <span class="at">subtitle =</span> <span class="st">&quot;  by department and year&quot;</span>,</span>
-<span id="cb17-12"><a href="#cb17-12" aria-hidden="true" tabindex="-1"></a>       <span class="at">caption =</span> <span class="st">&quot;Hacking Medical Physics. Data and Idea: J. Andersson and G. Poludniowski&quot;</span>) <span class="sc">+</span></span>
-<span id="cb17-13"><a href="#cb17-13" aria-hidden="true" tabindex="-1"></a>  <span class="co"># tweaking the plot style (optional) with the function &quot;theme&quot;:</span></span>
-<span id="cb17-14"><a href="#cb17-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme</span>(<span class="at">panel.background =</span> <span class="fu">element_blank</span>(),</span>
-<span id="cb17-15"><a href="#cb17-15" aria-hidden="true" tabindex="-1"></a>        <span class="at">panel.grid.major.y =</span> <span class="fu">element_line</span>(<span class="at">linetype =</span> <span class="dv">3</span>, <span class="at">color =</span> <span class="st">&quot;gray&quot;</span>),</span>
-<span id="cb17-16"><a href="#cb17-16" aria-hidden="true" tabindex="-1"></a>        <span class="at">panel.spacing.x =</span> <span class="fu">unit</span>(<span class="dv">1</span>, <span class="st">&quot;cm&quot;</span>),</span>
-<span id="cb17-17"><a href="#cb17-17" aria-hidden="true" tabindex="-1"></a>        <span class="at">strip.text =</span> <span class="fu">element_text</span>(<span class="at">face =</span> <span class="st">&quot;bold&quot;</span>, <span class="at">color =</span> <span class="st">&quot;white&quot;</span>),</span>
-<span id="cb17-18"><a href="#cb17-18" aria-hidden="true" tabindex="-1"></a>        <span class="at">strip.background =</span> <span class="fu">element_rect</span>(<span class="at">fill =</span> <span class="st">&quot;#D47B60&quot;</span>)) <span class="sc">+</span></span>
-<span id="cb17-19"><a href="#cb17-19" aria-hidden="true" tabindex="-1"></a>  <span class="fu">facet_wrap</span>(<span class="sc">~</span> department) <span class="co"># split up the data into subplots for the different departments</span></span></code></pre></div>
+<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_y_continuous</span>(<span class="at">limits =</span> <span class="fu">c</span>(<span class="dv">0</span>,<span class="cn">NA</span>), </span>
+<span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a>                      <span class="co"># set lower bound to 0 and let ggplot automatically set upper bound</span></span>
+<span id="cb17-9"><a href="#cb17-9" aria-hidden="true" tabindex="-1"></a>                     <span class="at">breaks =</span> <span class="fu">pretty</span>(<span class="fu">c</span>(<span class="dv">0</span>, <span class="fu">max</span>(all_reports_fixed<span class="sc">$</span>hp10, <span class="at">na.rm =</span> T)), <span class="at">n=</span><span class="dv">10</span>)) <span class="sc">+</span> </span>
+<span id="cb17-10"><a href="#cb17-10" aria-hidden="true" tabindex="-1"></a>                      <span class="co"># getting 10 breaks in the y-axis from 0 to maximum value of hp10</span></span>
+<span id="cb17-11"><a href="#cb17-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">&quot;&quot;</span>, <span class="at">y =</span> <span class="st">&quot;Hp(10) [mSv]&quot;</span>, <span class="co"># Axis names</span></span>
+<span id="cb17-12"><a href="#cb17-12" aria-hidden="true" tabindex="-1"></a>       <span class="at">title =</span> <span class="st">&quot;Summary Statistics for monthly Hp(10) values&quot;</span>,</span>
+<span id="cb17-13"><a href="#cb17-13" aria-hidden="true" tabindex="-1"></a>       <span class="at">subtitle =</span> <span class="st">&quot;  by department and year&quot;</span>,</span>
+<span id="cb17-14"><a href="#cb17-14" aria-hidden="true" tabindex="-1"></a>       <span class="at">caption =</span> <span class="st">&quot;Hacking Medical Physics. Data and Idea: J. Andersson and G. Poludniowski&quot;</span>) <span class="sc">+</span></span>
+<span id="cb17-15"><a href="#cb17-15" aria-hidden="true" tabindex="-1"></a>  <span class="co"># tweaking the plot style (optional) with the function &quot;theme&quot;:</span></span>
+<span id="cb17-16"><a href="#cb17-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme</span>(<span class="at">panel.background =</span> <span class="fu">element_blank</span>(),</span>
+<span id="cb17-17"><a href="#cb17-17" aria-hidden="true" tabindex="-1"></a>        <span class="at">panel.grid.major.y =</span> <span class="fu">element_line</span>(<span class="at">linetype =</span> <span class="dv">3</span>, <span class="at">color =</span> <span class="st">&quot;gray&quot;</span>),</span>
+<span id="cb17-18"><a href="#cb17-18" aria-hidden="true" tabindex="-1"></a>        <span class="at">panel.spacing.x =</span> <span class="fu">unit</span>(<span class="dv">1</span>, <span class="st">&quot;cm&quot;</span>),</span>
+<span id="cb17-19"><a href="#cb17-19" aria-hidden="true" tabindex="-1"></a>        <span class="at">strip.text =</span> <span class="fu">element_text</span>(<span class="at">face =</span> <span class="st">&quot;bold&quot;</span>, <span class="at">color =</span> <span class="st">&quot;white&quot;</span>),</span>
+<span id="cb17-20"><a href="#cb17-20" aria-hidden="true" tabindex="-1"></a>        <span class="at">strip.background =</span> <span class="fu">element_rect</span>(<span class="at">fill =</span> <span class="st">&quot;#D47B60&quot;</span>)) <span class="sc">+</span></span>
+<span id="cb17-21"><a href="#cb17-21" aria-hidden="true" tabindex="-1"></a>  <span class="fu">facet_wrap</span>(<span class="sc">~</span> department) <span class="co"># split up the data into subplots for the different departments</span></span></code></pre></div>
 <p><img src="data:image/png;base64,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" /><!-- --></p>
 </div>
 <div id="number-of-staff-dose-readings-per-dosimeter-type" class="section level3">
@@ -568,13 +579,15 @@ If you have not installed the packages loaded in the <code>setup code chunk</cod
 <span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="sc">!</span> status <span class="sc">%in%</span> <span class="fu">c</span>(<span class="st">&quot;NR&quot;</span>, <span class="st">&quot;B&quot;</span>)) <span class="sc">%&gt;%</span> </span>
 <span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>  <span class="co"># grouping by dosimeter type to count both types separately</span></span>
 <span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(dosimeter_type) <span class="sc">%&gt;%</span> <span class="co"># to count dosimeter readings depending on type</span></span>
-<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(<span class="fu">sum</span>(<span class="sc">!</span><span class="fu">is.na</span>(hp10)), <span class="fu">length</span>(<span class="sc">!</span><span class="fu">is.na</span>(hp007))) <span class="sc">%&gt;%</span> <span class="co"># counting the rows with numeric values only (that are not NA)</span></span>
-<span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a>    <span class="co"># OBS: !is.na(a) gives back TRUE if a variable is NOT NA. In R the logical value TRUE is aquivalent to 1. </span></span>
-<span id="cb18-8"><a href="#cb18-8" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Therefore summing over a vector of logical values gives the number of &quot;TRUE&quot;.</span></span>
-<span id="cb18-9"><a href="#cb18-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">kable</span>(<span class="at">align =</span> <span class="st">&quot;lcc&quot;</span>, <span class="co"># kable is a function to produce tables</span></span>
-<span id="cb18-10"><a href="#cb18-10" aria-hidden="true" tabindex="-1"></a>        <span class="at">col.names =</span> <span class="fu">c</span>(<span class="st">&quot;Dosimeter Type&quot;</span>, <span class="st">&quot;Hp(10)&quot;</span>, <span class="st">&quot;Hp(0.07)&quot;</span>), </span>
-<span id="cb18-11"><a href="#cb18-11" aria-hidden="true" tabindex="-1"></a>        <span class="at">caption =</span> <span class="st">&quot;Number of dosimeter readings per dosimeter type&quot;</span>) <span class="sc">%&gt;%</span> </span>
-<span id="cb18-12"><a href="#cb18-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">kable_styling</span>(<span class="at">bootstrap_options =</span> <span class="fu">c</span>(<span class="st">&quot;striped&quot;</span>, <span class="st">&quot;hover&quot;</span>)) <span class="co"># a function to further tweak tablbes</span></span></code></pre></div>
+<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(<span class="fu">sum</span>(<span class="sc">!</span><span class="fu">is.na</span>(hp10)), <span class="fu">length</span>(<span class="sc">!</span><span class="fu">is.na</span>(hp007))) <span class="sc">%&gt;%</span> </span>
+<span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a>   <span class="co"># counting the rows with numeric values only (that are not NA)</span></span>
+<span id="cb18-8"><a href="#cb18-8" aria-hidden="true" tabindex="-1"></a>    <span class="co"># OBS: !is.na(a) gives back TRUE if a variable is NOT NA. </span></span>
+<span id="cb18-9"><a href="#cb18-9" aria-hidden="true" tabindex="-1"></a>          <span class="co"># In R the logical value TRUE is equivalent to 1. </span></span>
+<span id="cb18-10"><a href="#cb18-10" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Therefore summing over a vector of logical values gives the number of &quot;TRUE&quot;s.</span></span>
+<span id="cb18-11"><a href="#cb18-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">kable</span>(<span class="at">align =</span> <span class="st">&quot;lcc&quot;</span>, <span class="co"># kable is a function to produce tables</span></span>
+<span id="cb18-12"><a href="#cb18-12" aria-hidden="true" tabindex="-1"></a>        <span class="at">col.names =</span> <span class="fu">c</span>(<span class="st">&quot;Dosimeter Type&quot;</span>, <span class="st">&quot;Hp(10)&quot;</span>, <span class="st">&quot;Hp(0.07)&quot;</span>), </span>
+<span id="cb18-13"><a href="#cb18-13" aria-hidden="true" tabindex="-1"></a>        <span class="at">caption =</span> <span class="st">&quot;Number of dosimeter readings per dosimeter type&quot;</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb18-14"><a href="#cb18-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">kable_styling</span>(<span class="at">bootstrap_options =</span> <span class="fu">c</span>(<span class="st">&quot;striped&quot;</span>, <span class="st">&quot;hover&quot;</span>)) <span class="co"># a function to further tweak tables</span></span></code></pre></div>
 <table class="table table-striped table-hover" style="margin-left: auto; margin-right: auto;">
 <caption>
 Number of dosimeter readings per dosimeter type
@@ -626,7 +639,7 @@ Ring
 <span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">kable</span>(<span class="at">align =</span> <span class="st">&quot;lc&quot;</span>, <span class="co"># kable is a function to produce tables</span></span>
 <span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a>        <span class="at">col.names =</span> <span class="fu">c</span>(<span class="st">&quot;Name&quot;</span>, <span class="st">&quot;Instances&quot;</span>), </span>
 <span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a>        <span class="at">caption =</span> <span class="st">&quot;Number of times a dosimeter was not returned per person&quot;</span>) <span class="sc">%&gt;%</span> </span>
-<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">kable_styling</span>(<span class="at">bootstrap_options =</span> <span class="fu">c</span>(<span class="st">&quot;striped&quot;</span>, <span class="st">&quot;hover&quot;</span>)) <span class="co"># a function to further tweak tablbes</span></span></code></pre></div>
+<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">kable_styling</span>(<span class="at">bootstrap_options =</span> <span class="fu">c</span>(<span class="st">&quot;striped&quot;</span>, <span class="st">&quot;hover&quot;</span>)) <span class="co"># a function to further tweak tables</span></span></code></pre></div>
 <table class="table table-striped table-hover" style="margin-left: auto; margin-right: auto;">
 <caption>
 Number of times a dosimeter was not returned per person
@@ -710,16 +723,19 @@ See <a href="https://rsqlite.r-dbi.org/reference/sqlite">RSQLite Packages Vignet
 <p>Since a database can hold many different kinds of data, not only personnel dosimeter readings, I will call my DB <code>medical_physics_db.sqlite</code>.</p>
 <div class="sourceCode" id="cb20"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>mp_db_conn <span class="ot">&lt;-</span> <span class="fu">dbConnect</span>(<span class="at">drv =</span> RSQLite<span class="sc">::</span><span class="fu">SQLite</span>(), </span>
 <span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>                        <span class="at">dbname =</span> <span class="st">&quot;medical_physics_db.sqlite&quot;</span>)</span>
-<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a><span class="co"># opening the connection and creating a connection object called &quot;staff_dose_db_conn&quot; that represents the database.</span></span></code></pre></div>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a><span class="co"># opening the connection and </span></span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a><span class="co"># creating a connection object called &quot;staff_dose_db_conn&quot; that represents the database.</span></span></code></pre></div>
 </div>
 <div id="creating-a-table-for-the-dosimeter-data" class="section level3">
 <h3>Creating a Table for the Dosimeter Data</h3>
 <p>In a database all data is stored in tables. For simplicity we will create a single table for the staff dosimeter readings and don’t go into details of optimal table design like <a href="https://opentextbc.ca/dbdesign01/chapter/chapter-11-functional-dependencies/">functional dependencies</a>, <a href="https://www.sqlitetutorial.net/sqlite-primary-key/">(primary/foreign) keys</a>, other constraints like <a href="https://www.sqlitetutorial.net/sqlite-unique-constraint/">UNIQUE</a>, and <a href="https://en.wikipedia.org/wiki/Database_normalization">Normalization</a>. <br></p>
+<div id="our-first-table" class="section level4">
+<h4>Our First Table</h4>
 <p>Before we create our final personnel dosimeter table we are going to have a look at some useful functions and runs a view tests.</p>
 <p>To see the content of the database, i.e. which tables the database holds:</p>
 <div class="sourceCode" id="cb21"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="co"># get a list of tables that already exist in the database</span></span>
 <span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a><span class="fu">dbListTables</span>(<span class="at">conn =</span> mp_db_conn)</span></code></pre></div>
-<pre><code>## Error in h(simpleError(msg, call)): Fehler bei der Auswertung des Argumentes &#39;conn&#39; bei der Methodenauswahl für Funktion &#39;dbListTables&#39;: Objekt &#39;mp_db_conn&#39; nicht gefunden</code></pre>
+<pre><code>## [1] &quot;sqlite_sequence&quot; &quot;staffdose&quot;</code></pre>
 <div class="sourceCode" id="cb23"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="co"># since we started from scratch there are no tables </span></span></code></pre></div>
 <p>The easiest way to create a table is by using the function <code>dbWriteTable</code> which takes a dataframe as argument and builds a table from it in the database. As dataframe we will use a subset (first 10 rows) of the cleaned data we already prepared before.</p>
 <div class="sourceCode" id="cb24"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="co"># In SQL there are several possibilities to handle date, I prefer &quot;text&quot;; </span></span>
@@ -731,113 +747,197 @@ See <a href="https://rsqlite.r-dbi.org/reference/sqlite">RSQLite Packages Vignet
 <span id="cb24-7"><a href="#cb24-7" aria-hidden="true" tabindex="-1"></a>arf_rows01to10 <span class="ot">&lt;-</span> all_reports_fixed_dateastext[<span class="dv">1</span><span class="sc">:</span><span class="dv">10</span>,]</span>
 <span id="cb24-8"><a href="#cb24-8" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb24-9"><a href="#cb24-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb24-10"><a href="#cb24-10" aria-hidden="true" tabindex="-1"></a><span class="co"># If you try to create a table with a name that is already used by a table in the database you will get an error message. In order to be able to run this tutorial more than once we use the statement &quot;DROP TABLE IF EXISTS&quot;  to delete the table if it already exists.</span></span>
-<span id="cb24-11"><a href="#cb24-11" aria-hidden="true" tabindex="-1"></a><span class="fu">dbExecute</span>(mp_db_conn, <span class="st">&quot;DROP TABLE IF EXISTS test01&quot;</span>)</span></code></pre></div>
-<pre><code>## Error in h(simpleError(msg, call)): Fehler bei der Auswertung des Argumentes &#39;conn&#39; bei der Methodenauswahl für Funktion &#39;dbExecute&#39;: Objekt &#39;mp_db_conn&#39; nicht gefunden</code></pre>
+<span id="cb24-10"><a href="#cb24-10" aria-hidden="true" tabindex="-1"></a><span class="co"># If you try to create a table with a name that is already used by a table in the database </span></span>
+<span id="cb24-11"><a href="#cb24-11" aria-hidden="true" tabindex="-1"></a><span class="co"># you will get an error message. In order to be able to run this tutorial more than once we </span></span>
+<span id="cb24-12"><a href="#cb24-12" aria-hidden="true" tabindex="-1"></a><span class="co"># use the statement &quot;DROP TABLE IF EXISTS&quot;  to delete the table if it already exists.</span></span>
+<span id="cb24-13"><a href="#cb24-13" aria-hidden="true" tabindex="-1"></a><span class="fu">dbExecute</span>(mp_db_conn, <span class="st">&quot;DROP TABLE IF EXISTS test01&quot;</span>)</span></code></pre></div>
+<pre><code>## [1] 0</code></pre>
 <div class="sourceCode" id="cb26"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="co"># creating a table from a dataframe</span></span>
 <span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a><span class="fu">dbWriteTable</span>(<span class="at">conn =</span> mp_db_conn,</span>
 <span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a>              <span class="at">name =</span> <span class="st">&quot;test01&quot;</span>,</span>
-<span id="cb26-4"><a href="#cb26-4" aria-hidden="true" tabindex="-1"></a>              <span class="at">value  =</span> arf_rows01to10)</span></code></pre></div>
-<pre><code>## Error in h(simpleError(msg, call)): Fehler bei der Auswertung des Argumentes &#39;conn&#39; bei der Methodenauswahl für Funktion &#39;dbWriteTable&#39;: Objekt &#39;mp_db_conn&#39; nicht gefunden</code></pre>
-<div class="sourceCode" id="cb28"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="co">#check if it worked:</span></span>
-<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a><span class="fu">dbListTables</span>(<span class="at">conn =</span> mp_db_conn)</span></code></pre></div>
-<pre><code>## Error in h(simpleError(msg, call)): Fehler bei der Auswertung des Argumentes &#39;conn&#39; bei der Methodenauswahl für Funktion &#39;dbListTables&#39;: Objekt &#39;mp_db_conn&#39; nicht gefunden</code></pre>
-<div class="sourceCode" id="cb30"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Now you should get the output &quot;test01&quot;</span></span></code></pre></div>
+<span id="cb26-4"><a href="#cb26-4" aria-hidden="true" tabindex="-1"></a>              <span class="at">value  =</span> arf_rows01to10)</span>
+<span id="cb26-5"><a href="#cb26-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-6"><a href="#cb26-6" aria-hidden="true" tabindex="-1"></a><span class="co">#check if it worked:</span></span>
+<span id="cb26-7"><a href="#cb26-7" aria-hidden="true" tabindex="-1"></a><span class="fu">dbListTables</span>(<span class="at">conn =</span> mp_db_conn)</span></code></pre></div>
+<pre><code>## [1] &quot;sqlite_sequence&quot; &quot;staffdose&quot;       &quot;test01&quot;</code></pre>
+<div class="sourceCode" id="cb28"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Now you should get the output &quot;test01&quot;</span></span></code></pre></div>
 <p>Now we send our first database queries to view the table:</p>
-<div class="sourceCode" id="cb31"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="fu">dbGetQuery</span>(<span class="at">conn =</span> mp_db_conn,</span>
-<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a>           <span class="at">statement =</span> <span class="st">&quot;SELECT * FROM test01&quot;</span>)</span></code></pre></div>
-<pre><code>## Error in h(simpleError(msg, call)): Fehler bei der Auswertung des Argumentes &#39;conn&#39; bei der Methodenauswahl für Funktion &#39;dbGetQuery&#39;: Objekt &#39;mp_db_conn&#39; nicht gefunden</code></pre>
-<div class="sourceCode" id="cb33"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a><span class="co"># &quot;SELECT *&quot;: Select all columns </span></span>
-<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb33-3"><a href="#cb33-3" aria-hidden="true" tabindex="-1"></a><span class="co"># See the structure of the table by using built in pragma statements</span></span>
-<span id="cb33-4"><a href="#cb33-4" aria-hidden="true" tabindex="-1"></a><span class="co"># https://www.sqlite.org/pragma.html) in a query</span></span>
-<span id="cb33-5"><a href="#cb33-5" aria-hidden="true" tabindex="-1"></a><span class="fu">dbGetQuery</span>(<span class="at">conn =</span> mp_db_conn,</span>
-<span id="cb33-6"><a href="#cb33-6" aria-hidden="true" tabindex="-1"></a>           <span class="at">statement =</span> <span class="st">&quot;pragma table_info(&#39;test01&#39;)&quot;</span>)</span></code></pre></div>
-<pre><code>## Error in h(simpleError(msg, call)): Fehler bei der Auswertung des Argumentes &#39;conn&#39; bei der Methodenauswahl für Funktion &#39;dbGetQuery&#39;: Objekt &#39;mp_db_conn&#39; nicht gefunden</code></pre>
-<p>As you can see from the output of the last command we don’t have a primary key (all “pk” are set to 0) and neither have we set a UNIQUE constraint. Lets see what happens if we add some more data. This time we create a dataframe with rows 9 to 12 from <code>all_reports_fixed_dateastext</code>. Rows 9 and 10 are already in the database and rows 11 and 12 are new data.</p>
+<div class="sourceCode" id="cb29"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="fu">dbGetQuery</span>(<span class="at">conn =</span> mp_db_conn,</span>
+<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a>           <span class="at">statement =</span> <span class="st">&quot;SELECT * FROM test01&quot;</span>) <span class="sc">%&gt;%</span> <span class="co"># &quot;SELECT *&quot;: to select all columns </span></span>
+<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a>  tibble<span class="sc">::</span><span class="fu">tibble</span>()</span></code></pre></div>
+<pre><code>## # A tibble: 10 x 19
+##    customer_name    customer_uid department    department_uid name    person_uid
+##    &lt;chr&gt;                   &lt;dbl&gt; &lt;chr&gt;                  &lt;dbl&gt; &lt;chr&gt;        &lt;dbl&gt;
+##  1 Hogsmeade Royal~          141 Nuclear Medi~              1 Severu~      12368
+##  2 Hogsmeade Royal~          141 Nuclear Medi~              1 Harry ~      12369
+##  3 Hogsmeade Royal~          141 Nuclear Medi~              1 Parvat~      12370
+##  4 Hogsmeade Royal~          141 Nuclear Medi~              1 Parvat~      12370
+##  5 Hogsmeade Royal~          141 Nuclear Medi~              1 Cedric~      12371
+##  6 Hogsmeade Royal~          141 Nuclear Medi~              1 Cedric~      12371
+##  7 Hogsmeade Royal~          141 Nuclear Medi~              1 Ron We~      12372
+##  8 Hogsmeade Royal~          141 Nuclear Medi~              1 Tom Ma~      12373
+##  9 Hogsmeade Royal~          141 Diagnostic R~              2 Hermio~      12374
+## 10 Hogsmeade Royal~          141 Diagnostic R~              2 Albus ~      12375
+## # ... with 13 more variables: radiation_type &lt;chr&gt;, hp10 &lt;dbl&gt;, hp007 &lt;dbl&gt;,
+## #   user_type &lt;chr&gt;, dosimeter_type &lt;chr&gt;, dosimeter_placement &lt;chr&gt;,
+## #   dosimeter_uid &lt;dbl&gt;, measurement_period_start &lt;chr&gt;,
+## #   measurement_period_end &lt;chr&gt;, read_date &lt;chr&gt;, report_date &lt;chr&gt;,
+## #   report_uid &lt;dbl&gt;, status &lt;chr&gt;</code></pre>
+<div class="sourceCode" id="cb31"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Lets select a subset of columns</span></span>
+<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a><span class="fu">dbGetQuery</span>(<span class="at">conn =</span> mp_db_conn,</span>
+<span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a>           <span class="at">statement =</span> <span class="st">&quot;SELECT name, person_uid, dosimeter_uid, report_uid, report_date FROM test01&quot;</span>)</span></code></pre></div>
+<pre><code>##                  name person_uid dosimeter_uid report_uid report_date
+## 1       Severus Snape      12368         90072       1137  2019-12-28
+## 2        Harry Potter      12369         90073       1137  2019-12-28
+## 3       Parvati Patil      12370         90075       1137  2019-12-28
+## 4       Parvati Patil      12370         90076       1137  2019-12-28
+## 5      Cedric Diggory      12371         90077       1137  2019-12-28
+## 6      Cedric Diggory      12371         90078       1137  2019-12-28
+## 7         Ron Weasley      12372         90079       1137  2019-12-28
+## 8  Tom Marvolo Riddle      12373         90080       1137  2019-12-28
+## 9   Hermione Grainger      12374         90081       1137  2019-12-28
+## 10   Albus Dumbledore      12375         90082       1137  2019-12-28</code></pre>
+<div class="sourceCode" id="cb33"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a><span class="co"># See the structure of the table by using built in pragma statements</span></span>
+<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a><span class="co"># https://www.sqlite.org/pragma.html) in a query</span></span>
+<span id="cb33-3"><a href="#cb33-3" aria-hidden="true" tabindex="-1"></a><span class="fu">dbGetQuery</span>(<span class="at">conn =</span> mp_db_conn,</span>
+<span id="cb33-4"><a href="#cb33-4" aria-hidden="true" tabindex="-1"></a>           <span class="at">statement =</span> <span class="st">&quot;pragma table_info(&#39;test01&#39;)&quot;</span>)</span></code></pre></div>
+<pre><code>##    cid                     name type notnull dflt_value pk
+## 1    0            customer_name TEXT       0         NA  0
+## 2    1             customer_uid REAL       0         NA  0
+## 3    2               department TEXT       0         NA  0
+## 4    3           department_uid REAL       0         NA  0
+## 5    4                     name TEXT       0         NA  0
+## 6    5               person_uid REAL       0         NA  0
+## 7    6           radiation_type TEXT       0         NA  0
+## 8    7                     hp10 REAL       0         NA  0
+## 9    8                    hp007 REAL       0         NA  0
+## 10   9                user_type TEXT       0         NA  0
+## 11  10           dosimeter_type TEXT       0         NA  0
+## 12  11      dosimeter_placement TEXT       0         NA  0
+## 13  12            dosimeter_uid REAL       0         NA  0
+## 14  13 measurement_period_start TEXT       0         NA  0
+## 15  14   measurement_period_end TEXT       0         NA  0
+## 16  15                read_date TEXT       0         NA  0
+## 17  16              report_date TEXT       0         NA  0
+## 18  17               report_uid REAL       0         NA  0
+## 19  18                   status TEXT       0         NA  0</code></pre>
+<p>As you can see from the output we don’t have a primary key (all “pk” are set to 0) and neither have we set a UNIQUE constraint. Lets see what happens if we add some more data. This time we create a dataframe with rows 9 to 12 from <code>all_reports_fixed_dateastext</code>. Rows 9 and 10 are already in the database and rows 11 and 12 are new data.</p>
 <div class="sourceCode" id="cb35"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a>arf_rows09to12 <span class="ot">&lt;-</span> all_reports_fixed_dateastext[<span class="dv">9</span><span class="sc">:</span><span class="dv">12</span>,]</span>
 <span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb35-3"><a href="#cb35-3" aria-hidden="true" tabindex="-1"></a><span class="fu">dbWriteTable</span>(<span class="at">conn =</span> mp_db_conn,</span>
 <span id="cb35-4"><a href="#cb35-4" aria-hidden="true" tabindex="-1"></a>             <span class="at">name =</span> <span class="st">&quot;test01&quot;</span>,</span>
 <span id="cb35-5"><a href="#cb35-5" aria-hidden="true" tabindex="-1"></a>             <span class="at">value =</span> arf_rows09to12,</span>
-<span id="cb35-6"><a href="#cb35-6" aria-hidden="true" tabindex="-1"></a>             <span class="at">append =</span> <span class="cn">TRUE</span>) </span></code></pre></div>
-<pre><code>## Error in h(simpleError(msg, call)): Fehler bei der Auswertung des Argumentes &#39;conn&#39; bei der Methodenauswahl für Funktion &#39;dbWriteTable&#39;: Objekt &#39;mp_db_conn&#39; nicht gefunden</code></pre>
-<div class="sourceCode" id="cb37"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a><span class="co"># if there is already a table with the given name we have to set one of the arguments &quot;append&quot; or &quot;overwrite&quot; to true, otherwise we will get an error message</span></span>
-<span id="cb37-2"><a href="#cb37-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb37-3"><a href="#cb37-3" aria-hidden="true" tabindex="-1"></a><span class="fu">dbGetQuery</span>(<span class="at">conn =</span> mp_db_conn,</span>
-<span id="cb37-4"><a href="#cb37-4" aria-hidden="true" tabindex="-1"></a>           <span class="at">statement =</span> <span class="st">&quot;SELECT * FROM test01&quot;</span>)</span></code></pre></div>
-<pre><code>## Error in h(simpleError(msg, call)): Fehler bei der Auswertung des Argumentes &#39;conn&#39; bei der Methodenauswahl für Funktion &#39;dbGetQuery&#39;: Objekt &#39;mp_db_conn&#39; nicht gefunden</code></pre>
-<p>Now we have 14 rows in the table which means that we created duplicates by adding rows 9 and 10 again. In order to avoid duplicates we need constraints like a <code>PRIMARY KEY</code> and/or a <code>UNIQUE</code> constraint.<br />
-<br> There are different strategies to implement constraints but for consistency reasons we will build the table analogous to the Python tutorial “by hand”: As <code>PRIMARY KEY</code> we add an <code>id</code>-column which we will fill with <code>AUTOINCREMENT</code> and set a <code>UNIQUE</code>-constraint with <code>report_uid, person_uid, dosimeter_placement</code>:</p>
-<div class="sourceCode" id="cb39"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a><span class="co"># First we clean up the database by deleting the test01-table</span></span>
-<span id="cb39-2"><a href="#cb39-2" aria-hidden="true" tabindex="-1"></a><span class="fu">dbExecute</span>(mp_db_conn, <span class="st">&quot;DROP TABLE IF EXISTS test01&quot;</span>)</span></code></pre></div>
-<pre><code>## Error in h(simpleError(msg, call)): Fehler bei der Auswertung des Argumentes &#39;conn&#39; bei der Methodenauswahl für Funktion &#39;dbExecute&#39;: Objekt &#39;mp_db_conn&#39; nicht gefunden</code></pre>
-<div class="sourceCode" id="cb41"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a><span class="co"># check if database is empty</span></span>
-<span id="cb41-2"><a href="#cb41-2" aria-hidden="true" tabindex="-1"></a><span class="fu">dbListTables</span>(mp_db_conn)</span></code></pre></div>
-<pre><code>## Error in h(simpleError(msg, call)): Fehler bei der Auswertung des Argumentes &#39;conn&#39; bei der Methodenauswahl für Funktion &#39;dbListTables&#39;: Objekt &#39;mp_db_conn&#39; nicht gefunden</code></pre>
-<div class="sourceCode" id="cb43"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb43-1"><a href="#cb43-1" aria-hidden="true" tabindex="-1"></a><span class="co"># since we started from scratch there are no tables </span></span>
-<span id="cb43-2"><a href="#cb43-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb43-3"><a href="#cb43-3" aria-hidden="true" tabindex="-1"></a><span class="co"># for reproducibility reasons we run the following command</span></span>
-<span id="cb43-4"><a href="#cb43-4" aria-hidden="true" tabindex="-1"></a><span class="fu">dbExecute</span>(<span class="at">conn =</span> mp_db_conn, </span>
-<span id="cb43-5"><a href="#cb43-5" aria-hidden="true" tabindex="-1"></a>          <span class="st">&quot;DROP TABLE IF EXISTS staffdose&quot;</span>)</span></code></pre></div>
-<pre><code>## Error in h(simpleError(msg, call)): Fehler bei der Auswertung des Argumentes &#39;conn&#39; bei der Methodenauswahl für Funktion &#39;dbExecute&#39;: Objekt &#39;mp_db_conn&#39; nicht gefunden</code></pre>
-<div class="sourceCode" id="cb45"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb45-1"><a href="#cb45-1" aria-hidden="true" tabindex="-1"></a><span class="fu">dbExecute</span>(<span class="at">conn =</span> mp_db_conn,</span>
-<span id="cb45-2"><a href="#cb45-2" aria-hidden="true" tabindex="-1"></a>            <span class="st">&quot;CREATE TABLE staffdose (</span></span>
-<span id="cb45-3"><a href="#cb45-3" aria-hidden="true" tabindex="-1"></a><span class="st">                id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,</span></span>
-<span id="cb45-4"><a href="#cb45-4" aria-hidden="true" tabindex="-1"></a><span class="st">                customer_name VARCHAR,</span></span>
-<span id="cb45-5"><a href="#cb45-5" aria-hidden="true" tabindex="-1"></a><span class="st">                customer_uid INTEGER,</span></span>
-<span id="cb45-6"><a href="#cb45-6" aria-hidden="true" tabindex="-1"></a><span class="st">                department VARCHAR,</span></span>
-<span id="cb45-7"><a href="#cb45-7" aria-hidden="true" tabindex="-1"></a><span class="st">                department_uid INTEGER,</span></span>
-<span id="cb45-8"><a href="#cb45-8" aria-hidden="true" tabindex="-1"></a><span class="st">                name VARCHAR,</span></span>
-<span id="cb45-9"><a href="#cb45-9" aria-hidden="true" tabindex="-1"></a><span class="st">                person_uid INTEGER,</span></span>
-<span id="cb45-10"><a href="#cb45-10" aria-hidden="true" tabindex="-1"></a><span class="st">                radiation_type VARCHAR,</span></span>
-<span id="cb45-11"><a href="#cb45-11" aria-hidden="true" tabindex="-1"></a><span class="st">                hp10 DOUBLE,</span></span>
-<span id="cb45-12"><a href="#cb45-12" aria-hidden="true" tabindex="-1"></a><span class="st">                hp007 DOUBLE,</span></span>
-<span id="cb45-13"><a href="#cb45-13" aria-hidden="true" tabindex="-1"></a><span class="st">                user_type VARCHAR,</span></span>
-<span id="cb45-14"><a href="#cb45-14" aria-hidden="true" tabindex="-1"></a><span class="st">                dosimeter_type VARCHAR,</span></span>
-<span id="cb45-15"><a href="#cb45-15" aria-hidden="true" tabindex="-1"></a><span class="st">                dosimeter_placement VARCHAR,</span></span>
-<span id="cb45-16"><a href="#cb45-16" aria-hidden="true" tabindex="-1"></a><span class="st">                dosimeter_uid INTEGER,</span></span>
-<span id="cb45-17"><a href="#cb45-17" aria-hidden="true" tabindex="-1"></a><span class="st">                measurement_period_start TEXT,</span></span>
-<span id="cb45-18"><a href="#cb45-18" aria-hidden="true" tabindex="-1"></a><span class="st">                measurement_period_end TEXT,</span></span>
-<span id="cb45-19"><a href="#cb45-19" aria-hidden="true" tabindex="-1"></a><span class="st">                read_date TEXT,</span></span>
-<span id="cb45-20"><a href="#cb45-20" aria-hidden="true" tabindex="-1"></a><span class="st">                report_date TEXT,</span></span>
-<span id="cb45-21"><a href="#cb45-21" aria-hidden="true" tabindex="-1"></a><span class="st">                report_uid DOUBLE,</span></span>
-<span id="cb45-22"><a href="#cb45-22" aria-hidden="true" tabindex="-1"></a><span class="st">                status VARCHAR,</span></span>
-<span id="cb45-23"><a href="#cb45-23" aria-hidden="true" tabindex="-1"></a><span class="st">                UNIQUE(report_uid, person_uid, dosimeter_placement)</span></span>
-<span id="cb45-24"><a href="#cb45-24" aria-hidden="true" tabindex="-1"></a><span class="st">            );&quot;</span>)</span></code></pre></div>
-<pre><code>## Error in h(simpleError(msg, call)): Fehler bei der Auswertung des Argumentes &#39;conn&#39; bei der Methodenauswahl für Funktion &#39;dbExecute&#39;: Objekt &#39;mp_db_conn&#39; nicht gefunden</code></pre>
-<div class="sourceCode" id="cb47"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb47-1"><a href="#cb47-1" aria-hidden="true" tabindex="-1"></a><span class="co"># check if it worked</span></span>
-<span id="cb47-2"><a href="#cb47-2" aria-hidden="true" tabindex="-1"></a><span class="fu">dbListTables</span>(mp_db_conn)</span></code></pre></div>
-<pre><code>## Error in h(simpleError(msg, call)): Fehler bei der Auswertung des Argumentes &#39;conn&#39; bei der Methodenauswahl für Funktion &#39;dbListTables&#39;: Objekt &#39;mp_db_conn&#39; nicht gefunden</code></pre>
-<div class="sourceCode" id="cb49"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb49-1"><a href="#cb49-1" aria-hidden="true" tabindex="-1"></a><span class="co"># for info on the automatically created table &quot;sqlite_sequence&quot; see: https://www.sqlite.org/autoinc.html</span></span>
-<span id="cb49-2"><a href="#cb49-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb49-3"><a href="#cb49-3" aria-hidden="true" tabindex="-1"></a><span class="co"># check the structure of the table:</span></span>
-<span id="cb49-4"><a href="#cb49-4" aria-hidden="true" tabindex="-1"></a><span class="fu">dbGetQuery</span>(mp_db_conn, </span>
-<span id="cb49-5"><a href="#cb49-5" aria-hidden="true" tabindex="-1"></a>           <span class="st">&quot;pragma table_info(&#39;staffdose&#39;)&quot;</span>) <span class="sc">%&gt;%</span> </span>
-<span id="cb49-6"><a href="#cb49-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">head</span>(<span class="dv">1</span>)</span></code></pre></div>
-<pre><code>## Error in h(simpleError(msg, call)): Fehler bei der Auswertung des Argumentes &#39;conn&#39; bei der Methodenauswahl für Funktion &#39;dbGetQuery&#39;: Objekt &#39;mp_db_conn&#39; nicht gefunden</code></pre>
-<div class="sourceCode" id="cb51"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb51-1"><a href="#cb51-1" aria-hidden="true" tabindex="-1"></a><span class="co"># the id-column should have the values 1 for &quot;notnull&quot; and &quot;pk&quot; (primary key)</span></span></code></pre></div>
+<span id="cb35-6"><a href="#cb35-6" aria-hidden="true" tabindex="-1"></a>             <span class="at">append =</span> <span class="cn">TRUE</span>) </span>
+<span id="cb35-7"><a href="#cb35-7" aria-hidden="true" tabindex="-1"></a><span class="co"># if there is already a table with the given name we have to </span></span>
+<span id="cb35-8"><a href="#cb35-8" aria-hidden="true" tabindex="-1"></a><span class="co"># set one of the arguments &quot;append&quot; or &quot;overwrite&quot; to true, </span></span>
+<span id="cb35-9"><a href="#cb35-9" aria-hidden="true" tabindex="-1"></a><span class="co"># otherwise we will get an error message</span></span>
+<span id="cb35-10"><a href="#cb35-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb35-11"><a href="#cb35-11" aria-hidden="true" tabindex="-1"></a><span class="fu">dbGetQuery</span>(<span class="at">conn =</span> mp_db_conn,</span>
+<span id="cb35-12"><a href="#cb35-12" aria-hidden="true" tabindex="-1"></a>           <span class="at">statement =</span> <span class="st">&quot;SELECT name, person_uid, dosimeter_uid, report_uid report_date FROM test01&quot;</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb35-13"><a href="#cb35-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tibble</span>()</span></code></pre></div>
+<pre><code>## # A tibble: 14 x 4
+##    name               person_uid dosimeter_uid report_date
+##    &lt;chr&gt;                   &lt;dbl&gt;         &lt;dbl&gt;       &lt;dbl&gt;
+##  1 Severus Snape           12368         90072        1137
+##  2 Harry Potter            12369         90073        1137
+##  3 Parvati Patil           12370         90075        1137
+##  4 Parvati Patil           12370         90076        1137
+##  5 Cedric Diggory          12371         90077        1137
+##  6 Cedric Diggory          12371         90078        1137
+##  7 Ron Weasley             12372         90079        1137
+##  8 Tom Marvolo Riddle      12373         90080        1137
+##  9 Hermione Grainger       12374         90081        1137
+## 10 Albus Dumbledore        12375         90082        1137
+## 11 Hermione Grainger       12374         90081        1137
+## 12 Albus Dumbledore        12375         90082        1137
+## 13 Filius Flitwick         12376         90083        1137
+## 14 Neville Longbottom      12377         90084        1137</code></pre>
+<p>Now we have 14 rows in the table which means that we created duplicates by adding rows 9 and 10 again (Entries for the dosimeter readings of Hermione and Albus from December 2019).<br />
+<br> In order to avoid duplicates we need constraints like a <code>PRIMARY KEY</code> and/or a <code>UNIQUE</code> constraint. There are different strategies to implement constraints but for consistency reasons we will build the table analogous to the Python tutorial “by hand”:<br />
+As <code>PRIMARY KEY</code> we add an <code>id</code>-column which we will fill with <code>AUTOINCREMENT</code> and set a <code>UNIQUE</code>-constraint with <code>report_uid, person_uid, dosimeter_placement</code>:</p>
+<div class="sourceCode" id="cb37"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a><span class="co"># First we clean up the database by deleting the test01-table</span></span>
+<span id="cb37-2"><a href="#cb37-2" aria-hidden="true" tabindex="-1"></a><span class="fu">dbExecute</span>(mp_db_conn, <span class="st">&quot;DROP TABLE IF EXISTS test01&quot;</span>)</span></code></pre></div>
+<pre><code>## [1] 0</code></pre>
+<div class="sourceCode" id="cb39"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a><span class="co"># check if database is empty</span></span>
+<span id="cb39-2"><a href="#cb39-2" aria-hidden="true" tabindex="-1"></a><span class="fu">dbListTables</span>(mp_db_conn)</span></code></pre></div>
+<pre><code>## [1] &quot;sqlite_sequence&quot; &quot;staffdose&quot;</code></pre>
+<div class="sourceCode" id="cb41"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a><span class="co"># for reproducibility reasons we run the following command</span></span>
+<span id="cb41-2"><a href="#cb41-2" aria-hidden="true" tabindex="-1"></a><span class="fu">dbExecute</span>(<span class="at">conn =</span> mp_db_conn, </span>
+<span id="cb41-3"><a href="#cb41-3" aria-hidden="true" tabindex="-1"></a>          <span class="st">&quot;DROP TABLE IF EXISTS staffdose&quot;</span>)</span></code></pre></div>
+<pre><code>## [1] 0</code></pre>
+<div class="sourceCode" id="cb43"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb43-1"><a href="#cb43-1" aria-hidden="true" tabindex="-1"></a><span class="co"># creating the table</span></span>
+<span id="cb43-2"><a href="#cb43-2" aria-hidden="true" tabindex="-1"></a><span class="fu">dbExecute</span>(<span class="at">conn =</span> mp_db_conn,</span>
+<span id="cb43-3"><a href="#cb43-3" aria-hidden="true" tabindex="-1"></a>            <span class="st">&quot;CREATE TABLE staffdose (</span></span>
+<span id="cb43-4"><a href="#cb43-4" aria-hidden="true" tabindex="-1"></a><span class="st">                id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,</span></span>
+<span id="cb43-5"><a href="#cb43-5" aria-hidden="true" tabindex="-1"></a><span class="st">                customer_name VARCHAR,</span></span>
+<span id="cb43-6"><a href="#cb43-6" aria-hidden="true" tabindex="-1"></a><span class="st">                customer_uid INTEGER,</span></span>
+<span id="cb43-7"><a href="#cb43-7" aria-hidden="true" tabindex="-1"></a><span class="st">                department VARCHAR,</span></span>
+<span id="cb43-8"><a href="#cb43-8" aria-hidden="true" tabindex="-1"></a><span class="st">                department_uid INTEGER,</span></span>
+<span id="cb43-9"><a href="#cb43-9" aria-hidden="true" tabindex="-1"></a><span class="st">                name VARCHAR,</span></span>
+<span id="cb43-10"><a href="#cb43-10" aria-hidden="true" tabindex="-1"></a><span class="st">                person_uid INTEGER,</span></span>
+<span id="cb43-11"><a href="#cb43-11" aria-hidden="true" tabindex="-1"></a><span class="st">                radiation_type VARCHAR,</span></span>
+<span id="cb43-12"><a href="#cb43-12" aria-hidden="true" tabindex="-1"></a><span class="st">                hp10 DOUBLE,</span></span>
+<span id="cb43-13"><a href="#cb43-13" aria-hidden="true" tabindex="-1"></a><span class="st">                hp007 DOUBLE,</span></span>
+<span id="cb43-14"><a href="#cb43-14" aria-hidden="true" tabindex="-1"></a><span class="st">                user_type VARCHAR,</span></span>
+<span id="cb43-15"><a href="#cb43-15" aria-hidden="true" tabindex="-1"></a><span class="st">                dosimeter_type VARCHAR,</span></span>
+<span id="cb43-16"><a href="#cb43-16" aria-hidden="true" tabindex="-1"></a><span class="st">                dosimeter_placement VARCHAR,</span></span>
+<span id="cb43-17"><a href="#cb43-17" aria-hidden="true" tabindex="-1"></a><span class="st">                dosimeter_uid INTEGER,</span></span>
+<span id="cb43-18"><a href="#cb43-18" aria-hidden="true" tabindex="-1"></a><span class="st">                measurement_period_start TEXT,</span></span>
+<span id="cb43-19"><a href="#cb43-19" aria-hidden="true" tabindex="-1"></a><span class="st">                measurement_period_end TEXT,</span></span>
+<span id="cb43-20"><a href="#cb43-20" aria-hidden="true" tabindex="-1"></a><span class="st">                read_date TEXT,</span></span>
+<span id="cb43-21"><a href="#cb43-21" aria-hidden="true" tabindex="-1"></a><span class="st">                report_date TEXT,</span></span>
+<span id="cb43-22"><a href="#cb43-22" aria-hidden="true" tabindex="-1"></a><span class="st">                report_uid DOUBLE,</span></span>
+<span id="cb43-23"><a href="#cb43-23" aria-hidden="true" tabindex="-1"></a><span class="st">                status VARCHAR,</span></span>
+<span id="cb43-24"><a href="#cb43-24" aria-hidden="true" tabindex="-1"></a><span class="st">                UNIQUE(report_uid, person_uid, dosimeter_placement)</span></span>
+<span id="cb43-25"><a href="#cb43-25" aria-hidden="true" tabindex="-1"></a><span class="st">            );&quot;</span>)</span></code></pre></div>
+<pre><code>## [1] 0</code></pre>
+<div class="sourceCode" id="cb45"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb45-1"><a href="#cb45-1" aria-hidden="true" tabindex="-1"></a><span class="co"># check if it worked</span></span>
+<span id="cb45-2"><a href="#cb45-2" aria-hidden="true" tabindex="-1"></a><span class="fu">dbListTables</span>(mp_db_conn)</span></code></pre></div>
+<pre><code>## [1] &quot;sqlite_sequence&quot; &quot;staffdose&quot;</code></pre>
+<div class="sourceCode" id="cb47"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb47-1"><a href="#cb47-1" aria-hidden="true" tabindex="-1"></a><span class="co"># you can see that there are two tables:</span></span>
+<span id="cb47-2"><a href="#cb47-2" aria-hidden="true" tabindex="-1"></a><span class="co"># - &quot;staffdose&quot; (the one we defined) and </span></span>
+<span id="cb47-3"><a href="#cb47-3" aria-hidden="true" tabindex="-1"></a><span class="co"># &quot;sqlite_sequence&quot; automatically created because we used &quot;AUTOINCREMENT&quot;</span></span>
+<span id="cb47-4"><a href="#cb47-4" aria-hidden="true" tabindex="-1"></a><span class="co"># for info on &quot;sqlite_sequence&quot; see: https://www.sqlite.org/autoinc.html</span></span>
+<span id="cb47-5"><a href="#cb47-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb47-6"><a href="#cb47-6" aria-hidden="true" tabindex="-1"></a><span class="co"># check if &quot;id&quot; is the primary key of the table:</span></span>
+<span id="cb47-7"><a href="#cb47-7" aria-hidden="true" tabindex="-1"></a><span class="fu">dbGetQuery</span>(mp_db_conn, </span>
+<span id="cb47-8"><a href="#cb47-8" aria-hidden="true" tabindex="-1"></a>           <span class="st">&quot;pragma table_info(&#39;staffdose&#39;)&quot;</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb47-9"><a href="#cb47-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">head</span>(<span class="dv">1</span>)</span></code></pre></div>
+<pre><code>##   cid name    type notnull dflt_value pk
+## 1   0   id INTEGER       1         NA  1</code></pre>
+<div class="sourceCode" id="cb49"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb49-1"><a href="#cb49-1" aria-hidden="true" tabindex="-1"></a><span class="co"># the id-column should have the values 1 for &quot;notnull&quot; and &quot;pk&quot; (primary key)</span></span></code></pre></div>
 <p>Lets try again, add data and then add a dataset with some duplicates:</p>
-<div class="sourceCode" id="cb52"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb52-1"><a href="#cb52-1" aria-hidden="true" tabindex="-1"></a><span class="co"># adding data</span></span>
+<div class="sourceCode" id="cb50"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb50-1"><a href="#cb50-1" aria-hidden="true" tabindex="-1"></a><span class="co"># adding data</span></span>
+<span id="cb50-2"><a href="#cb50-2" aria-hidden="true" tabindex="-1"></a><span class="fu">dbWriteTable</span>(<span class="at">conn =</span> mp_db_conn,</span>
+<span id="cb50-3"><a href="#cb50-3" aria-hidden="true" tabindex="-1"></a>             <span class="at">name =</span> <span class="st">&quot;staffdose&quot;</span>,</span>
+<span id="cb50-4"><a href="#cb50-4" aria-hidden="true" tabindex="-1"></a>             <span class="at">value =</span> arf_rows01to10,</span>
+<span id="cb50-5"><a href="#cb50-5" aria-hidden="true" tabindex="-1"></a>             <span class="at">append =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb50-6"><a href="#cb50-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb50-7"><a href="#cb50-7" aria-hidden="true" tabindex="-1"></a><span class="co"># check if data was added</span></span>
+<span id="cb50-8"><a href="#cb50-8" aria-hidden="true" tabindex="-1"></a><span class="fu">dbGetQuery</span>(<span class="at">conn =</span> mp_db_conn,</span>
+<span id="cb50-9"><a href="#cb50-9" aria-hidden="true" tabindex="-1"></a>           <span class="at">statement =</span> <span class="st">&quot;SELECT name, person_uid, dosimeter_uid, report_uid report_date FROM staffdose&quot;</span>)</span></code></pre></div>
+<pre><code>##                  name person_uid dosimeter_uid report_date
+## 1       Severus Snape      12368         90072        1137
+## 2        Harry Potter      12369         90073        1137
+## 3       Parvati Patil      12370         90075        1137
+## 4       Parvati Patil      12370         90076        1137
+## 5      Cedric Diggory      12371         90077        1137
+## 6      Cedric Diggory      12371         90078        1137
+## 7         Ron Weasley      12372         90079        1137
+## 8  Tom Marvolo Riddle      12373         90080        1137
+## 9   Hermione Grainger      12374         90081        1137
+## 10   Albus Dumbledore      12375         90082        1137</code></pre>
+<div class="sourceCode" id="cb52"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb52-1"><a href="#cb52-1" aria-hidden="true" tabindex="-1"></a><span class="co"># add dataset with duplicates</span></span>
 <span id="cb52-2"><a href="#cb52-2" aria-hidden="true" tabindex="-1"></a><span class="fu">dbWriteTable</span>(<span class="at">conn =</span> mp_db_conn,</span>
 <span id="cb52-3"><a href="#cb52-3" aria-hidden="true" tabindex="-1"></a>             <span class="at">name =</span> <span class="st">&quot;staffdose&quot;</span>,</span>
-<span id="cb52-4"><a href="#cb52-4" aria-hidden="true" tabindex="-1"></a>             <span class="at">value =</span> arf_rows01to10,</span>
+<span id="cb52-4"><a href="#cb52-4" aria-hidden="true" tabindex="-1"></a>             <span class="at">value =</span> arf_rows09to12,</span>
 <span id="cb52-5"><a href="#cb52-5" aria-hidden="true" tabindex="-1"></a>             <span class="at">append =</span> <span class="cn">TRUE</span>)</span></code></pre></div>
-<pre><code>## Error in h(simpleError(msg, call)): Fehler bei der Auswertung des Argumentes &#39;conn&#39; bei der Methodenauswahl für Funktion &#39;dbWriteTable&#39;: Objekt &#39;mp_db_conn&#39; nicht gefunden</code></pre>
-<div class="sourceCode" id="cb54"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb54-1"><a href="#cb54-1" aria-hidden="true" tabindex="-1"></a><span class="co"># check if data was added</span></span>
-<span id="cb54-2"><a href="#cb54-2" aria-hidden="true" tabindex="-1"></a><span class="fu">dbGetQuery</span>(<span class="at">conn =</span> mp_db_conn,</span>
-<span id="cb54-3"><a href="#cb54-3" aria-hidden="true" tabindex="-1"></a>           <span class="at">statement =</span> <span class="st">&quot;SELECT * from staffdose&quot;</span>)</span></code></pre></div>
-<pre><code>## Error in h(simpleError(msg, call)): Fehler bei der Auswertung des Argumentes &#39;conn&#39; bei der Methodenauswahl für Funktion &#39;dbGetQuery&#39;: Objekt &#39;mp_db_conn&#39; nicht gefunden</code></pre>
-<div class="sourceCode" id="cb56"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb56-1"><a href="#cb56-1" aria-hidden="true" tabindex="-1"></a><span class="co"># add dataset with duplicates</span></span>
-<span id="cb56-2"><a href="#cb56-2" aria-hidden="true" tabindex="-1"></a><span class="fu">dbWriteTable</span>(<span class="at">conn =</span> mp_db_conn,</span>
-<span id="cb56-3"><a href="#cb56-3" aria-hidden="true" tabindex="-1"></a>             <span class="at">name =</span> <span class="st">&quot;staffdose&quot;</span>,</span>
-<span id="cb56-4"><a href="#cb56-4" aria-hidden="true" tabindex="-1"></a>             <span class="at">value =</span> arf_rows09to12,</span>
-<span id="cb56-5"><a href="#cb56-5" aria-hidden="true" tabindex="-1"></a>             <span class="at">append =</span> <span class="cn">TRUE</span>)</span></code></pre></div>
-<pre><code>## Error in h(simpleError(msg, call)): Fehler bei der Auswertung des Argumentes &#39;conn&#39; bei der Methodenauswahl für Funktion &#39;dbWriteTable&#39;: Objekt &#39;mp_db_conn&#39; nicht gefunden</code></pre>
-<p>Now you should get an error message like <code>UNIQUE constraint failed: staffdose.report_uid, staffdose.person_uid, staffdose.dosimeter_placement</code>. Now duplicates are prevented but unfortunately there is no easy way to just add unique data. For details and source of the following work around see forum thread “<a href="https://community.rstudio.com/t/creating-and-populating-a-sqlite-database-via-r-how-to-ignore-duplicate-rows/85470/3">RStudio Community - Creating and populating a SQLite database via R - How to ignore duplicate rows?</a>”.</p>
-<p>When we are finished we clsoe the connection to the database:</p>
-<div class="sourceCode" id="cb58"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb58-1"><a href="#cb58-1" aria-hidden="true" tabindex="-1"></a><span class="fu">dbDisconnect</span>(mp_db_conn)</span></code></pre></div>
-<pre><code>## Error in h(simpleError(msg, call)): Fehler bei der Auswertung des Argumentes &#39;conn&#39; bei der Methodenauswahl für Funktion &#39;dbDisconnect&#39;: Objekt &#39;mp_db_conn&#39; nicht gefunden</code></pre>
+<pre><code>## Error: UNIQUE constraint failed: staffdose.report_uid, staffdose.person_uid, staffdose.dosimeter_placement</code></pre>
+<p>Now you should get an error message like: <code>UNIQUE constraint failed: staffdose.report_uid, staffdose.person_uid, staffdose.dosimeter_placement</code>.<br />
+<br> We have achieved our goal to prevent duplicates but unfortunately there is no easy way to just add unique data. To solve this problem we need a workaround. For details and source of the following approach see the forum thread “<a href="https://community.rstudio.com/t/creating-and-populating-a-sqlite-database-via-r-how-to-ignore-duplicate-rows/85470/3">RStudio Community - Creating and populating a SQLite database via R - How to ignore duplicate rows?</a>”.</p>
+<p>When we are finished we close the connection to the database:</p>
+<div class="sourceCode" id="cb54"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb54-1"><a href="#cb54-1" aria-hidden="true" tabindex="-1"></a><span class="fu">dbDisconnect</span>(mp_db_conn)</span></code></pre></div>
+</div>
 </div>
 </div>
 <div id="reporting-with-rmarkdown" class="section level2">
