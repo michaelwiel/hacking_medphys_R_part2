@@ -26,7 +26,7 @@ library(DBI)
 ```
 
 ## Short Description
-This is a R Version for Part 2 of the Article Series "Hacking Medical Physics" by Jonas Andersson and Gavin Poludniowski i (GitRepo: [rvbCMTS/EMP-News](https://github.com/rvbCMTS/EMP-News.git)) in the Newsletter of the European Federation of Organisations for Medical Physics (EFOMP)^[[European Medical Physics News](https://www.efomp.org/index.php?r=fc&id=emp-news)].
+This is a R Version for Part 2 of the Article Series "Hacking Medical Physics" by Jonas Andersson and Gavin Poludniowski (GitRepo: [rvbCMTS/EMP-News](https://github.com/rvbCMTS/EMP-News.git)) in the Newsletter of the European Federation of Organisations for Medical Physics (EFOMP)^[[European Medical Physics News](https://www.efomp.org/index.php?r=fc&id=emp-news)].
 
 ### Ressources and Preparation
 In order to run this R-Markdown file you need to install RStudio/R ([RStudio Installer](https://www.rstudio.com/products/rstudio/download/)).  
@@ -48,18 +48,19 @@ If your data files reside in the working directory you can access them in a rela
 My preferred method to read Excel files is to use the `readxl`-package:
 
 ```{r reading_excel}
-read_xls(path = "reports/StaffDoses_1.xls")
+read_xls(path = "reports/StaffDoses_1.xls") %>% 
+  head(5)
 ```
 
-Note for R Newcomers: If you know the order of the arguments of a function you don't have to supply the argument names. If you open the help for the function `read_xls` by typing `?read_xls` in the console the description of the function includes the list of arguments:  
+_Note for R Newcomers:_ If you know the order of the arguments of a function you don't have to supply the argument names. If you open the help for the function `read_xls` by typing `?read_xls` in the console the description of the function includes the list of arguments:  
 <br>
-`read_xls(path, sheet = NULL, range = NULL, col_names = TRUE, col_types = NULL, na = "", trim_ws = TRUE, skip = 0, n_max = Inf, guess_max = min(1000, n_max), progress = readxl_progress(), .name_repair = "unique")`  
+`read_xls(path, sheet = NULL, range = NULL, col_names = TRUE, col_types = NULL, ...)`  
 <br>
-Since `path` is the first argument we could also read in the data by just writing `read_xls("reports/StaffDoses_1.xls")`. It is of course faster but on the other side makes the code harder to read if you don't know the function. The second thing to note is that there are a lot of other mandatory arguments but they all have default value. `col_names` is set to `TRUE` by default and this will cause the function to regard the first line in the excel file as column names and not as data.  
+Since `path` is the first argument we could also read in the data by just writing `read_xls("reports/StaffDoses_1.xls")`. It is of course faster to type but on the other side makes the code harder to read if you don't know the function. The second thing to note is that there are a lot of other mandatory arguments but they all have default value. For example `col_names` is set to `TRUE` by default and this will cause the function to regard the first line in the excel file as column names and not as data.  
 
 
 ### Fixing the column names
-Reading the Excel-File with the function `read_xls` from the package `readxl` gives a decent first result. A few things should be changed though in order to work with the data properly. The variable names (column titles) should follow the following convention^[[Social Science Computing Cooperative - Naming Variables](https://sscc.wisc.edu/sscc/pubs/DWE/book/4-2-naming-variables.html)]:  
+Reading the Excel-File with the function `read_xls` from the package `readxl` gives a decent first result. A few things should be changed though in order to work with the data properly. The variable names (column titles) should adhere to the following convention^[[Social Science Computing Cooperative - Naming Variables](https://sscc.wisc.edu/sscc/pubs/DWE/book/4-2-naming-variables.html)]:  
 
 > * Use only lower case.  
 > * Use the underscore, "_" as a replacment for spaces to separate words (called __snake coding__).
@@ -73,12 +74,11 @@ report_column_names <- read_xls(path = "reports/StaffDoses_1.xls",
   # to extract the column names we don't need any data therefore we read in n=0 lines
   colnames() %>% # extracting the column names as a vector
   tolower() %>% # convert upper case to lower case
-  # next we use the function "gsub":
-    # https://statisticsglobe.com/sub-gsub-r-function-example
-    # https://rstudio-pubs-static.s3.amazonaws.com/74603_76cd14d5983f47408fdf0b323550b846.html
-  gsub(pattern = " ", replacement = "_") %>% # replacing blanks with underscores
-  gsub(pattern = "[().]", replacement = "")  # deleting round brackets and dots; 
-  # the square-brackets function as list operator (all characters inside the square-brackets are identified)
+  gsub(pattern = " ", 
+       replacement = "_") %>% # replacing blanks with underscores
+  gsub(pattern = "[().]", 
+       replacement = "")  # deleting round brackets and dots; 
+    # the square-brackets function as list operator (all characters inside the square-brackets are identified)
 
 report_column_names
 ```
@@ -88,12 +88,12 @@ To read in all files from a folder we can make use of the function `read.files()
 
 ```{r read_all_files_from_folder}
 list.files(path = "reports") # get a list of all files from a folder
-all_reports_to_read_in <- list.files("reports") # read the list of files as a character vector
+all_reports_to_read_in <- list.files("reports") # read the list of files in a character vector
 
 # number of reports in the folder:
 length(all_reports_to_read_in)
 
-all_reports <- data.frame() # create an empty dataframe to hold all reports
+all_reports <- data.frame() # create an empty dataframe
 
 for (i in 1:length(all_reports_to_read_in)) { # a for-loop to read in all reports
   # reading in the i-th report into variable "rep"
@@ -109,7 +109,7 @@ Some data wrangling is needed to get the right data types:
 
 * All numerical variables should be defined as `double` or `integer`,  
 * Replace "," with "." in decimal numbers so R can recognise them as numbers ("English convention" for decimal numbers),  
-* Create new columns `hp10_status` and `hp007_status` before converting `hp10` and `hp007` to numeric in order not to lose information. Where `hp10` and `hp007` have the values B, NR or `NA` (B: Below Measurement Treshold; NR: Not returned; `NA`: Missing Value) we transfer those values to the new columns, if the values are numeric we set the value in the new columns to OK.  
+* Create a column `status` before converting `hp10` and `hp007` to numeric in order not to lose information. Where `hp10` and `hp007` have the values B, NR or `NA` (B: Below Measurement Treshold; NR: Not returned; `NA`: Missing Value) we transfer those values to the new column, if the values are numeric we set the value in the new column to OK.  
 
 To fix the dates I needed a work around because my machine `locale` is set to German but the dates in the reports have abbreviated month names in English. One way to read in the data correctly with little coding is to set the `locale` on the machine to English temporarily. For date-time conversion to and from character see [`strptime`](https://www.rdocumentation.org/packages/base/versions/3.6.2/topics/strptime).
 
@@ -124,12 +124,16 @@ Sys.setlocale("LC_TIME", locale = "English") # setting the machine locale for ti
 
 
 all_reports_fixed <- all_reports %>% 
-  # In first step we are replacing the colon with dots as comma sign 
+  # At first we replace the colon with dots as comma sign 
     # (needed to convert to numeric later on)
   # with the function mutate we create new columns based on existing ones 
     # or modify the content of existing columns
-  mutate(hp10 = str_replace_all(hp10, pattern = ",", replacement = ".")) %>% 
-  mutate(hp007 = str_replace_all(hp007, pattern = ",", replacement = ".")) %>% 
+  mutate(hp10 = str_replace_all(hp10, 
+                                pattern = ",", 
+                                replacement = ".")) %>% 
+  mutate(hp007 = str_replace_all(hp007, 
+                                 pattern = ",", 
+                                 replacement = ".")) %>% 
   # before we convert hp10 and hp007 to numeric we create a new column 
     # with non-numeric values of hp007 in order not to lose information
     # "B": Below Measurement Threshold, 
@@ -142,11 +146,15 @@ all_reports_fixed <- all_reports %>%
                             is.numeric(as.numeric(hp007)) ~ "OK")) %>% 
   # next we convert relevant columns to numeric 
     # (non-numeric values in hp10 and hp007 will be converted to NA automatically)
-  mutate(across(c(customer_uid, department_uid, person_uid, hp10, hp007, dosimeter_uid, report_uid), as.numeric)) %>% 
-  # to make sure we have no duplicated data 
-    # (same report read in more than once, identified by "report_uid") 
+  mutate(across(c(customer_uid, department_uid, person_uid, hp10, hp007, dosimeter_uid, report_uid), 
+                as.numeric)) %>% 
+  # next we convert the columns representing dates from "character" to "date"
+    # with format = "%d-%b-%Y" we tell R that the date is in the form "01-Dec-2021"
+  mutate(across(c(measurement_period_start:report_date), 
+                as.Date, 
+                format = "%d-%b-%Y")) %>% 
+  # to make sure we have no duplicated data (same report read in more than once) 
   # we eliminate duplicates with the function "distinct"... after grouping by person_uid and dosimeter_uid
-  mutate(across(c(measurement_period_start:report_date), as.Date, format = "%d-%b-%Y")) %>% 
   group_by(person_uid, dosimeter_uid) %>% 
   distinct(report_uid, .keep_all = TRUE) %>%
   ungroup()
@@ -199,7 +207,7 @@ all_reports_fixed <- all_reports %>%
 #--------
 
 
-## Reporting
+## Data Analysis
 
 ### Hp(10) - Summary Statistics by Department and Year
 ```{r hp10_summary_stat}
@@ -230,7 +238,7 @@ all_reports_fixed %>%
 ```{r nr_dose_readings}
 all_reports_fixed %>% 
   filter(user_type == "Staff") %>% # Filter for Staff readings
-  filter(! status %in% c("NR", "B")) %>% 
+  filter(! status %in% c("NR", "B")) %>% # filter out "NR" and "B"
   # grouping by dosimeter type to count both types separately
   group_by(dosimeter_type) %>% # to count dosimeter readings depending on type
   summarise(sum(!is.na(hp10)), length(!is.na(hp007))) %>% 
@@ -269,7 +277,7 @@ For this part I am drawing heavily on the following ressources:
 
 For a limited number of files like in the example above working with a database is not necessary but databases have several advantages^[[opentextbc.ca - Database Design](https://opentextbc.ca/dbdesign01/chapter/chapter-3-characteristics-and-benefits-of-a-database)]:  
 
->* Data Independance (your colleagues might want to access the data with Python or Matlab)  
+>* Data Independence (your colleagues might want to access the data with Python or Matlab)  
 >* Insulation between data and program  
 >* Support for multiple views of data (subsets of the data for different users)  
 >* Centralized control over data  
@@ -282,13 +290,13 @@ If you are new to SQL and you want to have a possibilty to "look into" a SQLite 
 
 ### Creating (or opening a connection to) a Database
 With the funciton `dbConnect` you create a database file or open a connection to an already existing database.  
-See [RSQLite Packages Vignette](https://rsqlite.r-dbi.org/reference/sqlite) for a list of optional arguments. The argument "flags" for example specifies the connection mode:  
+See [RSQLite Packages Vignette](https://rsqlite.r-dbi.org/reference/sqlite) for a list of optional arguments. The argument "flags" specifies the connection mode:  
 
-* SQLITE_RWC: open the database in read/write mode and create the database file if it does not already exist [STANDARD];  
+* SQLITE_RWC: open the database in read/write mode and create the database file if it does not already exist [DEFAULT];  
 * SQLITE_RW: open the database in read/write mode. Raise an error if the file does not already exist;  
 * SQLITE_RO: open the database in read only mode. Raise an error if the file does not already exist.  
 
-Since a database can hold many different kinds of data, not only personnel dosimeter readings, I will call my DB `medical_physics_db.sqlite`.
+Since a database can hold many different kinds of data, not only personnel dosimeter readings, I will call the database `medical_physics_db.sqlite`.
 ```{r creating_a_db}
 mp_db_conn <- dbConnect(drv = RSQLite::SQLite(), 
                         dbname = "medical_physics_db.sqlite")
@@ -298,49 +306,45 @@ mp_db_conn <- dbConnect(drv = RSQLite::SQLite(),
 
 
 ### Creating a Table for the Dosimeter Data
-In a database all data is stored in tables. For simplicity we will create a single table for the staff dosimeter readings and don't go into details of optimal table design like [functional dependencies](https://opentextbc.ca/dbdesign01/chapter/chapter-11-functional-dependencies/), [(primary/foreign) keys](https://www.sqlitetutorial.net/sqlite-primary-key/), other constraints like [UNIQUE](https://www.sqlitetutorial.net/sqlite-unique-constraint/), and [Normalization](https://en.wikipedia.org/wiki/Database_normalization). 
+In a database all data is stored in tables. For simplicity we will create a single table for the staff dosimeter readings and don't go into details of optimal table design like [functional dependencies](https://opentextbc.ca/dbdesign01/chapter/chapter-11-functional-dependencies/) and [Normalization](https://en.wikipedia.org/wiki/Database_normalization). 
 <br>
 
 #### Our First Table
-Before we create our final personnel dosimeter table we are going to have a look at some useful functions and runs a view tests.
+Before we create our final personnel dosimeter table we are going to have a look at some useful functions and run a view tests. As data we will use a subset (first 10 rows) of the cleaned data we already prepared before (section "Fix data types"). 
 
-To see the content of the database, i.e. which tables the database holds:
-```{r table_tests01, error=TRUE}
-# get a list of tables that already exist in the database
-dbListTables(conn = mp_db_conn)
-# since we started from scratch there are no tables 
-```
-
-The easiest way to create a table is by using the function `dbWriteTable` which takes a dataframe as argument and builds a table from it in the database. As dataframe we will use a subset (first 10 rows) of the cleaned data we already prepared before. 
-
-```{r table_test02, error=TRUE}
+```{r table_test_dataprep}
 # In SQL there are several possibilities to handle date, I prefer "text"; 
 # details see here: https://www.sqlite.org/lang_datefunc.html 
-# Therefore we first change the datatype of the date columns to text
+# Therefore we first change the data type of the date columns to text
 all_reports_fixed_dateastext <- all_reports_fixed %>% 
   mutate(across(c(measurement_period_start:report_date), as.character))
 
+# storing the first 10 rows in a seperate dataframe
 arf_rows01to10 <- all_reports_fixed_dateastext[1:10,]
-
-
-# If you try to create a table with a name that is already used by a table in the database 
-# you will get an error message. In order to be able to run this tutorial more than once we 
-# use the statement "DROP TABLE IF EXISTS"  to delete the table if it already exists.
-dbExecute(mp_db_conn, "DROP TABLE IF EXISTS test01")
-
-# creating a table from a dataframe
-dbWriteTable(conn = mp_db_conn,
-              name = "test01",
-              value  = arf_rows01to10)
-
-#check if it worked:
-dbListTables(conn = mp_db_conn)
-# Now you should get the output "test01"
 ```
 
-Now we send our first database queries to view the table:
+The easiest way to create a table is by using the function `dbWriteTable` which takes a dataframe as argument and writes the data into a table.  
 
-```{r table_test03, error=TRUE}
+```{r table_test02}
+# creating a table from a dataframe
+dbWriteTable(conn = mp_db_conn,
+             name = "test01",
+             value  = arf_rows01to10,
+             overwrite = TRUE)
+# I set the argument "overwrite" to TRUE in case you run this script more than once.
+  # If you write data to a table with dbWriteTable() there are three possibilites:
+  # 1) The table exists but you want to overwrite it: use the "overwrite = TRUE"
+  # 2) The table exists and you want to add data: use "append = TRUE"
+  # 3) The table does not exist: neither overwrite or append have to be used
+# If the table exists but you neither set append or overwrite to TRUE you will get an error message 
+
+#check if it worked by listing all tables of a database:
+dbListTables(conn = mp_db_conn)
+```
+
+Now we execute our first SQL queries with `dbGetQuery()` which returns the result of the query as dataframe.
+
+```{r table_test03}
 dbGetQuery(conn = mp_db_conn,
            statement = "SELECT * FROM test01") %>% # "SELECT *": to select all columns 
   tibble::tibble()
@@ -350,7 +354,7 @@ dbGetQuery(conn = mp_db_conn,
            statement = "SELECT name, person_uid, dosimeter_uid, report_uid, report_date FROM test01")
 
 # See the structure of the table by using built in pragma statements
-# https://www.sqlite.org/pragma.html) in a query
+  # (https://www.sqlite.org/pragma.html) in a query
 dbGetQuery(conn = mp_db_conn,
            statement = "pragma table_info('test01')")
 ```
@@ -359,7 +363,7 @@ As you can see from the output we don't have a primary key (all "pk" are set to 
 <br>
 Lets see what happens if we add some more data. This time we create a dataframe with rows 10 to 12 from `all_reports_fixed_dateastext`. Row 10 is already in the database and rows 11 and 12 are new data.
 
-```{r table_test04, error=TRUE}
+```{r table_test04}
 arf_rows10to12 <- all_reports_fixed_dateastext[10:12,]
 
 dbWriteTable(conn = mp_db_conn,
@@ -376,24 +380,31 @@ dbGetQuery(conn = mp_db_conn,
 ```
 
 Now we have 13 rows in the table which means that we created a duplicate by adding row 10 again (Entry for the dosimeter reading of Albus Dumbledore from December 2019).  
-<br>
-In order to avoid duplicates we need constraints like a `PRIMARY KEY` and/or a `UNIQUE` constraint.
-There are different strategies to implement constraints but for consistency reasons we will build the table analogous to the Python tutorial "by hand":  
-As `PRIMARY KEY` we add an `id`-column which we will fill with `AUTOINCREMENT` and set a `UNIQUE`-constraint with `report_uid, person_uid, dosimeter_placement`:
 
+
+#### Table with Constraints
+In order to avoid duplicates we need constraints like a `PRIMARY KEY` and/or a `UNIQUE` constraint.
+There are different strategies to implement constraints but for consistency reasons we will build our dosimeter readings table analogous to the Python tutorial "by hand" and call it `staffdose`.  
+As `PRIMARY KEY` we add an `id`-column which we will fill with `AUTOINCREMENT` and set a `UNIQUE`-constraint with `report_uid, person_uid, dosimeter_placement`.  
+<br>
+First we delete the table `test01` with the function `dbExecute`. This function executes data manipulation statements without returning a result set.
 ```{r creating_a_table, error=TRUE}
 # First we clean up the database by deleting the test01-table
-dbExecute(mp_db_conn, "DROP TABLE IF EXISTS test01")
-
-# check if database is empty
-dbListTables(mp_db_conn)
-
-# for reproducibility reasons we run the following command
 dbExecute(conn = mp_db_conn, 
-          "DROP TABLE IF EXISTS staffdose")
+          statement = "DROP TABLE IF EXISTS test01")
+
+# If you run this script a second time 
+# you will get an error message if you try to create a table that already exists.
+# To avoid this we will delete the table "staffdose" if it exists:
+dbExecute(conn = mp_db_conn, 
+          statement = "DROP TABLE IF EXISTS staffdose")
+
+# check content of the database
+dbListTables(mp_db_conn)
 
 # creating the table
 dbExecute(conn = mp_db_conn,
+          statement = 
             "CREATE TABLE staffdose (
                 id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
                 customer_name VARCHAR,
@@ -421,9 +432,9 @@ dbExecute(conn = mp_db_conn,
 # check if it worked
 dbListTables(mp_db_conn)
 # you can see that there are two tables:
-# - "staffdose" (the one we defined) and 
-# "sqlite_sequence" automatically created because we used "AUTOINCREMENT"
-# for info on "sqlite_sequence" see: https://www.sqlite.org/autoinc.html
+  # "staffdose" (the one we defined) and 
+  # "sqlite_sequence" automatically created because we used "AUTOINCREMENT"
+    # for info on "sqlite_sequence" see: https://www.sqlite.org/autoinc.html
 
 # check if "id" is the primary key of the table:
 dbGetQuery(mp_db_conn, 
@@ -432,7 +443,7 @@ dbGetQuery(mp_db_conn,
 # the id-column should have the values 1 for "notnull" and "pk" (primary key)
 ```
 
-Lets try again, add data and then add a dataset with some duplicates:
+Lets try again, add data and then try to add some more data including duplicates:
 
 ```{r table_add_data_duplicates, error=TRUE}
 # adding data
@@ -455,7 +466,10 @@ dbWriteTable(conn = mp_db_conn,
 Now you should get an error message like: 
 `UNIQUE constraint failed: staffdose.report_uid, staffdose.person_uid, staffdose.dosimeter_placement`.  
 <br>
-We have achieved our goal to prevent duplicates but unfortunately there is no easy way to just add unique data. To solve this problem we need a workaround. For details and source of the following approach see the forum thread "[RStudio Community - Creating and populating a SQLite database via R - How to ignore duplicate rows?](https://community.rstudio.com/t/creating-and-populating-a-sqlite-database-via-r-how-to-ignore-duplicate-rows/85470/3)".
+We have achieved our goal to prevent duplicates but unfortunately there is no easy way to just add unique data with any of the functions of the packages `DBI` or `RSQLite`. To solve this problem we need a workaround. 
+
+#### Adding only unique Data
+For details and source of the following approach see the forum thread "[RStudio Community - Creating and populating a SQLite database via R - How to ignore duplicate rows?](https://community.rstudio.com/t/creating-and-populating-a-sqlite-database-via-r-how-to-ignore-duplicate-rows/85470/3)".
 
 
 When we are finished we close the connection to the database:
