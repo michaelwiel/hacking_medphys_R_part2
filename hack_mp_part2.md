@@ -1,13 +1,14 @@
 ---
 title: "Hacking Medical Physics with R"
 author: "Michael Wieland"
-date: "2022-03-19"
+date: "2022-03-20"
 output: 
   html_document: 
     highlight: pygments
     theme: flatly
     toc: yes
     toc_float: yes
+    toc_depth: 3
     code_folding: show
     keep_md: yes
 ---
@@ -445,7 +446,7 @@ dbListTables(conn = mp_db_conn)
 ```
 
 ```
-## [1] "sqlite_sequence" "staffdose"       "stage"           "test01"
+## [1] "test01"
 ```
 
 Now we execute our first SQL queries with `dbGetQuery()` which returns the result of the query as dataframe.
@@ -606,7 +607,7 @@ dbListTables(mp_db_conn)
 ```
 
 ```
-## [1] "sqlite_sequence" "stage"
+## character(0)
 ```
 
 ```r
@@ -648,7 +649,7 @@ dbListTables(mp_db_conn)
 ```
 
 ```
-## [1] "sqlite_sequence" "staffdose"       "stage"
+## [1] "sqlite_sequence" "staffdose"
 ```
 
 ```r
@@ -857,6 +858,177 @@ dbAppendUniqueStaffDose(mp_db_conn, all_reports_fixed_dateastext)
 ```
 ## [1] 600
 ```
+
+### Data Analysis with SQL and R
+
+#### SQL: Hp(10) - Summary Statistics by Department and Year
+
+```r
+# Preparing the parameterized query
+# params:
+stat <- "OK"
+dos_type <- "Badge"
+year <- c(2020,2021)
+
+dbGetQuery(conn = mp_db_conn,
+           statement = 
+             "SELECT hp10, department, STRFTIME('%Y', measurement_period_end) AS report_year 
+                FROM staffdose WHERE hp10>=0 
+                AND status = ? AND dosimeter_type = ?
+                AND report_year BETWEEN ? AND ?",
+                params = c(stat, dos_type, year)) %>% 
+  ggplot(aes(x=report_year, y=hp10)) +
+  geom_boxplot() +
+  scale_y_continuous(limits = c(0,NA), 
+                      # set lower bound to 0 and let ggplot automatically set upper bound
+                     breaks = pretty(c(0, max(all_reports_fixed$hp10, na.rm = T)), n=10)) + 
+                      # getting 10 breaks in the y-axis from 0 to maximum value of hp10
+  labs(x = "", y = "Hp(10) [mSv]", # Axis names
+       title = "Summary Statistics for monthly Hp(10) values",
+       subtitle = "  by department and year",
+       caption = "Hacking Medical Physics. Data and Idea: J. Andersson and G. Poludniowski") +
+  # tweaking the plot style (optional) with the function "theme":
+  theme(panel.background = element_blank(),
+        panel.grid.major.y = element_line(linetype = 3, color = "gray"),
+        panel.spacing.x = unit(1, "cm"),
+        strip.text = element_text(face = "bold", color = "white"),
+        strip.background = element_rect(fill = "#7395D1")) +
+  facet_wrap(~ department) # split up the data into subplots for the different departments
+```
+
+![](hack_mp_part2_files/figure-html/sql_datana_sumstat-1.png)<!-- -->
+
+```r
+dbListFields(mp_db_conn, "staffdose")
+```
+
+```
+##  [1] "id"                       "customer_name"           
+##  [3] "customer_uid"             "department"              
+##  [5] "department_uid"           "name"                    
+##  [7] "person_uid"               "radiation_type"          
+##  [9] "hp10"                     "hp007"                   
+## [11] "user_type"                "dosimeter_type"          
+## [13] "dosimeter_placement"      "dosimeter_uid"           
+## [15] "measurement_period_start" "measurement_period_end"  
+## [17] "read_date"                "report_date"             
+## [19] "report_uid"               "status"
+```
+
+#### SQL: Number of Staff Dose Readings per Dosimeter Type
+
+```r
+# params:
+stat = "NR"
+
+# query and print table
+dbGetQuery(conn = mp_db_conn,
+           statement = 
+             "SELECT COUNT(hp10) AS hp10, COUNT(hp007) AS hp007, dosimeter_type  
+              FROM staffdose 
+              WHERE status != ?
+              GROUP BY dosimeter_type",
+              params = stat) %>% 
+  relocate(dosimeter_type) %>% # settingr dosimeter_type as first column
+  kable(align = "lcc", # kable is a function to produce tables
+        col.names = c("Dosimeter Type", "Hp(10)", "Hp(0.07)"), 
+        caption = "Number of dosimeter readings per dosimeter type") %>% 
+  kable_styling(bootstrap_options = c("striped", "hover")) # a function to further tweak tables
+```
+
+<table class="table table-striped table-hover" style="margin-left: auto; margin-right: auto;">
+<caption>Number of dosimeter readings per dosimeter type</caption>
+ <thead>
+  <tr>
+   <th style="text-align:left;"> Dosimeter Type </th>
+   <th style="text-align:center;"> Hp(10) </th>
+   <th style="text-align:center;"> Hp(0.07) </th>
+  </tr>
+ </thead>
+<tbody>
+  <tr>
+   <td style="text-align:left;"> Badge </td>
+   <td style="text-align:center;"> 403 </td>
+   <td style="text-align:center;"> 403 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Ring </td>
+   <td style="text-align:center;"> 0 </td>
+   <td style="text-align:center;"> 47 </td>
+  </tr>
+</tbody>
+</table>
+
+#### SQL: Individuals who did not return their Dosimeters
+
+```r
+# params:
+stat = "NR"
+
+# query and print table
+dbGetQuery(conn = mp_db_conn,
+           statement = 
+             "SELECT name, COUNT(status) as instances
+              FROM staffdose
+              WHERE status = ?
+              GROUP BY name
+              ORDER BY instances DESC",
+              params = stat) %>% 
+  kable(align = "lc", # kable is a function to produce tables
+        col.names = c("Name", "Instances"), 
+        caption = "Number of times a dosimeter was not returned per person") %>% 
+  kable_styling(bootstrap_options = c("striped", "hover")) # a function to further tweak tables
+```
+
+<table class="table table-striped table-hover" style="margin-left: auto; margin-right: auto;">
+<caption>Number of times a dosimeter was not returned per person</caption>
+ <thead>
+  <tr>
+   <th style="text-align:left;"> Name </th>
+   <th style="text-align:center;"> Instances </th>
+  </tr>
+ </thead>
+<tbody>
+  <tr>
+   <td style="text-align:left;"> Tom Marvolo Riddle </td>
+   <td style="text-align:center;"> 28 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Luna Lovegood </td>
+   <td style="text-align:center;"> 14 </td>
+  </tr>
+</tbody>
+</table>
+
+#### SQL: Total badge HP(10) Staff Dose Readings per Department
+
+```r
+#params
+stat = "OK"
+year = 2020
+dos_type = "Badge"
+
+#query and figure
+
+dbGetQuery(conn = mp_db_conn,
+           statement = 
+             "SELECT name, department, SUM(hp10) AS hp10_total, STRFTIME('%Y', measurement_period_end) AS report_year
+              FROM staffdose
+              WHERE hp10>0 AND report_year = ? AND status = ? AND dosimeter_type = ?
+              GROUP BY name",
+              params = c(year, stat, dos_type)) %>% 
+  ggplot(aes(x=reorder(name, desc(hp10_total)), y=hp10_total, fill = department)) +
+  geom_col() +
+  labs(x = "", y = "HP(10) [mSv]", fill = "",
+       title = "Total Dose per Person and Department for 2020",
+       subtitle = "   Type: Badge") +
+  coord_flip() +
+  theme(legend.position = "bottom",
+        panel.background = element_blank(),
+        panel.grid.major.y = element_line(linetype = 3, color = "gray"))
+```
+
+![](hack_mp_part2_files/figure-html/sql_total_dose_2020-1.png)<!-- -->
 
 
 When we are finished we close the connection to the database:
