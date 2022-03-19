@@ -365,7 +365,7 @@ div.tocify {
 <span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="co"># https://cran.r-project.org/web/packages/RSQLite/vignettes/RSQLite.html</span></span></code></pre></div>
 <div id="short-description" class="section level2">
 <h2>Short Description</h2>
-<p>This is a R Version for Part 2 of the Article Series “Hacking Medical Physics” by Jonas Andersson and Gavin Poludniowski i (GitRepo: <a href="https://github.com/rvbCMTS/EMP-News.git">rvbCMTS/EMP-News</a>) in the Newsletter of the European Federation of Organisations for Medical Physics (EFOMP)<a href="#fn1" class="footnote-ref" id="fnref1"><sup>1</sup></a>.</p>
+<p>This is a R Version for Part 2 of the Article Series “Hacking Medical Physics” by Jonas Andersson and Gavin Poludniowski (GitRepo: <a href="https://github.com/rvbCMTS/EMP-News.git">rvbCMTS/EMP-News</a>) in the Newsletter of the European Federation of Organisations for Medical Physics (EFOMP)<a href="#fn1" class="footnote-ref" id="fnref1"><sup>1</sup></a>.</p>
 <div id="ressources-and-preparation" class="section level3">
 <h3>Ressources and Preparation</h3>
 <p>In order to run this R-Markdown file you need to install RStudio/R (<a href="https://www.rstudio.com/products/rstudio/download/">RStudio Installer</a>).</p>
@@ -389,28 +389,24 @@ If you have not installed the packages loaded in the <code>setup code chunk</cod
 <div id="reading-an-excel-file" class="section level3">
 <h3>Reading an Excel File</h3>
 <p>My preferred method to read Excel files is to use the <code>readxl</code>-package:</p>
-<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">read_xls</span>(<span class="at">path =</span> <span class="st">&quot;reports/StaffDoses_1.xls&quot;</span>)</span></code></pre></div>
-<pre><code>## # A tibble: 22 x 18
-##    `Customer name` `Customer UID` Department `Department UID` Name  `Person UID`
-##    &lt;chr&gt;           &lt;chr&gt;          &lt;chr&gt;      &lt;chr&gt;            &lt;chr&gt; &lt;chr&gt;       
-##  1 Hogsmeade Roya~ 141            Nuclear M~ 1                Seve~ 12368       
-##  2 Hogsmeade Roya~ 141            Nuclear M~ 1                Harr~ 12369       
-##  3 Hogsmeade Roya~ 141            Nuclear M~ 1                Parv~ 12370       
-##  4 Hogsmeade Roya~ 141            Nuclear M~ 1                Parv~ 12370       
-##  5 Hogsmeade Roya~ 141            Nuclear M~ 1                Cedr~ 12371       
-##  6 Hogsmeade Roya~ 141            Nuclear M~ 1                Cedr~ 12371       
-##  7 Hogsmeade Roya~ 141            Nuclear M~ 1                Ron ~ 12372       
-##  8 Hogsmeade Roya~ 141            Nuclear M~ 1                Tom ~ 12373       
-##  9 Hogsmeade Roya~ 141            Diagnosti~ 2                Herm~ 12374       
-## 10 Hogsmeade Roya~ 141            Diagnosti~ 2                Albu~ 12375       
-## # ... with 12 more rows, and 12 more variables: Radiation type &lt;chr&gt;,
-## #   Hp(10) &lt;chr&gt;, Hp(0.07) &lt;chr&gt;, User type &lt;chr&gt;, Dosimeter type &lt;chr&gt;,
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">read_xls</span>(<span class="at">path =</span> <span class="st">&quot;reports/StaffDoses_1.xls&quot;</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">head</span>(<span class="dv">5</span>)</span></code></pre></div>
+<pre><code>## # A tibble: 5 x 18
+##   `Customer name`  `Customer UID` Department `Department UID` Name  `Person UID`
+##   &lt;chr&gt;            &lt;chr&gt;          &lt;chr&gt;      &lt;chr&gt;            &lt;chr&gt; &lt;chr&gt;       
+## 1 Hogsmeade Royal~ 141            Nuclear M~ 1                Seve~ 12368       
+## 2 Hogsmeade Royal~ 141            Nuclear M~ 1                Harr~ 12369       
+## 3 Hogsmeade Royal~ 141            Nuclear M~ 1                Parv~ 12370       
+## 4 Hogsmeade Royal~ 141            Nuclear M~ 1                Parv~ 12370       
+## 5 Hogsmeade Royal~ 141            Nuclear M~ 1                Cedr~ 12371       
+## # ... with 12 more variables: Radiation type &lt;chr&gt;, Hp(10) &lt;chr&gt;,
+## #   Hp(0.07) &lt;chr&gt;, User type &lt;chr&gt;, Dosimeter type &lt;chr&gt;,
 ## #   Dosimeter placement &lt;chr&gt;, Dosimeter UID &lt;chr&gt;,
 ## #   Measurement period (start) &lt;chr&gt;, Measurement period (end) &lt;chr&gt;,
 ## #   Read date &lt;chr&gt;, Report date &lt;chr&gt;, Report UID &lt;chr&gt;</code></pre>
-<p>Note for R Newcomers: If you know the order of the arguments of a function you don’t have to supply the argument names. If you open the help for the function <code>read_xls</code> by typing <code>?read_xls</code> in the console the description of the function includes the list of arguments:<br />
-<br> <code>read_xls(path, sheet = NULL, range = NULL, col_names = TRUE, col_types = NULL, na = &quot;&quot;, trim_ws = TRUE, skip = 0, n_max = Inf, guess_max = min(1000, n_max), progress = readxl_progress(), .name_repair = &quot;unique&quot;)</code><br />
-<br> Since <code>path</code> is the first argument we could also read in the data by just writing <code>read_xls(&quot;reports/StaffDoses_1.xls&quot;)</code>. It is of course faster but on the other side makes the code harder to read if you don’t know the function. The second thing to note is that there are a lot of other mandatory arguments but they all have default value. <code>col_names</code> is set to <code>TRUE</code> by default and this will cause the function to regard the first line in the excel file as column names and not as data.</p>
+<p><em>Note for R Newcomers:</em> If you know the order of the arguments of a function you don’t have to supply the argument names. If you open the help for the function <code>read_xls</code> by typing <code>?read_xls</code> in the console the description of the function includes the list of arguments:<br />
+<br> <code>read_xls(path, sheet = NULL, range = NULL, col_names = TRUE, col_types = NULL, ...)</code><br />
+<br> Since <code>path</code> is the first argument we could also read in the data by just writing <code>read_xls(&quot;reports/StaffDoses_1.xls&quot;)</code>. It is of course faster to type but on the other side makes the code harder to read if you don’t know the function. The second thing to note is that there are a lot of other mandatory arguments but they all have default value. For example <code>col_names</code> is set to <code>TRUE</code> by default and this will cause the function to regard the first line in the excel file as column names and not as data.</p>
 </div>
 <div id="fixing-the-column-names" class="section level3">
 <h3>Fixing the column names</h3>
@@ -429,11 +425,13 @@ If you have not installed the packages loaded in the <code>setup code chunk</cod
 <span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  <span class="co"># to extract the column names we don&#39;t need any data therefore we read in n=0 lines</span></span>
 <span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">colnames</span>() <span class="sc">%&gt;%</span> <span class="co"># extracting the column names as a vector</span></span>
 <span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tolower</span>() <span class="sc">%&gt;%</span> <span class="co"># convert upper case to lower case</span></span>
-<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">gsub</span>(<span class="at">pattern =</span> <span class="st">&quot; &quot;</span>, <span class="at">replacement =</span> <span class="st">&quot;_&quot;</span>) <span class="sc">%&gt;%</span> <span class="co"># replacing blanks with underscores</span></span>
-<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">gsub</span>(<span class="at">pattern =</span> <span class="st">&quot;[().]&quot;</span>, <span class="at">replacement =</span> <span class="st">&quot;&quot;</span>)  <span class="co"># deleting round brackets and dots; </span></span>
-<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>    <span class="co"># the square-brackets function as list operator (all characters inside the square-brackets are identified)</span></span>
-<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>report_column_names</span></code></pre></div>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">gsub</span>(<span class="at">pattern =</span> <span class="st">&quot; &quot;</span>, </span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>       <span class="at">replacement =</span> <span class="st">&quot;_&quot;</span>) <span class="sc">%&gt;%</span> <span class="co"># replacing blanks with underscores</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">gsub</span>(<span class="at">pattern =</span> <span class="st">&quot;[().]&quot;</span>, </span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>       <span class="at">replacement =</span> <span class="st">&quot;&quot;</span>)  <span class="co"># deleting round brackets and dots; </span></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>    <span class="co"># the square-brackets function as list operator (all characters inside the square-brackets are identified)</span></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>report_column_names</span></code></pre></div>
 <pre><code>##  [1] &quot;customer_name&quot;            &quot;customer_uid&quot;            
 ##  [3] &quot;department&quot;               &quot;department_uid&quot;          
 ##  [5] &quot;name&quot;                     &quot;person_uid&quot;              
@@ -493,38 +491,42 @@ If you have not installed the packages loaded in the <code>setup code chunk</cod
 <span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>all_reports_fixed <span class="ot">&lt;-</span> all_reports <span class="sc">%&gt;%</span> </span>
-<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>  <span class="co"># In first step we are replacing the colon with dots as comma sign </span></span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>  <span class="co"># At first we replace the colon with dots as comma sign </span></span>
 <span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>    <span class="co"># (needed to convert to numeric later on)</span></span>
 <span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a>  <span class="co"># with the function mutate we create new columns based on existing ones </span></span>
 <span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a>    <span class="co"># or modify the content of existing columns</span></span>
-<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">hp10 =</span> <span class="fu">str_replace_all</span>(hp10, <span class="at">pattern =</span> <span class="st">&quot;,&quot;</span>, <span class="at">replacement =</span> <span class="st">&quot;.&quot;</span>)) <span class="sc">%&gt;%</span> </span>
-<span id="cb13-11"><a href="#cb13-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">hp007 =</span> <span class="fu">str_replace_all</span>(hp007, <span class="at">pattern =</span> <span class="st">&quot;,&quot;</span>, <span class="at">replacement =</span> <span class="st">&quot;.&quot;</span>)) <span class="sc">%&gt;%</span> </span>
-<span id="cb13-12"><a href="#cb13-12" aria-hidden="true" tabindex="-1"></a>  <span class="co"># before we convert hp10 and hp007 to numeric we create a new column </span></span>
-<span id="cb13-13"><a href="#cb13-13" aria-hidden="true" tabindex="-1"></a>    <span class="co"># with non-numeric values of hp007 in order not to lose information</span></span>
-<span id="cb13-14"><a href="#cb13-14" aria-hidden="true" tabindex="-1"></a>    <span class="co"># &quot;B&quot;: Below Measurement Threshold, </span></span>
-<span id="cb13-15"><a href="#cb13-15" aria-hidden="true" tabindex="-1"></a>    <span class="co"># &quot;NR&quot;: Not returned, </span></span>
-<span id="cb13-16"><a href="#cb13-16" aria-hidden="true" tabindex="-1"></a>    <span class="co"># &quot;NA&quot;: missing value; </span></span>
-<span id="cb13-17"><a href="#cb13-17" aria-hidden="true" tabindex="-1"></a>    <span class="co"># &quot;OK&quot; where a numeric value exists for the variables hp007)</span></span>
-<span id="cb13-18"><a href="#cb13-18" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">status =</span> <span class="fu">case_when</span>(hp007 <span class="sc">==</span> <span class="st">&quot;B&quot;</span> <span class="sc">~</span> <span class="st">&quot;B&quot;</span>,</span>
-<span id="cb13-19"><a href="#cb13-19" aria-hidden="true" tabindex="-1"></a>                            hp007 <span class="sc">==</span> <span class="st">&quot;NR&quot;</span> <span class="sc">~</span> <span class="st">&quot;NR&quot;</span>,</span>
-<span id="cb13-20"><a href="#cb13-20" aria-hidden="true" tabindex="-1"></a>                            <span class="fu">is.na</span>(hp007) <span class="sc">~</span> <span class="cn">NA_character_</span>,</span>
-<span id="cb13-21"><a href="#cb13-21" aria-hidden="true" tabindex="-1"></a>                            <span class="fu">is.numeric</span>(<span class="fu">as.numeric</span>(hp007)) <span class="sc">~</span> <span class="st">&quot;OK&quot;</span>)) <span class="sc">%&gt;%</span> </span>
-<span id="cb13-22"><a href="#cb13-22" aria-hidden="true" tabindex="-1"></a>  <span class="co"># next we convert relevant columns to numeric </span></span>
-<span id="cb13-23"><a href="#cb13-23" aria-hidden="true" tabindex="-1"></a>    <span class="co"># (non-numeric values in hp10 and hp007 will be converted to NA automatically)</span></span>
-<span id="cb13-24"><a href="#cb13-24" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="fu">across</span>(<span class="fu">c</span>(customer_uid, department_uid, person_uid, hp10, hp007, dosimeter_uid, report_uid), </span>
-<span id="cb13-25"><a href="#cb13-25" aria-hidden="true" tabindex="-1"></a>                as.numeric)) <span class="sc">%&gt;%</span> </span>
-<span id="cb13-26"><a href="#cb13-26" aria-hidden="true" tabindex="-1"></a>  <span class="co"># next we convert the columns representing dates from &quot;character&quot; to &quot;date&quot;</span></span>
-<span id="cb13-27"><a href="#cb13-27" aria-hidden="true" tabindex="-1"></a>    <span class="co"># with format = &quot;%d-%b-%Y&quot; we tell R that the date is in the form &quot;01-Dec-2021&quot;</span></span>
-<span id="cb13-28"><a href="#cb13-28" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="fu">across</span>(<span class="fu">c</span>(measurement_period_start<span class="sc">:</span>report_date), </span>
-<span id="cb13-29"><a href="#cb13-29" aria-hidden="true" tabindex="-1"></a>                as.Date, </span>
-<span id="cb13-30"><a href="#cb13-30" aria-hidden="true" tabindex="-1"></a>                <span class="at">format =</span> <span class="st">&quot;%d-%b-%Y&quot;</span>)) <span class="sc">%&gt;%</span> </span>
-<span id="cb13-31"><a href="#cb13-31" aria-hidden="true" tabindex="-1"></a>  <span class="co"># to make sure we have no duplicated data (same report read in more than once) </span></span>
-<span id="cb13-32"><a href="#cb13-32" aria-hidden="true" tabindex="-1"></a>  <span class="co"># we eliminate duplicates with the function &quot;distinct&quot;... after grouping by person_uid and dosimeter_uid</span></span>
-<span id="cb13-33"><a href="#cb13-33" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(person_uid, dosimeter_uid) <span class="sc">%&gt;%</span> </span>
-<span id="cb13-34"><a href="#cb13-34" aria-hidden="true" tabindex="-1"></a>  <span class="fu">distinct</span>(report_uid, <span class="at">.keep_all =</span> <span class="cn">TRUE</span>) <span class="sc">%&gt;%</span></span>
-<span id="cb13-35"><a href="#cb13-35" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ungroup</span>()</span>
-<span id="cb13-36"><a href="#cb13-36" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-37"><a href="#cb13-37" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(all_reports_fixed)</span></code></pre></div>
+<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">hp10 =</span> <span class="fu">str_replace_all</span>(hp10, </span>
+<span id="cb13-11"><a href="#cb13-11" aria-hidden="true" tabindex="-1"></a>                                <span class="at">pattern =</span> <span class="st">&quot;,&quot;</span>, </span>
+<span id="cb13-12"><a href="#cb13-12" aria-hidden="true" tabindex="-1"></a>                                <span class="at">replacement =</span> <span class="st">&quot;.&quot;</span>)) <span class="sc">%&gt;%</span> </span>
+<span id="cb13-13"><a href="#cb13-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">hp007 =</span> <span class="fu">str_replace_all</span>(hp007, </span>
+<span id="cb13-14"><a href="#cb13-14" aria-hidden="true" tabindex="-1"></a>                                 <span class="at">pattern =</span> <span class="st">&quot;,&quot;</span>, </span>
+<span id="cb13-15"><a href="#cb13-15" aria-hidden="true" tabindex="-1"></a>                                 <span class="at">replacement =</span> <span class="st">&quot;.&quot;</span>)) <span class="sc">%&gt;%</span> </span>
+<span id="cb13-16"><a href="#cb13-16" aria-hidden="true" tabindex="-1"></a>  <span class="co"># before we convert hp10 and hp007 to numeric we create a new column </span></span>
+<span id="cb13-17"><a href="#cb13-17" aria-hidden="true" tabindex="-1"></a>    <span class="co"># with non-numeric values of hp007 in order not to lose information</span></span>
+<span id="cb13-18"><a href="#cb13-18" aria-hidden="true" tabindex="-1"></a>    <span class="co"># &quot;B&quot;: Below Measurement Threshold, </span></span>
+<span id="cb13-19"><a href="#cb13-19" aria-hidden="true" tabindex="-1"></a>    <span class="co"># &quot;NR&quot;: Not returned, </span></span>
+<span id="cb13-20"><a href="#cb13-20" aria-hidden="true" tabindex="-1"></a>    <span class="co"># &quot;NA&quot;: missing value; </span></span>
+<span id="cb13-21"><a href="#cb13-21" aria-hidden="true" tabindex="-1"></a>    <span class="co"># &quot;OK&quot; where a numeric value exists for the variables hp007)</span></span>
+<span id="cb13-22"><a href="#cb13-22" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">status =</span> <span class="fu">case_when</span>(hp007 <span class="sc">==</span> <span class="st">&quot;B&quot;</span> <span class="sc">~</span> <span class="st">&quot;B&quot;</span>,</span>
+<span id="cb13-23"><a href="#cb13-23" aria-hidden="true" tabindex="-1"></a>                            hp007 <span class="sc">==</span> <span class="st">&quot;NR&quot;</span> <span class="sc">~</span> <span class="st">&quot;NR&quot;</span>,</span>
+<span id="cb13-24"><a href="#cb13-24" aria-hidden="true" tabindex="-1"></a>                            <span class="fu">is.na</span>(hp007) <span class="sc">~</span> <span class="cn">NA_character_</span>,</span>
+<span id="cb13-25"><a href="#cb13-25" aria-hidden="true" tabindex="-1"></a>                            <span class="fu">is.numeric</span>(<span class="fu">as.numeric</span>(hp007)) <span class="sc">~</span> <span class="st">&quot;OK&quot;</span>)) <span class="sc">%&gt;%</span> </span>
+<span id="cb13-26"><a href="#cb13-26" aria-hidden="true" tabindex="-1"></a>  <span class="co"># next we convert relevant columns to numeric </span></span>
+<span id="cb13-27"><a href="#cb13-27" aria-hidden="true" tabindex="-1"></a>    <span class="co"># (non-numeric values in hp10 and hp007 will be converted to NA automatically)</span></span>
+<span id="cb13-28"><a href="#cb13-28" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="fu">across</span>(<span class="fu">c</span>(customer_uid, department_uid, person_uid, hp10, hp007, dosimeter_uid, report_uid), </span>
+<span id="cb13-29"><a href="#cb13-29" aria-hidden="true" tabindex="-1"></a>                as.numeric)) <span class="sc">%&gt;%</span> </span>
+<span id="cb13-30"><a href="#cb13-30" aria-hidden="true" tabindex="-1"></a>  <span class="co"># next we convert the columns representing dates from &quot;character&quot; to &quot;date&quot;</span></span>
+<span id="cb13-31"><a href="#cb13-31" aria-hidden="true" tabindex="-1"></a>    <span class="co"># with format = &quot;%d-%b-%Y&quot; we tell R that the date is in the form &quot;01-Dec-2021&quot;</span></span>
+<span id="cb13-32"><a href="#cb13-32" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="fu">across</span>(<span class="fu">c</span>(measurement_period_start<span class="sc">:</span>report_date), </span>
+<span id="cb13-33"><a href="#cb13-33" aria-hidden="true" tabindex="-1"></a>                as.Date, </span>
+<span id="cb13-34"><a href="#cb13-34" aria-hidden="true" tabindex="-1"></a>                <span class="at">format =</span> <span class="st">&quot;%d-%b-%Y&quot;</span>)) <span class="sc">%&gt;%</span> </span>
+<span id="cb13-35"><a href="#cb13-35" aria-hidden="true" tabindex="-1"></a>  <span class="co"># to make sure we have no duplicated data (same report read in more than once) </span></span>
+<span id="cb13-36"><a href="#cb13-36" aria-hidden="true" tabindex="-1"></a>  <span class="co"># we eliminate duplicates with the function &quot;distinct&quot;... after grouping by person_uid and dosimeter_uid</span></span>
+<span id="cb13-37"><a href="#cb13-37" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(person_uid, dosimeter_uid) <span class="sc">%&gt;%</span> </span>
+<span id="cb13-38"><a href="#cb13-38" aria-hidden="true" tabindex="-1"></a>  <span class="fu">distinct</span>(report_uid, <span class="at">.keep_all =</span> <span class="cn">TRUE</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb13-39"><a href="#cb13-39" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ungroup</span>()</span>
+<span id="cb13-40"><a href="#cb13-40" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-41"><a href="#cb13-41" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(all_reports_fixed)</span></code></pre></div>
 <pre><code>## # A tibble: 6 x 19
 ##   customer_name     customer_uid department   department_uid name     person_uid
 ##   &lt;chr&gt;                    &lt;dbl&gt; &lt;chr&gt;                 &lt;dbl&gt; &lt;chr&gt;         &lt;dbl&gt;
@@ -708,20 +710,20 @@ Tom Marvolo Riddle
 <li>Security constraints</li>
 </ul>
 </blockquote>
-<p>If you are new to SQL and you want to have a possibilty to “look into” a SQLite database check out the leightweight and open source GUI <a href="https://sqlitestudio.pl/">SQLiteStudio</a>.</p>
+<p>If you are new to SQL and you want to have a possibilty to “look into” a SQLite database check out the leightweight and open source GUI <a href="https://sqlitestudio.pl/">SQLiteStudio</a>. <br> To connect R to a database management system (DBMS) we need the <a href="https://dbi.r-dbi.org/"><code>DBI</code>-package</a> and <a href="https://rsqlite.r-dbi.org/"><code>RSQLite</code></a>. If you not have done it already go ahead and install the <code>RSQLite</code>-package which will automatically install the <code>DBI</code>-package. For detailed information on the <code>DBI</code> functions we will use see the <a href="https://dbi.r-dbi.org/reference/">DBI - Reference</a>.</p>
 </div>
 <div id="creating-or-opening-a-connection-to-a-database" class="section level3">
 <h3>Creating (or opening a connection to) a Database</h3>
 <p>With the funciton <code>dbConnect</code> you create a database file or open a connection to an already existing database.<br />
-See <a href="https://rsqlite.r-dbi.org/reference/sqlite">RSQLite Packages Vignette</a> for a list of optional arguments. The argument “flags” for example specifies the connection mode:</p>
+See <a href="https://rsqlite.r-dbi.org/reference/sqlite">RSQLite Packages Vignette</a> for a list of optional arguments. The argument “flags” specifies the connection mode:</p>
 <ul>
-<li>SQLITE_RWC: open the database in read/write mode and create the database file if it does not already exist [STANDARD];<br />
+<li>SQLITE_RWC: open the database in read/write mode and create the database file if it does not already exist [DEFAULT];<br />
 </li>
 <li>SQLITE_RW: open the database in read/write mode. Raise an error if the file does not already exist;<br />
 </li>
 <li>SQLITE_RO: open the database in read only mode. Raise an error if the file does not already exist.</li>
 </ul>
-<p>Since a database can hold many different kinds of data, not only personnel dosimeter readings, I will call my DB <code>medical_physics_db.sqlite</code>.</p>
+<p>Since a database can hold many different kinds of data, not only personnel dosimeter readings, I will call the database <code>medical_physics_db.sqlite</code>.</p>
 <div class="sourceCode" id="cb20"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>mp_db_conn <span class="ot">&lt;-</span> <span class="fu">dbConnect</span>(<span class="at">drv =</span> RSQLite<span class="sc">::</span><span class="fu">SQLite</span>(), </span>
 <span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>                        <span class="at">dbname =</span> <span class="st">&quot;medical_physics_db.sqlite&quot;</span>)</span>
 <span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a><span class="co"># opening the connection and </span></span>
@@ -739,7 +741,8 @@ See <a href="https://rsqlite.r-dbi.org/reference/sqlite">RSQLite Packages Vignet
 <span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a>all_reports_fixed_dateastext <span class="ot">&lt;-</span> all_reports_fixed <span class="sc">%&gt;%</span> </span>
 <span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="fu">across</span>(<span class="fu">c</span>(measurement_period_start<span class="sc">:</span>report_date), as.character))</span>
 <span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb21-7"><a href="#cb21-7" aria-hidden="true" tabindex="-1"></a>arf_rows01to10 <span class="ot">&lt;-</span> all_reports_fixed_dateastext[<span class="dv">1</span><span class="sc">:</span><span class="dv">10</span>,]</span></code></pre></div>
+<span id="cb21-7"><a href="#cb21-7" aria-hidden="true" tabindex="-1"></a><span class="co"># storing the first 10 rows in a seperate dataframe</span></span>
+<span id="cb21-8"><a href="#cb21-8" aria-hidden="true" tabindex="-1"></a>arf_rows01to10 <span class="ot">&lt;-</span> all_reports_fixed_dateastext[<span class="dv">1</span><span class="sc">:</span><span class="dv">10</span>,]</span></code></pre></div>
 <p>The easiest way to create a table is by using the function <code>dbWriteTable</code> which takes a dataframe as argument and writes the data into a table.</p>
 <div class="sourceCode" id="cb22"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="co"># creating a table from a dataframe</span></span>
 <span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a><span class="fu">dbWriteTable</span>(<span class="at">conn =</span> mp_db_conn,</span>
@@ -747,20 +750,19 @@ See <a href="https://rsqlite.r-dbi.org/reference/sqlite">RSQLite Packages Vignet
 <span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a>             <span class="at">value  =</span> arf_rows01to10,</span>
 <span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a>             <span class="at">overwrite =</span> <span class="cn">TRUE</span>)</span>
 <span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a><span class="co"># I set the argument &quot;overwrite&quot; to TRUE in case you run this script more than once.</span></span>
-<span id="cb22-7"><a href="#cb22-7" aria-hidden="true" tabindex="-1"></a>  <span class="co"># If you write data to a table with dbWriteTable() there are three options:</span></span>
+<span id="cb22-7"><a href="#cb22-7" aria-hidden="true" tabindex="-1"></a>  <span class="co"># If you write data to a table with dbWriteTable() there are three possibilites:</span></span>
 <span id="cb22-8"><a href="#cb22-8" aria-hidden="true" tabindex="-1"></a>  <span class="co"># 1) The table exists but you want to overwrite it: use the &quot;overwrite = TRUE&quot;</span></span>
 <span id="cb22-9"><a href="#cb22-9" aria-hidden="true" tabindex="-1"></a>  <span class="co"># 2) The table exists and you want to add data: use &quot;append = TRUE&quot;</span></span>
 <span id="cb22-10"><a href="#cb22-10" aria-hidden="true" tabindex="-1"></a>  <span class="co"># 3) The table does not exist: neither overwrite or append have to be used</span></span>
 <span id="cb22-11"><a href="#cb22-11" aria-hidden="true" tabindex="-1"></a><span class="co"># If the table exists but you neither set append or overwrite to TRUE you will get an error message </span></span>
 <span id="cb22-12"><a href="#cb22-12" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb22-13"><a href="#cb22-13" aria-hidden="true" tabindex="-1"></a><span class="co">#check if it worked:</span></span>
+<span id="cb22-13"><a href="#cb22-13" aria-hidden="true" tabindex="-1"></a><span class="co">#check if it worked by listing all tables of a database:</span></span>
 <span id="cb22-14"><a href="#cb22-14" aria-hidden="true" tabindex="-1"></a><span class="fu">dbListTables</span>(<span class="at">conn =</span> mp_db_conn)</span></code></pre></div>
-<pre><code>## [1] &quot;sqlite_sequence&quot; &quot;staffdose&quot;       &quot;test01&quot;</code></pre>
-<div class="sourceCode" id="cb24"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Now you should get the output &quot;test01&quot;</span></span></code></pre></div>
+<pre><code>## [1] &quot;sqlite_sequence&quot; &quot;staffdose&quot;       &quot;stage&quot;           &quot;test01&quot;</code></pre>
 <p>Now we execute our first SQL queries with <code>dbGetQuery()</code> which returns the result of the query as dataframe.</p>
-<div class="sourceCode" id="cb25"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="fu">dbGetQuery</span>(<span class="at">conn =</span> mp_db_conn,</span>
-<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a>           <span class="at">statement =</span> <span class="st">&quot;SELECT * FROM test01&quot;</span>) <span class="sc">%&gt;%</span> <span class="co"># &quot;SELECT *&quot;: to select all columns </span></span>
-<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a>  tibble<span class="sc">::</span><span class="fu">tibble</span>()</span></code></pre></div>
+<div class="sourceCode" id="cb24"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="fu">dbGetQuery</span>(<span class="at">conn =</span> mp_db_conn,</span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>           <span class="at">statement =</span> <span class="st">&quot;SELECT * FROM test01&quot;</span>) <span class="sc">%&gt;%</span> <span class="co"># &quot;SELECT *&quot;: to select all columns </span></span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a>  tibble<span class="sc">::</span><span class="fu">tibble</span>()</span></code></pre></div>
 <pre><code>## # A tibble: 10 x 19
 ##    customer_name    customer_uid department    department_uid name    person_uid
 ##    &lt;chr&gt;                   &lt;dbl&gt; &lt;chr&gt;                  &lt;dbl&gt; &lt;chr&gt;        &lt;dbl&gt;
@@ -779,9 +781,9 @@ See <a href="https://rsqlite.r-dbi.org/reference/sqlite">RSQLite Packages Vignet
 ## #   dosimeter_uid &lt;dbl&gt;, measurement_period_start &lt;chr&gt;,
 ## #   measurement_period_end &lt;chr&gt;, read_date &lt;chr&gt;, report_date &lt;chr&gt;,
 ## #   report_uid &lt;dbl&gt;, status &lt;chr&gt;</code></pre>
-<div class="sourceCode" id="cb27"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Lets select a subset of columns</span></span>
-<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a><span class="fu">dbGetQuery</span>(<span class="at">conn =</span> mp_db_conn,</span>
-<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a>           <span class="at">statement =</span> <span class="st">&quot;SELECT name, person_uid, dosimeter_uid, report_uid, report_date FROM test01&quot;</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb26"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Lets select a subset of columns</span></span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a><span class="fu">dbGetQuery</span>(<span class="at">conn =</span> mp_db_conn,</span>
+<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a>           <span class="at">statement =</span> <span class="st">&quot;SELECT name, person_uid, dosimeter_uid, report_uid, report_date FROM test01&quot;</span>)</span></code></pre></div>
 <pre><code>##                  name person_uid dosimeter_uid report_uid report_date
 ## 1       Severus Snape      12368         90072       1137  2019-12-28
 ## 2        Harry Potter      12369         90073       1137  2019-12-28
@@ -793,10 +795,10 @@ See <a href="https://rsqlite.r-dbi.org/reference/sqlite">RSQLite Packages Vignet
 ## 8  Tom Marvolo Riddle      12373         90080       1137  2019-12-28
 ## 9   Hermione Grainger      12374         90081       1137  2019-12-28
 ## 10   Albus Dumbledore      12375         90082       1137  2019-12-28</code></pre>
-<div class="sourceCode" id="cb29"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="co"># See the structure of the table by using built in pragma statements</span></span>
-<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a>  <span class="co"># (https://www.sqlite.org/pragma.html) in a query</span></span>
-<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a><span class="fu">dbGetQuery</span>(<span class="at">conn =</span> mp_db_conn,</span>
-<span id="cb29-4"><a href="#cb29-4" aria-hidden="true" tabindex="-1"></a>           <span class="at">statement =</span> <span class="st">&quot;pragma table_info(&#39;test01&#39;)&quot;</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb28"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="co"># See the structure of the table by using built in pragma statements</span></span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a>  <span class="co"># (https://www.sqlite.org/pragma.html) in a query</span></span>
+<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a><span class="fu">dbGetQuery</span>(<span class="at">conn =</span> mp_db_conn,</span>
+<span id="cb28-4"><a href="#cb28-4" aria-hidden="true" tabindex="-1"></a>           <span class="at">statement =</span> <span class="st">&quot;pragma table_info(&#39;test01&#39;)&quot;</span>)</span></code></pre></div>
 <pre><code>##    cid                     name type notnull dflt_value pk
 ## 1    0            customer_name TEXT       0         NA  0
 ## 2    1             customer_uid REAL       0         NA  0
@@ -819,19 +821,19 @@ See <a href="https://rsqlite.r-dbi.org/reference/sqlite">RSQLite Packages Vignet
 ## 19  18                   status TEXT       0         NA  0</code></pre>
 <p>As you can see from the output we don’t have a primary key (all “pk” are set to 0) and neither have we set a UNIQUE constraint.<br />
 <br> Lets see what happens if we add some more data. This time we create a dataframe with rows 10 to 12 from <code>all_reports_fixed_dateastext</code>. Row 10 is already in the database and rows 11 and 12 are new data.</p>
-<div class="sourceCode" id="cb31"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a>arf_rows10to12 <span class="ot">&lt;-</span> all_reports_fixed_dateastext[<span class="dv">10</span><span class="sc">:</span><span class="dv">12</span>,]</span>
-<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a><span class="fu">dbWriteTable</span>(<span class="at">conn =</span> mp_db_conn,</span>
-<span id="cb31-4"><a href="#cb31-4" aria-hidden="true" tabindex="-1"></a>             <span class="at">name =</span> <span class="st">&quot;test01&quot;</span>,</span>
-<span id="cb31-5"><a href="#cb31-5" aria-hidden="true" tabindex="-1"></a>             <span class="at">value =</span> arf_rows10to12,</span>
-<span id="cb31-6"><a href="#cb31-6" aria-hidden="true" tabindex="-1"></a>             <span class="at">append =</span> <span class="cn">TRUE</span>) </span>
-<span id="cb31-7"><a href="#cb31-7" aria-hidden="true" tabindex="-1"></a><span class="co"># if there is already a table with the given name we have to </span></span>
-<span id="cb31-8"><a href="#cb31-8" aria-hidden="true" tabindex="-1"></a><span class="co"># set one of the arguments &quot;append&quot; or &quot;overwrite&quot; to true, </span></span>
-<span id="cb31-9"><a href="#cb31-9" aria-hidden="true" tabindex="-1"></a><span class="co"># otherwise we will get an error message</span></span>
-<span id="cb31-10"><a href="#cb31-10" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb31-11"><a href="#cb31-11" aria-hidden="true" tabindex="-1"></a><span class="fu">dbGetQuery</span>(<span class="at">conn =</span> mp_db_conn,</span>
-<span id="cb31-12"><a href="#cb31-12" aria-hidden="true" tabindex="-1"></a>           <span class="at">statement =</span> <span class="st">&quot;SELECT name, person_uid, dosimeter_uid, report_uid report_date FROM test01&quot;</span>) <span class="sc">%&gt;%</span> </span>
-<span id="cb31-13"><a href="#cb31-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tibble</span>()</span></code></pre></div>
+<div class="sourceCode" id="cb30"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a>arf_rows10to12 <span class="ot">&lt;-</span> all_reports_fixed_dateastext[<span class="dv">10</span><span class="sc">:</span><span class="dv">12</span>,]</span>
+<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb30-3"><a href="#cb30-3" aria-hidden="true" tabindex="-1"></a><span class="fu">dbWriteTable</span>(<span class="at">conn =</span> mp_db_conn,</span>
+<span id="cb30-4"><a href="#cb30-4" aria-hidden="true" tabindex="-1"></a>             <span class="at">name =</span> <span class="st">&quot;test01&quot;</span>,</span>
+<span id="cb30-5"><a href="#cb30-5" aria-hidden="true" tabindex="-1"></a>             <span class="at">value =</span> arf_rows10to12,</span>
+<span id="cb30-6"><a href="#cb30-6" aria-hidden="true" tabindex="-1"></a>             <span class="at">append =</span> <span class="cn">TRUE</span>) </span>
+<span id="cb30-7"><a href="#cb30-7" aria-hidden="true" tabindex="-1"></a><span class="co"># if there is already a table with the given name we have to </span></span>
+<span id="cb30-8"><a href="#cb30-8" aria-hidden="true" tabindex="-1"></a><span class="co"># set one of the arguments &quot;append&quot; or &quot;overwrite&quot; to true, </span></span>
+<span id="cb30-9"><a href="#cb30-9" aria-hidden="true" tabindex="-1"></a><span class="co"># otherwise we will get an error message</span></span>
+<span id="cb30-10"><a href="#cb30-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb30-11"><a href="#cb30-11" aria-hidden="true" tabindex="-1"></a><span class="fu">dbGetQuery</span>(<span class="at">conn =</span> mp_db_conn,</span>
+<span id="cb30-12"><a href="#cb30-12" aria-hidden="true" tabindex="-1"></a>           <span class="at">statement =</span> <span class="st">&quot;SELECT name, person_uid, dosimeter_uid, report_uid report_date FROM test01&quot;</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb30-13"><a href="#cb30-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tibble</span>()</span></code></pre></div>
 <pre><code>## # A tibble: 13 x 4
 ##    name               person_uid dosimeter_uid report_date
 ##    &lt;chr&gt;                   &lt;dbl&gt;         &lt;dbl&gt;       &lt;dbl&gt;
@@ -852,99 +854,194 @@ See <a href="https://rsqlite.r-dbi.org/reference/sqlite">RSQLite Packages Vignet
 </div>
 <div id="table-with-constraints" class="section level4">
 <h4>Table with Constraints</h4>
-<p>In order to avoid duplicates we need constraints like a <code>PRIMARY KEY</code> and/or a <code>UNIQUE</code> constraint. There are different strategies to implement constraints but for consistency reasons we will build the table analogous to the Python tutorial “by hand”:<br />
+<p>In order to avoid duplicates we need constraints like a <code>PRIMARY KEY</code> and/or a <code>UNIQUE</code> constraint. There are different strategies to implement constraints but for consistency reasons we will build our dosimeter readings table analogous to the Python tutorial “by hand” and call it <code>staffdose</code>.<br />
 As <code>PRIMARY KEY</code> we add an <code>id</code>-column which we will fill with <code>AUTOINCREMENT</code> and set a <code>UNIQUE</code>-constraint with <code>report_uid, person_uid, dosimeter_placement</code>.<br />
-First we delete the table <code>test01</code> with the function <code>dbExecute</code>. This function executes data manipulation statements without returning a result set.</p>
-<div class="sourceCode" id="cb33"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a><span class="co"># First we clean up the database by deleting the test01-table</span></span>
-<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a><span class="fu">dbExecute</span>(<span class="at">conn =</span> mp_db_conn, </span>
-<span id="cb33-3"><a href="#cb33-3" aria-hidden="true" tabindex="-1"></a>          <span class="at">statement =</span> <span class="st">&quot;DROP TABLE IF EXISTS test01&quot;</span>)</span></code></pre></div>
+<br> First we delete the table <code>test01</code> with the function <code>dbExecute</code>. This function executes data manipulation statements without returning a result set.</p>
+<div class="sourceCode" id="cb32"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a><span class="co"># First we clean up the database by deleting the test01-table</span></span>
+<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a><span class="fu">dbExecute</span>(<span class="at">conn =</span> mp_db_conn, </span>
+<span id="cb32-3"><a href="#cb32-3" aria-hidden="true" tabindex="-1"></a>          <span class="at">statement =</span> <span class="st">&quot;DROP TABLE IF EXISTS test01&quot;</span>)</span></code></pre></div>
 <pre><code>## [1] 0</code></pre>
-<div class="sourceCode" id="cb35"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="co"># check content of the database</span></span>
-<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a><span class="fu">dbListTables</span>(mp_db_conn)</span></code></pre></div>
-<pre><code>## [1] &quot;sqlite_sequence&quot; &quot;staffdose&quot;</code></pre>
-<div class="sourceCode" id="cb37"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a><span class="co"># for reproducibility reasons we run the following command</span></span>
-<span id="cb37-2"><a href="#cb37-2" aria-hidden="true" tabindex="-1"></a><span class="fu">dbExecute</span>(<span class="at">conn =</span> mp_db_conn, </span>
-<span id="cb37-3"><a href="#cb37-3" aria-hidden="true" tabindex="-1"></a>          <span class="at">statement =</span> <span class="st">&quot;DROP TABLE IF EXISTS staffdose&quot;</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb34"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a><span class="co"># If you run this script a second time </span></span>
+<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a><span class="co"># you will get an error message if you try to create a table that already exists.</span></span>
+<span id="cb34-3"><a href="#cb34-3" aria-hidden="true" tabindex="-1"></a><span class="co"># To avoid this we will delete the table &quot;staffdose&quot; if it exists:</span></span>
+<span id="cb34-4"><a href="#cb34-4" aria-hidden="true" tabindex="-1"></a><span class="fu">dbExecute</span>(<span class="at">conn =</span> mp_db_conn, </span>
+<span id="cb34-5"><a href="#cb34-5" aria-hidden="true" tabindex="-1"></a>          <span class="at">statement =</span> <span class="st">&quot;DROP TABLE IF EXISTS staffdose&quot;</span>)</span></code></pre></div>
 <pre><code>## [1] 0</code></pre>
-<div class="sourceCode" id="cb39"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a><span class="co"># creating the table</span></span>
-<span id="cb39-2"><a href="#cb39-2" aria-hidden="true" tabindex="-1"></a><span class="fu">dbExecute</span>(<span class="at">conn =</span> mp_db_conn,</span>
-<span id="cb39-3"><a href="#cb39-3" aria-hidden="true" tabindex="-1"></a>          <span class="at">statement =</span> </span>
-<span id="cb39-4"><a href="#cb39-4" aria-hidden="true" tabindex="-1"></a>            <span class="st">&quot;CREATE TABLE staffdose (</span></span>
-<span id="cb39-5"><a href="#cb39-5" aria-hidden="true" tabindex="-1"></a><span class="st">                id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,</span></span>
-<span id="cb39-6"><a href="#cb39-6" aria-hidden="true" tabindex="-1"></a><span class="st">                customer_name VARCHAR,</span></span>
-<span id="cb39-7"><a href="#cb39-7" aria-hidden="true" tabindex="-1"></a><span class="st">                customer_uid INTEGER,</span></span>
-<span id="cb39-8"><a href="#cb39-8" aria-hidden="true" tabindex="-1"></a><span class="st">                department VARCHAR,</span></span>
-<span id="cb39-9"><a href="#cb39-9" aria-hidden="true" tabindex="-1"></a><span class="st">                department_uid INTEGER,</span></span>
-<span id="cb39-10"><a href="#cb39-10" aria-hidden="true" tabindex="-1"></a><span class="st">                name VARCHAR,</span></span>
-<span id="cb39-11"><a href="#cb39-11" aria-hidden="true" tabindex="-1"></a><span class="st">                person_uid INTEGER,</span></span>
-<span id="cb39-12"><a href="#cb39-12" aria-hidden="true" tabindex="-1"></a><span class="st">                radiation_type VARCHAR,</span></span>
-<span id="cb39-13"><a href="#cb39-13" aria-hidden="true" tabindex="-1"></a><span class="st">                hp10 DOUBLE,</span></span>
-<span id="cb39-14"><a href="#cb39-14" aria-hidden="true" tabindex="-1"></a><span class="st">                hp007 DOUBLE,</span></span>
-<span id="cb39-15"><a href="#cb39-15" aria-hidden="true" tabindex="-1"></a><span class="st">                user_type VARCHAR,</span></span>
-<span id="cb39-16"><a href="#cb39-16" aria-hidden="true" tabindex="-1"></a><span class="st">                dosimeter_type VARCHAR,</span></span>
-<span id="cb39-17"><a href="#cb39-17" aria-hidden="true" tabindex="-1"></a><span class="st">                dosimeter_placement VARCHAR,</span></span>
-<span id="cb39-18"><a href="#cb39-18" aria-hidden="true" tabindex="-1"></a><span class="st">                dosimeter_uid INTEGER,</span></span>
-<span id="cb39-19"><a href="#cb39-19" aria-hidden="true" tabindex="-1"></a><span class="st">                measurement_period_start TEXT,</span></span>
-<span id="cb39-20"><a href="#cb39-20" aria-hidden="true" tabindex="-1"></a><span class="st">                measurement_period_end TEXT,</span></span>
-<span id="cb39-21"><a href="#cb39-21" aria-hidden="true" tabindex="-1"></a><span class="st">                read_date TEXT,</span></span>
-<span id="cb39-22"><a href="#cb39-22" aria-hidden="true" tabindex="-1"></a><span class="st">                report_date TEXT,</span></span>
-<span id="cb39-23"><a href="#cb39-23" aria-hidden="true" tabindex="-1"></a><span class="st">                report_uid DOUBLE,</span></span>
-<span id="cb39-24"><a href="#cb39-24" aria-hidden="true" tabindex="-1"></a><span class="st">                status VARCHAR,</span></span>
-<span id="cb39-25"><a href="#cb39-25" aria-hidden="true" tabindex="-1"></a><span class="st">                UNIQUE(report_uid, person_uid, dosimeter_placement)</span></span>
-<span id="cb39-26"><a href="#cb39-26" aria-hidden="true" tabindex="-1"></a><span class="st">            );&quot;</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb36"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a><span class="co"># check content of the database</span></span>
+<span id="cb36-2"><a href="#cb36-2" aria-hidden="true" tabindex="-1"></a><span class="fu">dbListTables</span>(mp_db_conn)</span></code></pre></div>
+<pre><code>## [1] &quot;sqlite_sequence&quot; &quot;stage&quot;</code></pre>
+<div class="sourceCode" id="cb38"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a><span class="co"># creating the table</span></span>
+<span id="cb38-2"><a href="#cb38-2" aria-hidden="true" tabindex="-1"></a><span class="fu">dbExecute</span>(<span class="at">conn =</span> mp_db_conn,</span>
+<span id="cb38-3"><a href="#cb38-3" aria-hidden="true" tabindex="-1"></a>          <span class="at">statement =</span> </span>
+<span id="cb38-4"><a href="#cb38-4" aria-hidden="true" tabindex="-1"></a>            <span class="st">&quot;CREATE TABLE staffdose (</span></span>
+<span id="cb38-5"><a href="#cb38-5" aria-hidden="true" tabindex="-1"></a><span class="st">                id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,</span></span>
+<span id="cb38-6"><a href="#cb38-6" aria-hidden="true" tabindex="-1"></a><span class="st">                customer_name VARCHAR,</span></span>
+<span id="cb38-7"><a href="#cb38-7" aria-hidden="true" tabindex="-1"></a><span class="st">                customer_uid INTEGER,</span></span>
+<span id="cb38-8"><a href="#cb38-8" aria-hidden="true" tabindex="-1"></a><span class="st">                department VARCHAR,</span></span>
+<span id="cb38-9"><a href="#cb38-9" aria-hidden="true" tabindex="-1"></a><span class="st">                department_uid INTEGER,</span></span>
+<span id="cb38-10"><a href="#cb38-10" aria-hidden="true" tabindex="-1"></a><span class="st">                name VARCHAR,</span></span>
+<span id="cb38-11"><a href="#cb38-11" aria-hidden="true" tabindex="-1"></a><span class="st">                person_uid INTEGER,</span></span>
+<span id="cb38-12"><a href="#cb38-12" aria-hidden="true" tabindex="-1"></a><span class="st">                radiation_type VARCHAR,</span></span>
+<span id="cb38-13"><a href="#cb38-13" aria-hidden="true" tabindex="-1"></a><span class="st">                hp10 DOUBLE,</span></span>
+<span id="cb38-14"><a href="#cb38-14" aria-hidden="true" tabindex="-1"></a><span class="st">                hp007 DOUBLE,</span></span>
+<span id="cb38-15"><a href="#cb38-15" aria-hidden="true" tabindex="-1"></a><span class="st">                user_type VARCHAR,</span></span>
+<span id="cb38-16"><a href="#cb38-16" aria-hidden="true" tabindex="-1"></a><span class="st">                dosimeter_type VARCHAR,</span></span>
+<span id="cb38-17"><a href="#cb38-17" aria-hidden="true" tabindex="-1"></a><span class="st">                dosimeter_placement VARCHAR,</span></span>
+<span id="cb38-18"><a href="#cb38-18" aria-hidden="true" tabindex="-1"></a><span class="st">                dosimeter_uid INTEGER,</span></span>
+<span id="cb38-19"><a href="#cb38-19" aria-hidden="true" tabindex="-1"></a><span class="st">                measurement_period_start TEXT,</span></span>
+<span id="cb38-20"><a href="#cb38-20" aria-hidden="true" tabindex="-1"></a><span class="st">                measurement_period_end TEXT,</span></span>
+<span id="cb38-21"><a href="#cb38-21" aria-hidden="true" tabindex="-1"></a><span class="st">                read_date TEXT,</span></span>
+<span id="cb38-22"><a href="#cb38-22" aria-hidden="true" tabindex="-1"></a><span class="st">                report_date TEXT,</span></span>
+<span id="cb38-23"><a href="#cb38-23" aria-hidden="true" tabindex="-1"></a><span class="st">                report_uid DOUBLE,</span></span>
+<span id="cb38-24"><a href="#cb38-24" aria-hidden="true" tabindex="-1"></a><span class="st">                status VARCHAR,</span></span>
+<span id="cb38-25"><a href="#cb38-25" aria-hidden="true" tabindex="-1"></a><span class="st">                UNIQUE(report_uid, person_uid, dosimeter_placement)</span></span>
+<span id="cb38-26"><a href="#cb38-26" aria-hidden="true" tabindex="-1"></a><span class="st">            );&quot;</span>)</span></code></pre></div>
 <pre><code>## [1] 0</code></pre>
-<div class="sourceCode" id="cb41"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a><span class="co"># check if it worked</span></span>
-<span id="cb41-2"><a href="#cb41-2" aria-hidden="true" tabindex="-1"></a><span class="fu">dbListTables</span>(mp_db_conn)</span></code></pre></div>
-<pre><code>## [1] &quot;sqlite_sequence&quot; &quot;staffdose&quot;</code></pre>
-<div class="sourceCode" id="cb43"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb43-1"><a href="#cb43-1" aria-hidden="true" tabindex="-1"></a><span class="co"># you can see that there are two tables:</span></span>
-<span id="cb43-2"><a href="#cb43-2" aria-hidden="true" tabindex="-1"></a>  <span class="co"># &quot;staffdose&quot; (the one we defined) and </span></span>
-<span id="cb43-3"><a href="#cb43-3" aria-hidden="true" tabindex="-1"></a>  <span class="co"># &quot;sqlite_sequence&quot; automatically created because we used &quot;AUTOINCREMENT&quot;</span></span>
-<span id="cb43-4"><a href="#cb43-4" aria-hidden="true" tabindex="-1"></a>    <span class="co"># for info on &quot;sqlite_sequence&quot; see: https://www.sqlite.org/autoinc.html</span></span>
-<span id="cb43-5"><a href="#cb43-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb43-6"><a href="#cb43-6" aria-hidden="true" tabindex="-1"></a><span class="co"># check if &quot;id&quot; is the primary key of the table:</span></span>
-<span id="cb43-7"><a href="#cb43-7" aria-hidden="true" tabindex="-1"></a><span class="fu">dbGetQuery</span>(mp_db_conn, </span>
-<span id="cb43-8"><a href="#cb43-8" aria-hidden="true" tabindex="-1"></a>           <span class="st">&quot;pragma table_info(&#39;staffdose&#39;)&quot;</span>) <span class="sc">%&gt;%</span> </span>
-<span id="cb43-9"><a href="#cb43-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">head</span>(<span class="dv">1</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb40"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a><span class="co"># check if it worked</span></span>
+<span id="cb40-2"><a href="#cb40-2" aria-hidden="true" tabindex="-1"></a><span class="fu">dbListTables</span>(mp_db_conn)</span></code></pre></div>
+<pre><code>## [1] &quot;sqlite_sequence&quot; &quot;staffdose&quot;       &quot;stage&quot;</code></pre>
+<div class="sourceCode" id="cb42"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb42-1"><a href="#cb42-1" aria-hidden="true" tabindex="-1"></a><span class="co"># you can see that there are two tables:</span></span>
+<span id="cb42-2"><a href="#cb42-2" aria-hidden="true" tabindex="-1"></a>  <span class="co"># &quot;staffdose&quot; (the one we defined) and </span></span>
+<span id="cb42-3"><a href="#cb42-3" aria-hidden="true" tabindex="-1"></a>  <span class="co"># &quot;sqlite_sequence&quot; automatically created because we used &quot;AUTOINCREMENT&quot;</span></span>
+<span id="cb42-4"><a href="#cb42-4" aria-hidden="true" tabindex="-1"></a>    <span class="co"># for info on &quot;sqlite_sequence&quot; see: https://www.sqlite.org/autoinc.html</span></span>
+<span id="cb42-5"><a href="#cb42-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb42-6"><a href="#cb42-6" aria-hidden="true" tabindex="-1"></a><span class="co"># check if &quot;id&quot; is the primary key of the table:</span></span>
+<span id="cb42-7"><a href="#cb42-7" aria-hidden="true" tabindex="-1"></a><span class="fu">dbGetQuery</span>(mp_db_conn, </span>
+<span id="cb42-8"><a href="#cb42-8" aria-hidden="true" tabindex="-1"></a>           <span class="st">&quot;pragma table_info(&#39;staffdose&#39;)&quot;</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb42-9"><a href="#cb42-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">head</span>(<span class="dv">1</span>)</span></code></pre></div>
 <pre><code>##   cid name    type notnull dflt_value pk
 ## 1   0   id INTEGER       1         NA  1</code></pre>
-<div class="sourceCode" id="cb45"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb45-1"><a href="#cb45-1" aria-hidden="true" tabindex="-1"></a><span class="co"># the id-column should have the values 1 for &quot;notnull&quot; and &quot;pk&quot; (primary key)</span></span></code></pre></div>
+<div class="sourceCode" id="cb44"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb44-1"><a href="#cb44-1" aria-hidden="true" tabindex="-1"></a><span class="co"># the id-column should have the values 1 for &quot;notnull&quot; and &quot;pk&quot; (primary key)</span></span></code></pre></div>
 <p>Lets try again, add data and then try to add some more data including duplicates:</p>
-<div class="sourceCode" id="cb46"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb46-1"><a href="#cb46-1" aria-hidden="true" tabindex="-1"></a><span class="co"># adding data</span></span>
-<span id="cb46-2"><a href="#cb46-2" aria-hidden="true" tabindex="-1"></a><span class="fu">dbWriteTable</span>(<span class="at">conn =</span> mp_db_conn,</span>
-<span id="cb46-3"><a href="#cb46-3" aria-hidden="true" tabindex="-1"></a>             <span class="at">name =</span> <span class="st">&quot;staffdose&quot;</span>,</span>
-<span id="cb46-4"><a href="#cb46-4" aria-hidden="true" tabindex="-1"></a>             <span class="at">value =</span> arf_rows01to10,</span>
-<span id="cb46-5"><a href="#cb46-5" aria-hidden="true" tabindex="-1"></a>             <span class="at">append =</span> <span class="cn">TRUE</span>)</span>
-<span id="cb46-6"><a href="#cb46-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb46-7"><a href="#cb46-7" aria-hidden="true" tabindex="-1"></a><span class="co"># check if data was added</span></span>
-<span id="cb46-8"><a href="#cb46-8" aria-hidden="true" tabindex="-1"></a><span class="fu">dbGetQuery</span>(<span class="at">conn =</span> mp_db_conn,</span>
-<span id="cb46-9"><a href="#cb46-9" aria-hidden="true" tabindex="-1"></a>           <span class="at">statement =</span> <span class="st">&quot;SELECT name, person_uid, dosimeter_uid, report_uid report_date FROM staffdose&quot;</span>)</span></code></pre></div>
-<pre><code>##                  name person_uid dosimeter_uid report_date
-## 1       Severus Snape      12368         90072        1137
-## 2        Harry Potter      12369         90073        1137
-## 3       Parvati Patil      12370         90075        1137
-## 4       Parvati Patil      12370         90076        1137
-## 5      Cedric Diggory      12371         90077        1137
-## 6      Cedric Diggory      12371         90078        1137
-## 7         Ron Weasley      12372         90079        1137
-## 8  Tom Marvolo Riddle      12373         90080        1137
-## 9   Hermione Grainger      12374         90081        1137
-## 10   Albus Dumbledore      12375         90082        1137</code></pre>
-<div class="sourceCode" id="cb48"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb48-1"><a href="#cb48-1" aria-hidden="true" tabindex="-1"></a><span class="co"># add dataset with duplicates</span></span>
-<span id="cb48-2"><a href="#cb48-2" aria-hidden="true" tabindex="-1"></a><span class="fu">dbWriteTable</span>(<span class="at">conn =</span> mp_db_conn,</span>
-<span id="cb48-3"><a href="#cb48-3" aria-hidden="true" tabindex="-1"></a>             <span class="at">name =</span> <span class="st">&quot;staffdose&quot;</span>,</span>
-<span id="cb48-4"><a href="#cb48-4" aria-hidden="true" tabindex="-1"></a>             <span class="at">value =</span> arf_rows10to12,</span>
-<span id="cb48-5"><a href="#cb48-5" aria-hidden="true" tabindex="-1"></a>             <span class="at">append =</span> <span class="cn">TRUE</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb45"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb45-1"><a href="#cb45-1" aria-hidden="true" tabindex="-1"></a><span class="co"># adding data</span></span>
+<span id="cb45-2"><a href="#cb45-2" aria-hidden="true" tabindex="-1"></a><span class="fu">dbAppendTable</span>(<span class="at">conn =</span> mp_db_conn,</span>
+<span id="cb45-3"><a href="#cb45-3" aria-hidden="true" tabindex="-1"></a>             <span class="at">name =</span> <span class="st">&quot;staffdose&quot;</span>,</span>
+<span id="cb45-4"><a href="#cb45-4" aria-hidden="true" tabindex="-1"></a>             <span class="at">value =</span> arf_rows01to10)</span></code></pre></div>
+<pre><code>## [1] 10</code></pre>
+<div class="sourceCode" id="cb47"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb47-1"><a href="#cb47-1" aria-hidden="true" tabindex="-1"></a><span class="co"># check if data was added</span></span>
+<span id="cb47-2"><a href="#cb47-2" aria-hidden="true" tabindex="-1"></a><span class="fu">dbGetQuery</span>(<span class="at">conn =</span> mp_db_conn,</span>
+<span id="cb47-3"><a href="#cb47-3" aria-hidden="true" tabindex="-1"></a>           <span class="at">statement =</span> <span class="st">&quot;SELECT name, person_uid, dosimeter_placement, dosimeter_uid, report_uid FROM staffdose&quot;</span>)</span></code></pre></div>
+<pre><code>##                  name person_uid dosimeter_placement dosimeter_uid report_uid
+## 1       Severus Snape      12368                Body         90072       1137
+## 2        Harry Potter      12369                Body         90073       1137
+## 3       Parvati Patil      12370                Body         90075       1137
+## 4       Parvati Patil      12370           Left hand         90076       1137
+## 5      Cedric Diggory      12371                Body         90077       1137
+## 6      Cedric Diggory      12371          Right hand         90078       1137
+## 7         Ron Weasley      12372                Body         90079       1137
+## 8  Tom Marvolo Riddle      12373                Body         90080       1137
+## 9   Hermione Grainger      12374                Body         90081       1137
+## 10   Albus Dumbledore      12375                Body         90082       1137</code></pre>
+<div class="sourceCode" id="cb49"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb49-1"><a href="#cb49-1" aria-hidden="true" tabindex="-1"></a><span class="co"># add dataset with duplicates</span></span>
+<span id="cb49-2"><a href="#cb49-2" aria-hidden="true" tabindex="-1"></a><span class="fu">dbWriteTable</span>(<span class="at">conn =</span> mp_db_conn,</span>
+<span id="cb49-3"><a href="#cb49-3" aria-hidden="true" tabindex="-1"></a>             <span class="at">name =</span> <span class="st">&quot;staffdose&quot;</span>,</span>
+<span id="cb49-4"><a href="#cb49-4" aria-hidden="true" tabindex="-1"></a>             <span class="at">value =</span> arf_rows10to12,</span>
+<span id="cb49-5"><a href="#cb49-5" aria-hidden="true" tabindex="-1"></a>             <span class="at">append =</span> <span class="cn">TRUE</span>)</span></code></pre></div>
 <pre><code>## Error: UNIQUE constraint failed: staffdose.report_uid, staffdose.person_uid, staffdose.dosimeter_placement</code></pre>
 <p>Now you should get an error message like: <code>UNIQUE constraint failed: staffdose.report_uid, staffdose.person_uid, staffdose.dosimeter_placement</code>.<br />
-<br> We have achieved our goal to prevent duplicates but unfortunately there is no easy way to just add unique data with any of the functions of the packages <code>DBI</code> or <code>RSQLite</code>. To solve this problem we need a workaround. For details and source of the following approach see the forum thread “<a href="https://community.rstudio.com/t/creating-and-populating-a-sqlite-database-via-r-how-to-ignore-duplicate-rows/85470/3">RStudio Community - Creating and populating a SQLite database via R - How to ignore duplicate rows?</a>”.</p>
+<br> We have achieved our goal to prevent duplicates but unfortunately there is no easy way to just add unique data with any of the functions of the packages <code>DBI</code> or <code>RSQLite</code>. To solve this problem we need a workaround.</p>
+</div>
+<div id="adding-only-unique-data" class="section level4">
+<h4>Adding only unique Data</h4>
+<p>For details and source of the following approach see the forum thread “<a href="https://community.rstudio.com/t/creating-and-populating-a-sqlite-database-via-r-how-to-ignore-duplicate-rows/85470/3">RStudio Community - Creating and populating a SQLite database via R - How to ignore duplicate rows?</a>”.</p>
+<p>For the work around we will use a second table called <code>stage</code> with the same structure as <code>staffdose</code> but without any constraints:</p>
+<div class="sourceCode" id="cb51"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb51-1"><a href="#cb51-1" aria-hidden="true" tabindex="-1"></a><span class="co"># we use &quot;DROP TABLE IF EXISTS&quot; in case we run the script more than once</span></span>
+<span id="cb51-2"><a href="#cb51-2" aria-hidden="true" tabindex="-1"></a><span class="fu">dbExecute</span>(<span class="at">conn =</span> mp_db_conn, </span>
+<span id="cb51-3"><a href="#cb51-3" aria-hidden="true" tabindex="-1"></a>          <span class="at">statement =</span> <span class="st">&quot;DROP TABLE IF EXISTS stage&quot;</span>)</span></code></pre></div>
+<pre><code>## [1] 0</code></pre>
+<div class="sourceCode" id="cb53"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb53-1"><a href="#cb53-1" aria-hidden="true" tabindex="-1"></a><span class="co"># creating the stage table</span></span>
+<span id="cb53-2"><a href="#cb53-2" aria-hidden="true" tabindex="-1"></a><span class="fu">dbExecute</span>(<span class="at">conn =</span> mp_db_conn,</span>
+<span id="cb53-3"><a href="#cb53-3" aria-hidden="true" tabindex="-1"></a>          <span class="at">statement =</span> </span>
+<span id="cb53-4"><a href="#cb53-4" aria-hidden="true" tabindex="-1"></a>            <span class="st">&quot;CREATE TABLE stage (</span></span>
+<span id="cb53-5"><a href="#cb53-5" aria-hidden="true" tabindex="-1"></a><span class="st">                id INTEGER,</span></span>
+<span id="cb53-6"><a href="#cb53-6" aria-hidden="true" tabindex="-1"></a><span class="st">                customer_name VARCHAR,</span></span>
+<span id="cb53-7"><a href="#cb53-7" aria-hidden="true" tabindex="-1"></a><span class="st">                customer_uid INTEGER,</span></span>
+<span id="cb53-8"><a href="#cb53-8" aria-hidden="true" tabindex="-1"></a><span class="st">                department VARCHAR,</span></span>
+<span id="cb53-9"><a href="#cb53-9" aria-hidden="true" tabindex="-1"></a><span class="st">                department_uid INTEGER,</span></span>
+<span id="cb53-10"><a href="#cb53-10" aria-hidden="true" tabindex="-1"></a><span class="st">                name VARCHAR,</span></span>
+<span id="cb53-11"><a href="#cb53-11" aria-hidden="true" tabindex="-1"></a><span class="st">                person_uid INTEGER,</span></span>
+<span id="cb53-12"><a href="#cb53-12" aria-hidden="true" tabindex="-1"></a><span class="st">                radiation_type VARCHAR,</span></span>
+<span id="cb53-13"><a href="#cb53-13" aria-hidden="true" tabindex="-1"></a><span class="st">                hp10 DOUBLE,</span></span>
+<span id="cb53-14"><a href="#cb53-14" aria-hidden="true" tabindex="-1"></a><span class="st">                hp007 DOUBLE,</span></span>
+<span id="cb53-15"><a href="#cb53-15" aria-hidden="true" tabindex="-1"></a><span class="st">                user_type VARCHAR,</span></span>
+<span id="cb53-16"><a href="#cb53-16" aria-hidden="true" tabindex="-1"></a><span class="st">                dosimeter_type VARCHAR,</span></span>
+<span id="cb53-17"><a href="#cb53-17" aria-hidden="true" tabindex="-1"></a><span class="st">                dosimeter_placement VARCHAR,</span></span>
+<span id="cb53-18"><a href="#cb53-18" aria-hidden="true" tabindex="-1"></a><span class="st">                dosimeter_uid INTEGER,</span></span>
+<span id="cb53-19"><a href="#cb53-19" aria-hidden="true" tabindex="-1"></a><span class="st">                measurement_period_start TEXT,</span></span>
+<span id="cb53-20"><a href="#cb53-20" aria-hidden="true" tabindex="-1"></a><span class="st">                measurement_period_end TEXT,</span></span>
+<span id="cb53-21"><a href="#cb53-21" aria-hidden="true" tabindex="-1"></a><span class="st">                read_date TEXT,</span></span>
+<span id="cb53-22"><a href="#cb53-22" aria-hidden="true" tabindex="-1"></a><span class="st">                report_date TEXT,</span></span>
+<span id="cb53-23"><a href="#cb53-23" aria-hidden="true" tabindex="-1"></a><span class="st">                report_uid DOUBLE,</span></span>
+<span id="cb53-24"><a href="#cb53-24" aria-hidden="true" tabindex="-1"></a><span class="st">                status VARCHAR</span></span>
+<span id="cb53-25"><a href="#cb53-25" aria-hidden="true" tabindex="-1"></a><span class="st">            );&quot;</span>)</span></code></pre></div>
+<pre><code>## [1] 0</code></pre>
+<p>To make life a little bit easier in the future we will define a function that will read in new data into the <code>stage</code> table and then transfers only the unique data to the <code>staffdose</code> table:</p>
+<div class="sourceCode" id="cb55"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb55-1"><a href="#cb55-1" aria-hidden="true" tabindex="-1"></a>dbAppendUniqueStaffDose <span class="ot">&lt;-</span> <span class="cf">function</span>(connection, newreportdata) {</span>
+<span id="cb55-2"><a href="#cb55-2" aria-hidden="true" tabindex="-1"></a>  <span class="co"># function to add only unique data to the staffdose table</span></span>
+<span id="cb55-3"><a href="#cb55-3" aria-hidden="true" tabindex="-1"></a>    <span class="co"># by using the stage table as intermediary</span></span>
+<span id="cb55-4"><a href="#cb55-4" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb55-5"><a href="#cb55-5" aria-hidden="true" tabindex="-1"></a>  <span class="co"># wiping clean stage table</span></span>
+<span id="cb55-6"><a href="#cb55-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">dbExecute</span>(connection, <span class="st">&quot;DELETE FROM stage&quot;</span>)</span>
+<span id="cb55-7"><a href="#cb55-7" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb55-8"><a href="#cb55-8" aria-hidden="true" tabindex="-1"></a>  <span class="co"># add the new data to the stage table</span></span>
+<span id="cb55-9"><a href="#cb55-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">dbAppendTable</span>(connection, <span class="st">&quot;stage&quot;</span>, newreportdata)</span>
+<span id="cb55-10"><a href="#cb55-10" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb55-11"><a href="#cb55-11" aria-hidden="true" tabindex="-1"></a>  <span class="co"># transfer only unique data from the stage table to the staffdose table</span></span>
+<span id="cb55-12"><a href="#cb55-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">dbExecute</span>(connection, <span class="st">&quot;INSERT OR IGNORE INTO staffdose SELECT * FROM stage&quot;</span>)</span>
+<span id="cb55-13"><a href="#cb55-13" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<p>Now we can add data succesfully without getting an error message, even if it contains duplicates that violate the <code>UNIQUE</code>-constraint we defined:</p>
+<div class="sourceCode" id="cb56"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb56-1"><a href="#cb56-1" aria-hidden="true" tabindex="-1"></a><span class="fu">dbAppendUniqueStaffDose</span>(<span class="at">connection =</span> mp_db_conn,</span>
+<span id="cb56-2"><a href="#cb56-2" aria-hidden="true" tabindex="-1"></a>                        <span class="at">newreportdata =</span> arf_rows10to12)</span></code></pre></div>
+<pre><code>## [1] 2</code></pre>
+<div class="sourceCode" id="cb58"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb58-1"><a href="#cb58-1" aria-hidden="true" tabindex="-1"></a><span class="co"># lets view the table:</span></span>
+<span id="cb58-2"><a href="#cb58-2" aria-hidden="true" tabindex="-1"></a>check <span class="ot">&lt;-</span> <span class="fu">dbGetQuery</span>(mp_db_conn, <span class="st">&quot;SELECT name, person_uid, dosimeter_placement, dosimeter_uid, report_uid FROM staffdose&quot;</span>); check</span></code></pre></div>
+<pre><code>##                  name person_uid dosimeter_placement dosimeter_uid report_uid
+## 1       Severus Snape      12368                Body         90072       1137
+## 2        Harry Potter      12369                Body         90073       1137
+## 3       Parvati Patil      12370                Body         90075       1137
+## 4       Parvati Patil      12370           Left hand         90076       1137
+## 5      Cedric Diggory      12371                Body         90077       1137
+## 6      Cedric Diggory      12371          Right hand         90078       1137
+## 7         Ron Weasley      12372                Body         90079       1137
+## 8  Tom Marvolo Riddle      12373                Body         90080       1137
+## 9   Hermione Grainger      12374                Body         90081       1137
+## 10   Albus Dumbledore      12375                Body         90082       1137
+## 11    Filius Flitwick      12376                Body         90083       1137
+## 12 Neville Longbottom      12377                Body         90084       1137</code></pre>
+<div class="sourceCode" id="cb60"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb60-1"><a href="#cb60-1" aria-hidden="true" tabindex="-1"></a><span class="co"># looks good</span></span>
+<span id="cb60-2"><a href="#cb60-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb60-3"><a href="#cb60-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Check if the data of the first 12 rows is really without duplicates</span></span>
+<span id="cb60-4"><a href="#cb60-4" aria-hidden="true" tabindex="-1"></a>  <span class="co"># by comparing the table content with the data from the dataframe </span></span>
+<span id="cb60-5"><a href="#cb60-5" aria-hidden="true" tabindex="-1"></a>check <span class="sc">==</span> all_reports_fixed[<span class="dv">1</span><span class="sc">:</span><span class="dv">12</span>, <span class="fu">c</span>(<span class="st">&quot;name&quot;</span>, <span class="st">&quot;person_uid&quot;</span>, <span class="st">&quot;dosimeter_placement&quot;</span>, <span class="st">&quot;dosimeter_uid&quot;</span>, <span class="st">&quot;report_uid&quot;</span>)]</span></code></pre></div>
+<pre><code>##       name person_uid dosimeter_placement dosimeter_uid report_uid
+##  [1,] TRUE       TRUE                TRUE          TRUE       TRUE
+##  [2,] TRUE       TRUE                TRUE          TRUE       TRUE
+##  [3,] TRUE       TRUE                TRUE          TRUE       TRUE
+##  [4,] TRUE       TRUE                TRUE          TRUE       TRUE
+##  [5,] TRUE       TRUE                TRUE          TRUE       TRUE
+##  [6,] TRUE       TRUE                TRUE          TRUE       TRUE
+##  [7,] TRUE       TRUE                TRUE          TRUE       TRUE
+##  [8,] TRUE       TRUE                TRUE          TRUE       TRUE
+##  [9,] TRUE       TRUE                TRUE          TRUE       TRUE
+## [10,] TRUE       TRUE                TRUE          TRUE       TRUE
+## [11,] TRUE       TRUE                TRUE          TRUE       TRUE
+## [12,] TRUE       TRUE                TRUE          TRUE       TRUE</code></pre>
+<div class="sourceCode" id="cb62"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb62-1"><a href="#cb62-1" aria-hidden="true" tabindex="-1"></a><span class="co"># if we have only TRUEs we only added unuique data</span></span>
+<span id="cb62-2"><a href="#cb62-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb62-3"><a href="#cb62-3" aria-hidden="true" tabindex="-1"></a><span class="co"># lets add all the data to the staffdose table</span></span>
+<span id="cb62-4"><a href="#cb62-4" aria-hidden="true" tabindex="-1"></a><span class="fu">dbAppendUniqueStaffDose</span>(mp_db_conn, all_reports_fixed_dateastext)</span></code></pre></div>
+<pre><code>## [1] 600</code></pre>
 <p>When we are finished we close the connection to the database:</p>
-<div class="sourceCode" id="cb50"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb50-1"><a href="#cb50-1" aria-hidden="true" tabindex="-1"></a><span class="fu">dbDisconnect</span>(mp_db_conn)</span></code></pre></div>
+<div class="sourceCode" id="cb64"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb64-1"><a href="#cb64-1" aria-hidden="true" tabindex="-1"></a><span class="fu">dbDisconnect</span>(mp_db_conn)</span></code></pre></div>
 </div>
 </div>
 </div>
 <div id="reporting-with-rmarkdown" class="section level2">
 <h2>Reporting with RMarkdown</h2>
-<p>#————- ## TESTING</p>
+<p>#————-</p>
+</div>
+<div id="testing" class="section level2">
+<h2>TESTING</h2>
 </div>
 <div class="footnotes">
 <hr />

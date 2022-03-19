@@ -27,7 +27,7 @@ library(DBI)
 ```
 
 ## Short Description
-This is a R Version for Part 2 of the Article Series "Hacking Medical Physics" by Jonas Andersson and Gavin Poludniowski i (GitRepo: [rvbCMTS/EMP-News](https://github.com/rvbCMTS/EMP-News.git)) in the Newsletter of the European Federation of Organisations for Medical Physics (EFOMP)^[[European Medical Physics News](https://www.efomp.org/index.php?r=fc&id=emp-news)].
+This is a R Version for Part 2 of the Article Series "Hacking Medical Physics" by Jonas Andersson and Gavin Poludniowski (GitRepo: [rvbCMTS/EMP-News](https://github.com/rvbCMTS/EMP-News.git)) in the Newsletter of the European Federation of Organisations for Medical Physics (EFOMP)^[[European Medical Physics News](https://www.efomp.org/index.php?r=fc&id=emp-news)].
 
 ### Ressources and Preparation
 In order to run this R-Markdown file you need to install RStudio/R ([RStudio Installer](https://www.rstudio.com/products/rstudio/download/)).  
@@ -50,35 +50,31 @@ My preferred method to read Excel files is to use the `readxl`-package:
 
 
 ```r
-read_xls(path = "reports/StaffDoses_1.xls")
+read_xls(path = "reports/StaffDoses_1.xls") %>% 
+  head(5)
 ```
 
 ```
-## # A tibble: 22 x 18
-##    `Customer name` `Customer UID` Department `Department UID` Name  `Person UID`
-##    <chr>           <chr>          <chr>      <chr>            <chr> <chr>       
-##  1 Hogsmeade Roya~ 141            Nuclear M~ 1                Seve~ 12368       
-##  2 Hogsmeade Roya~ 141            Nuclear M~ 1                Harr~ 12369       
-##  3 Hogsmeade Roya~ 141            Nuclear M~ 1                Parv~ 12370       
-##  4 Hogsmeade Roya~ 141            Nuclear M~ 1                Parv~ 12370       
-##  5 Hogsmeade Roya~ 141            Nuclear M~ 1                Cedr~ 12371       
-##  6 Hogsmeade Roya~ 141            Nuclear M~ 1                Cedr~ 12371       
-##  7 Hogsmeade Roya~ 141            Nuclear M~ 1                Ron ~ 12372       
-##  8 Hogsmeade Roya~ 141            Nuclear M~ 1                Tom ~ 12373       
-##  9 Hogsmeade Roya~ 141            Diagnosti~ 2                Herm~ 12374       
-## 10 Hogsmeade Roya~ 141            Diagnosti~ 2                Albu~ 12375       
-## # ... with 12 more rows, and 12 more variables: Radiation type <chr>,
-## #   Hp(10) <chr>, Hp(0.07) <chr>, User type <chr>, Dosimeter type <chr>,
+## # A tibble: 5 x 18
+##   `Customer name`  `Customer UID` Department `Department UID` Name  `Person UID`
+##   <chr>            <chr>          <chr>      <chr>            <chr> <chr>       
+## 1 Hogsmeade Royal~ 141            Nuclear M~ 1                Seve~ 12368       
+## 2 Hogsmeade Royal~ 141            Nuclear M~ 1                Harr~ 12369       
+## 3 Hogsmeade Royal~ 141            Nuclear M~ 1                Parv~ 12370       
+## 4 Hogsmeade Royal~ 141            Nuclear M~ 1                Parv~ 12370       
+## 5 Hogsmeade Royal~ 141            Nuclear M~ 1                Cedr~ 12371       
+## # ... with 12 more variables: Radiation type <chr>, Hp(10) <chr>,
+## #   Hp(0.07) <chr>, User type <chr>, Dosimeter type <chr>,
 ## #   Dosimeter placement <chr>, Dosimeter UID <chr>,
 ## #   Measurement period (start) <chr>, Measurement period (end) <chr>,
 ## #   Read date <chr>, Report date <chr>, Report UID <chr>
 ```
 
-Note for R Newcomers: If you know the order of the arguments of a function you don't have to supply the argument names. If you open the help for the function `read_xls` by typing `?read_xls` in the console the description of the function includes the list of arguments:  
+_Note for R Newcomers:_ If you know the order of the arguments of a function you don't have to supply the argument names. If you open the help for the function `read_xls` by typing `?read_xls` in the console the description of the function includes the list of arguments:  
 <br>
-`read_xls(path, sheet = NULL, range = NULL, col_names = TRUE, col_types = NULL, na = "", trim_ws = TRUE, skip = 0, n_max = Inf, guess_max = min(1000, n_max), progress = readxl_progress(), .name_repair = "unique")`  
+`read_xls(path, sheet = NULL, range = NULL, col_names = TRUE, col_types = NULL, ...)`  
 <br>
-Since `path` is the first argument we could also read in the data by just writing `read_xls("reports/StaffDoses_1.xls")`. It is of course faster but on the other side makes the code harder to read if you don't know the function. The second thing to note is that there are a lot of other mandatory arguments but they all have default value. `col_names` is set to `TRUE` by default and this will cause the function to regard the first line in the excel file as column names and not as data.  
+Since `path` is the first argument we could also read in the data by just writing `read_xls("reports/StaffDoses_1.xls")`. It is of course faster to type but on the other side makes the code harder to read if you don't know the function. The second thing to note is that there are a lot of other mandatory arguments but they all have default value. For example `col_names` is set to `TRUE` by default and this will cause the function to regard the first line in the excel file as column names and not as data.  
 
 
 ### Fixing the column names
@@ -97,8 +93,10 @@ report_column_names <- read_xls(path = "reports/StaffDoses_1.xls",
   # to extract the column names we don't need any data therefore we read in n=0 lines
   colnames() %>% # extracting the column names as a vector
   tolower() %>% # convert upper case to lower case
-  gsub(pattern = " ", replacement = "_") %>% # replacing blanks with underscores
-  gsub(pattern = "[().]", replacement = "")  # deleting round brackets and dots; 
+  gsub(pattern = " ", 
+       replacement = "_") %>% # replacing blanks with underscores
+  gsub(pattern = "[().]", 
+       replacement = "")  # deleting round brackets and dots; 
     # the square-brackets function as list operator (all characters inside the square-brackets are identified)
 
 report_column_names
@@ -188,12 +186,16 @@ Sys.setlocale("LC_TIME", locale = "English") # setting the machine locale for ti
 
 
 all_reports_fixed <- all_reports %>% 
-  # In first step we are replacing the colon with dots as comma sign 
+  # At first we replace the colon with dots as comma sign 
     # (needed to convert to numeric later on)
   # with the function mutate we create new columns based on existing ones 
     # or modify the content of existing columns
-  mutate(hp10 = str_replace_all(hp10, pattern = ",", replacement = ".")) %>% 
-  mutate(hp007 = str_replace_all(hp007, pattern = ",", replacement = ".")) %>% 
+  mutate(hp10 = str_replace_all(hp10, 
+                                pattern = ",", 
+                                replacement = ".")) %>% 
+  mutate(hp007 = str_replace_all(hp007, 
+                                 pattern = ",", 
+                                 replacement = ".")) %>% 
   # before we convert hp10 and hp007 to numeric we create a new column 
     # with non-numeric values of hp007 in order not to lose information
     # "B": Below Measurement Threshold, 
@@ -382,16 +384,18 @@ For a limited number of files like in the example above working with a database 
 >* Security constraints  
 
 If you are new to SQL and you want to have a possibilty to "look into" a SQLite database check out the leightweight and open source GUI [SQLiteStudio](https://sqlitestudio.pl/).
+<br>
+To connect R to a database management system (DBMS) we need the [`DBI`-package](https://dbi.r-dbi.org/) and [`RSQLite`](https://rsqlite.r-dbi.org/). If you not have done it already go ahead and install the `RSQLite`-package which will automatically install the `DBI`-package. For detailed information on the `DBI` functions we will use see the [DBI - Reference](https://dbi.r-dbi.org/reference/).
 
 ### Creating (or opening a connection to) a Database
 With the funciton `dbConnect` you create a database file or open a connection to an already existing database.  
-See [RSQLite Packages Vignette](https://rsqlite.r-dbi.org/reference/sqlite) for a list of optional arguments. The argument "flags" for example specifies the connection mode:  
+See [RSQLite Packages Vignette](https://rsqlite.r-dbi.org/reference/sqlite) for a list of optional arguments. The argument "flags" specifies the connection mode:  
 
-* SQLITE_RWC: open the database in read/write mode and create the database file if it does not already exist [STANDARD];  
+* SQLITE_RWC: open the database in read/write mode and create the database file if it does not already exist [DEFAULT];  
 * SQLITE_RW: open the database in read/write mode. Raise an error if the file does not already exist;  
 * SQLITE_RO: open the database in read only mode. Raise an error if the file does not already exist.  
 
-Since a database can hold many different kinds of data, not only personnel dosimeter readings, I will call my DB `medical_physics_db.sqlite`.
+Since a database can hold many different kinds of data, not only personnel dosimeter readings, I will call the database `medical_physics_db.sqlite`.
 
 ```r
 mp_db_conn <- dbConnect(drv = RSQLite::SQLite(), 
@@ -416,6 +420,7 @@ Before we create our final personnel dosimeter table we are going to have a look
 all_reports_fixed_dateastext <- all_reports_fixed %>% 
   mutate(across(c(measurement_period_start:report_date), as.character))
 
+# storing the first 10 rows in a seperate dataframe
 arf_rows01to10 <- all_reports_fixed_dateastext[1:10,]
 ```
 
@@ -429,22 +434,18 @@ dbWriteTable(conn = mp_db_conn,
              value  = arf_rows01to10,
              overwrite = TRUE)
 # I set the argument "overwrite" to TRUE in case you run this script more than once.
-  # If you write data to a table with dbWriteTable() there are three options:
+  # If you write data to a table with dbWriteTable() there are three possibilites:
   # 1) The table exists but you want to overwrite it: use the "overwrite = TRUE"
   # 2) The table exists and you want to add data: use "append = TRUE"
   # 3) The table does not exist: neither overwrite or append have to be used
 # If the table exists but you neither set append or overwrite to TRUE you will get an error message 
 
-#check if it worked:
+#check if it worked by listing all tables of a database:
 dbListTables(conn = mp_db_conn)
 ```
 
 ```
-## [1] "sqlite_sequence" "staffdose"       "test01"
-```
-
-```r
-# Now you should get the output "test01"
+## [1] "sqlite_sequence" "staffdose"       "stage"           "test01"
 ```
 
 Now we execute our first SQL queries with `dbGetQuery()` which returns the result of the query as dataframe.
@@ -572,8 +573,9 @@ Now we have 13 rows in the table which means that we created a duplicate by addi
 
 #### Table with Constraints
 In order to avoid duplicates we need constraints like a `PRIMARY KEY` and/or a `UNIQUE` constraint.
-There are different strategies to implement constraints but for consistency reasons we will build the table analogous to the Python tutorial "by hand":  
+There are different strategies to implement constraints but for consistency reasons we will build our dosimeter readings table analogous to the Python tutorial "by hand" and call it `staffdose`.  
 As `PRIMARY KEY` we add an `id`-column which we will fill with `AUTOINCREMENT` and set a `UNIQUE`-constraint with `report_uid, person_uid, dosimeter_placement`.  
+<br>
 First we delete the table `test01` with the function `dbExecute`. This function executes data manipulation statements without returning a result set.
 
 ```r
@@ -587,22 +589,24 @@ dbExecute(conn = mp_db_conn,
 ```
 
 ```r
-# check content of the database
-dbListTables(mp_db_conn)
-```
-
-```
-## [1] "sqlite_sequence" "staffdose"
-```
-
-```r
-# for reproducibility reasons we run the following command
+# If you run this script a second time 
+# you will get an error message if you try to create a table that already exists.
+# To avoid this we will delete the table "staffdose" if it exists:
 dbExecute(conn = mp_db_conn, 
           statement = "DROP TABLE IF EXISTS staffdose")
 ```
 
 ```
 ## [1] 0
+```
+
+```r
+# check content of the database
+dbListTables(mp_db_conn)
+```
+
+```
+## [1] "sqlite_sequence" "stage"
 ```
 
 ```r
@@ -644,7 +648,7 @@ dbListTables(mp_db_conn)
 ```
 
 ```
-## [1] "sqlite_sequence" "staffdose"
+## [1] "sqlite_sequence" "staffdose"       "stage"
 ```
 
 ```r
@@ -673,28 +677,33 @@ Lets try again, add data and then try to add some more data including duplicates
 
 ```r
 # adding data
-dbWriteTable(conn = mp_db_conn,
+dbAppendTable(conn = mp_db_conn,
              name = "staffdose",
-             value = arf_rows01to10,
-             append = TRUE)
+             value = arf_rows01to10)
+```
 
+```
+## [1] 10
+```
+
+```r
 # check if data was added
 dbGetQuery(conn = mp_db_conn,
-           statement = "SELECT name, person_uid, dosimeter_uid, report_uid report_date FROM staffdose")
+           statement = "SELECT name, person_uid, dosimeter_placement, dosimeter_uid, report_uid FROM staffdose")
 ```
 
 ```
-##                  name person_uid dosimeter_uid report_date
-## 1       Severus Snape      12368         90072        1137
-## 2        Harry Potter      12369         90073        1137
-## 3       Parvati Patil      12370         90075        1137
-## 4       Parvati Patil      12370         90076        1137
-## 5      Cedric Diggory      12371         90077        1137
-## 6      Cedric Diggory      12371         90078        1137
-## 7         Ron Weasley      12372         90079        1137
-## 8  Tom Marvolo Riddle      12373         90080        1137
-## 9   Hermione Grainger      12374         90081        1137
-## 10   Albus Dumbledore      12375         90082        1137
+##                  name person_uid dosimeter_placement dosimeter_uid report_uid
+## 1       Severus Snape      12368                Body         90072       1137
+## 2        Harry Potter      12369                Body         90073       1137
+## 3       Parvati Patil      12370                Body         90075       1137
+## 4       Parvati Patil      12370           Left hand         90076       1137
+## 5      Cedric Diggory      12371                Body         90077       1137
+## 6      Cedric Diggory      12371          Right hand         90078       1137
+## 7         Ron Weasley      12372                Body         90079       1137
+## 8  Tom Marvolo Riddle      12373                Body         90080       1137
+## 9   Hermione Grainger      12374                Body         90081       1137
+## 10   Albus Dumbledore      12375                Body         90082       1137
 ```
 
 ```r
@@ -712,7 +721,142 @@ dbWriteTable(conn = mp_db_conn,
 Now you should get an error message like: 
 `UNIQUE constraint failed: staffdose.report_uid, staffdose.person_uid, staffdose.dosimeter_placement`.  
 <br>
-We have achieved our goal to prevent duplicates but unfortunately there is no easy way to just add unique data with any of the functions of the packages `DBI` or `RSQLite`. To solve this problem we need a workaround. For details and source of the following approach see the forum thread "[RStudio Community - Creating and populating a SQLite database via R - How to ignore duplicate rows?](https://community.rstudio.com/t/creating-and-populating-a-sqlite-database-via-r-how-to-ignore-duplicate-rows/85470/3)".
+We have achieved our goal to prevent duplicates but unfortunately there is no easy way to just add unique data with any of the functions of the packages `DBI` or `RSQLite`. To solve this problem we need a workaround. 
+
+#### Adding only unique Data
+For details and source of the following approach see the forum thread "[RStudio Community - Creating and populating a SQLite database via R - How to ignore duplicate rows?](https://community.rstudio.com/t/creating-and-populating-a-sqlite-database-via-r-how-to-ignore-duplicate-rows/85470/3)".
+
+For the work around we will use a second table called `stage` with the same structure as `staffdose` but without any constraints:
+
+
+```r
+# we use "DROP TABLE IF EXISTS" in case we run the script more than once
+dbExecute(conn = mp_db_conn, 
+          statement = "DROP TABLE IF EXISTS stage")
+```
+
+```
+## [1] 0
+```
+
+```r
+# creating the stage table
+dbExecute(conn = mp_db_conn,
+          statement = 
+            "CREATE TABLE stage (
+                id INTEGER,
+                customer_name VARCHAR,
+                customer_uid INTEGER,
+                department VARCHAR,
+                department_uid INTEGER,
+                name VARCHAR,
+                person_uid INTEGER,
+                radiation_type VARCHAR,
+                hp10 DOUBLE,
+                hp007 DOUBLE,
+                user_type VARCHAR,
+                dosimeter_type VARCHAR,
+                dosimeter_placement VARCHAR,
+                dosimeter_uid INTEGER,
+                measurement_period_start TEXT,
+                measurement_period_end TEXT,
+                read_date TEXT,
+                report_date TEXT,
+                report_uid DOUBLE,
+                status VARCHAR
+            );")
+```
+
+```
+## [1] 0
+```
+
+To make life a little bit easier in the future we will define a function that will read in new data into the `stage` table and then transfers only the unique data to the `staffdose` table:
+
+
+```r
+dbAppendUniqueStaffDose <- function(connection, newreportdata) {
+  # function to add only unique data to the staffdose table
+    # by using the stage table as intermediary
+  
+  # wiping clean stage table
+  dbExecute(connection, "DELETE FROM stage")
+  
+  # add the new data to the stage table
+  dbAppendTable(connection, "stage", newreportdata)
+  
+  # transfer only unique data from the stage table to the staffdose table
+  dbExecute(connection, "INSERT OR IGNORE INTO staffdose SELECT * FROM stage")
+}
+```
+
+Now we can add data succesfully without getting an error message, even if it contains duplicates that violate the `UNIQUE`-constraint we defined:
+
+
+```r
+dbAppendUniqueStaffDose(connection = mp_db_conn,
+                        newreportdata = arf_rows10to12)
+```
+
+```
+## [1] 2
+```
+
+```r
+# lets view the table:
+check <- dbGetQuery(mp_db_conn, "SELECT name, person_uid, dosimeter_placement, dosimeter_uid, report_uid FROM staffdose"); check
+```
+
+```
+##                  name person_uid dosimeter_placement dosimeter_uid report_uid
+## 1       Severus Snape      12368                Body         90072       1137
+## 2        Harry Potter      12369                Body         90073       1137
+## 3       Parvati Patil      12370                Body         90075       1137
+## 4       Parvati Patil      12370           Left hand         90076       1137
+## 5      Cedric Diggory      12371                Body         90077       1137
+## 6      Cedric Diggory      12371          Right hand         90078       1137
+## 7         Ron Weasley      12372                Body         90079       1137
+## 8  Tom Marvolo Riddle      12373                Body         90080       1137
+## 9   Hermione Grainger      12374                Body         90081       1137
+## 10   Albus Dumbledore      12375                Body         90082       1137
+## 11    Filius Flitwick      12376                Body         90083       1137
+## 12 Neville Longbottom      12377                Body         90084       1137
+```
+
+```r
+# looks good
+
+# Check if the data of the first 12 rows is really without duplicates
+  # by comparing the table content with the data from the dataframe 
+check == all_reports_fixed[1:12, c("name", "person_uid", "dosimeter_placement", "dosimeter_uid", "report_uid")]
+```
+
+```
+##       name person_uid dosimeter_placement dosimeter_uid report_uid
+##  [1,] TRUE       TRUE                TRUE          TRUE       TRUE
+##  [2,] TRUE       TRUE                TRUE          TRUE       TRUE
+##  [3,] TRUE       TRUE                TRUE          TRUE       TRUE
+##  [4,] TRUE       TRUE                TRUE          TRUE       TRUE
+##  [5,] TRUE       TRUE                TRUE          TRUE       TRUE
+##  [6,] TRUE       TRUE                TRUE          TRUE       TRUE
+##  [7,] TRUE       TRUE                TRUE          TRUE       TRUE
+##  [8,] TRUE       TRUE                TRUE          TRUE       TRUE
+##  [9,] TRUE       TRUE                TRUE          TRUE       TRUE
+## [10,] TRUE       TRUE                TRUE          TRUE       TRUE
+## [11,] TRUE       TRUE                TRUE          TRUE       TRUE
+## [12,] TRUE       TRUE                TRUE          TRUE       TRUE
+```
+
+```r
+# if we have only TRUEs we only added unuique data
+
+# lets add all the data to the staffdose table
+dbAppendUniqueStaffDose(mp_db_conn, all_reports_fixed_dateastext)
+```
+
+```
+## [1] 600
+```
 
 
 When we are finished we close the connection to the database:
@@ -727,5 +871,8 @@ dbDisconnect(mp_db_conn)
 
 
 
-#-------------
+#-------------  
+
 ## TESTING
+
+

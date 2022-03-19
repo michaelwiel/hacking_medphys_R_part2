@@ -287,6 +287,8 @@ For a limited number of files like in the example above working with a database 
 >* Security constraints  
 
 If you are new to SQL and you want to have a possibilty to "look into" a SQLite database check out the leightweight and open source GUI [SQLiteStudio](https://sqlitestudio.pl/).
+<br>
+To connect R to a database management system (DBMS) we need the [`DBI`-package](https://dbi.r-dbi.org/) and [`RSQLite`](https://rsqlite.r-dbi.org/). If you not have done it already go ahead and install the `RSQLite`-package which will automatically install the `DBI`-package. For detailed information on the `DBI` functions we will use see the [DBI - Reference](https://dbi.r-dbi.org/reference/).
 
 ### Creating (or opening a connection to) a Database
 With the funciton `dbConnect` you create a database file or open a connection to an already existing database.  
@@ -447,14 +449,13 @@ Lets try again, add data and then try to add some more data including duplicates
 
 ```{r table_add_data_duplicates, error=TRUE}
 # adding data
-dbWriteTable(conn = mp_db_conn,
+dbAppendTable(conn = mp_db_conn,
              name = "staffdose",
-             value = arf_rows01to10,
-             append = TRUE)
+             value = arf_rows01to10)
 
 # check if data was added
 dbGetQuery(conn = mp_db_conn,
-           statement = "SELECT name, person_uid, dosimeter_uid, report_uid report_date FROM staffdose")
+           statement = "SELECT name, person_uid, dosimeter_placement, dosimeter_uid, report_uid FROM staffdose")
 
 # add dataset with duplicates
 dbWriteTable(conn = mp_db_conn,
@@ -471,6 +472,77 @@ We have achieved our goal to prevent duplicates but unfortunately there is no ea
 #### Adding only unique Data
 For details and source of the following approach see the forum thread "[RStudio Community - Creating and populating a SQLite database via R - How to ignore duplicate rows?](https://community.rstudio.com/t/creating-and-populating-a-sqlite-database-via-r-how-to-ignore-duplicate-rows/85470/3)".
 
+For the work around we will use a second table called `stage` with the same structure as `staffdose` but without any constraints:
+
+```{r create_stage}
+# we use "DROP TABLE IF EXISTS" in case we run the script more than once
+dbExecute(conn = mp_db_conn, 
+          statement = "DROP TABLE IF EXISTS stage")
+
+# creating the stage table
+dbExecute(conn = mp_db_conn,
+          statement = 
+            "CREATE TABLE stage (
+                id INTEGER,
+                customer_name VARCHAR,
+                customer_uid INTEGER,
+                department VARCHAR,
+                department_uid INTEGER,
+                name VARCHAR,
+                person_uid INTEGER,
+                radiation_type VARCHAR,
+                hp10 DOUBLE,
+                hp007 DOUBLE,
+                user_type VARCHAR,
+                dosimeter_type VARCHAR,
+                dosimeter_placement VARCHAR,
+                dosimeter_uid INTEGER,
+                measurement_period_start TEXT,
+                measurement_period_end TEXT,
+                read_date TEXT,
+                report_date TEXT,
+                report_uid DOUBLE,
+                status VARCHAR
+            );")
+```
+
+To make life a little bit easier in the future we will define a function that will read in new data into the `stage` table and then transfers only the unique data to the `staffdose` table:
+
+```{r add_only_unique_function}
+dbAppendUniqueStaffDose <- function(connection, newreportdata) {
+  # function to add only unique data to the staffdose table
+    # by using the stage table as intermediary
+  
+  # wiping clean stage table
+  dbExecute(connection, "DELETE FROM stage")
+  
+  # add the new data to the stage table
+  dbAppendTable(connection, "stage", newreportdata)
+  
+  # transfer only unique data from the stage table to the staffdose table
+  dbExecute(connection, "INSERT OR IGNORE INTO staffdose SELECT * FROM stage")
+}
+```
+
+Now we can add data succesfully without getting an error message, even if it contains duplicates that violate the `UNIQUE`-constraint we defined:
+
+```{r add_new_data_with_some_duplicates}
+dbAppendUniqueStaffDose(connection = mp_db_conn,
+                        newreportdata = arf_rows10to12)
+
+# lets view the table:
+check <- dbGetQuery(mp_db_conn, "SELECT name, person_uid, dosimeter_placement, dosimeter_uid, report_uid FROM staffdose"); check
+# looks good
+
+# Check if the data of the first 12 rows is really without duplicates
+  # by comparing the table content with the data from the dataframe 
+check == all_reports_fixed[1:12, c("name", "person_uid", "dosimeter_placement", "dosimeter_uid", "report_uid")]
+# if we have only TRUEs we only added unuique data
+
+# lets add all the data to the staffdose table
+dbAppendUniqueStaffDose(mp_db_conn, all_reports_fixed_dateastext)
+```
+
 
 When we are finished we close the connection to the database:
 ```{r closing_connection_to_db, error=TRUE}
@@ -483,5 +555,8 @@ dbDisconnect(mp_db_conn)
 
 
 
-#-------------
+#-------------  
+
 ## TESTING
+
+
