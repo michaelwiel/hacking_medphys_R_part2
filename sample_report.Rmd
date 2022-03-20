@@ -1,0 +1,81 @@
+---
+title: |
+  ![](figures/logo_for_report_header.png)  
+  <br>
+  <span style="color:black">Sample Report</span>
+author: "Michael Wieland"
+date: "20 3 2022"
+output: 
+  html_document: 
+    highlight: textmate
+    theme: simplex
+params:
+  department:
+    label: "Department:"
+    value: Radiotherapy
+    input: select
+    choices: ["Radiotherapy", "Diagnostic Radiology", "Nuclear Medicine"]
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE, error = TRUE)
+
+library(tidyverse)
+library(readxl)
+library(ggthemes)
+library(kableExtra)
+library(tibble)
+library(DBI)
+
+# params for SQL
+dep <- params$department
+status_ok <- "OK"
+dos_type <- "Badge"
+year <- "2020"
+```
+
+## Parameterized Report
+If you have a look in the YAML header you will find a `params`-section. With that configuration you can use `Knit with parameters...`. This opens a dialogue where you can select one of the departments and create the report for that department. For this sample report it is definitely an overkill but imagine you have 20 page report...
+
+```{r conect_to_db}
+mp_db_conn <- dbConnect(drv = RSQLite::SQLite(), 
+                        dbname = "medical_physics_db.sqlite")
+```
+
+```{sql, connection=mp_db_conn, output.var="rep_data"}
+-- RMarkdown supports SQL and many other languages
+-- https://bookdown.org/yihui/rmarkdown/language-engines.html#sql
+-- Within a SQL-code chunk you can write SQL statements directly without using any function from the DBI-package
+-- If you want to assign the output to a variable you have to specify it with the output.var option
+
+--SELECT * from staffdose WHERE department = ?dep
+
+SELECT hp10, department, STRFTIME('%Y', measurement_period_end) AS report_year 
+FROM staffdose 
+WHERE hp10>=0 AND status = ?status_ok AND dosimeter_type = ?dos_type AND report_year = ?year AND department = ?dep
+```
+
+```{r figure}
+rep_data %>% 
+  ggplot(aes(x=report_year, y=hp10)) +
+  geom_boxplot() +
+  scale_y_continuous(limits = c(0,NA), 
+                      # set lower bound to 0 and let ggplot automatically set upper bound
+                     breaks = pretty(c(0, max(rep_data$hp10, na.rm = T)), n=10)) + 
+                      # getting 10 breaks in the y-axis from 0 to maximum value of hp10
+  labs(x = "", y = "Hp(10) [mSv]", # Axis names
+       title = paste0("Monthly Hp(10) values in the ", params$department, " department"),
+       subtitle = paste0("  Year: ", year),
+       caption = "Hacking Medical Physics. Data and Idea: J. Andersson and G. Poludniowski") +
+  # tweaking the plot style (optional) with the function "theme":
+  theme(panel.background = element_blank(),
+        panel.grid.major.y = element_line(linetype = 3, color = "gray"))
+
+```
+
+
+
+
+```{r closing_connection_to_db}
+dbDisconnect(mp_db_conn)
+```

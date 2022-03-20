@@ -43,6 +43,12 @@ Ressources to get started with R:
 I will make heavy use of the package collection `tidyverse` and the "pipe"-operator (` %>% `). To learn more have a look at: [`tidyverse` - R packages for data science](https://www.tidyverse.org/).  
 If you have not installed the packages loaded in the `setup code chunk` (see above) start with installing them via `Tools` -> `Install Packages`.
 
+### Executing Code
+You can run the code in the console window or directly in the RMarkdwon-file by clicking on the little "Play"-button in the top right hand corner of the code chunks:
+
+![Code chunk example - Execute code with play button in the top right hand corner](figures/example_codechunk.png)
+
+
 ## Reading in Data
 If your data files reside in the working directory you can access them in a relative fashion. My current working directory is the folder where this R-Markdown-file is stored and the data files are stored in a subfolder called "reports".
 
@@ -1008,8 +1014,8 @@ dbGetQuery(conn = mp_db_conn,
   geom_col() +
   scale_fill_manual(values = c("#6186B0", "#B06186", "#86B061")) +
   labs(x = "", y = "HP(10) [mSv]", fill = "",
-       title = "Total Dose per Person and Department for 2020",
-       subtitle = "   Type: Badge") +
+       title = "Total Dose per Person for 2020",
+       subtitle = "   Badge HP(10)") +
   coord_flip() +
   theme(legend.position = "bottom",
         panel.background = element_blank(),
@@ -1018,7 +1024,93 @@ dbGetQuery(conn = mp_db_conn,
 
 ![](hack_mp_part2_files/figure-html/sql_total_dose_2020-1.png)<!-- -->
 
+### SQL Engine in RMarkdown
+As I will discuss in the next section, RMarkdown is an incredible powerful tool. One of its cool features is its ability to ["speak" SQL](https://bookdown.org/yihui/rmarkdown/language-engines.html#sql) and other languages. You can not only use "r code chunks" but others too. When using a "SQL code chunk" you don't need the `DBI`-functions, you can write native SQL queries:
 
+
+```sql
+SELECT name, department, hp10, report_uid FROM staffdose WHERE hp10>=0
+```
+
+
+<div class="knitsql-table">
+<table>
+<caption>Displaying records 1 - 10</caption>
+ <thead>
+  <tr>
+   <th style="text-align:left;"> name </th>
+   <th style="text-align:left;"> department </th>
+   <th style="text-align:right;"> hp10 </th>
+   <th style="text-align:right;"> report_uid </th>
+  </tr>
+ </thead>
+<tbody>
+  <tr>
+   <td style="text-align:left;"> Severus Snape </td>
+   <td style="text-align:left;"> Nuclear Medicine </td>
+   <td style="text-align:right;"> 0.09 </td>
+   <td style="text-align:right;"> 1137 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Cedric Diggory </td>
+   <td style="text-align:left;"> Nuclear Medicine </td>
+   <td style="text-align:right;"> 0.11 </td>
+   <td style="text-align:right;"> 1137 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Albus Dumbledore </td>
+   <td style="text-align:left;"> Diagnostic Radiology </td>
+   <td style="text-align:right;"> 0.08 </td>
+   <td style="text-align:right;"> 1137 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Filius Flitwick </td>
+   <td style="text-align:left;"> Diagnostic Radiology </td>
+   <td style="text-align:right;"> 0.11 </td>
+   <td style="text-align:right;"> 1137 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Neville Longbottom </td>
+   <td style="text-align:left;"> Diagnostic Radiology </td>
+   <td style="text-align:right;"> 0.13 </td>
+   <td style="text-align:right;"> 1137 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Draco Malfoy </td>
+   <td style="text-align:left;"> Diagnostic Radiology </td>
+   <td style="text-align:right;"> 0.10 </td>
+   <td style="text-align:right;"> 1137 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Minerva McGonagall </td>
+   <td style="text-align:left;"> Radiotherapy </td>
+   <td style="text-align:right;"> 0.09 </td>
+   <td style="text-align:right;"> 1137 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Poppy Pomfrey </td>
+   <td style="text-align:left;"> Radiotherapy </td>
+   <td style="text-align:right;"> 0.13 </td>
+   <td style="text-align:right;"> 1137 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Cho Chang </td>
+   <td style="text-align:left;"> Radiotherapy </td>
+   <td style="text-align:right;"> 0.08 </td>
+   <td style="text-align:right;"> 1137 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Newton Scamander </td>
+   <td style="text-align:left;"> Radiotherapy </td>
+   <td style="text-align:right;"> 0.07 </td>
+   <td style="text-align:right;"> 1137 </td>
+  </tr>
+</tbody>
+</table>
+
+</div>
+
+### Closing the connection to the database
 When we are finished we close the connection to the database:
 
 ```r
@@ -1026,13 +1118,12 @@ dbDisconnect(mp_db_conn)
 ```
 
 
-
 ## Reporting with RMarkdown
+R is one of the most important statistics software solutions out there and together with RStudio and its integration of [R Markdown](https://rmarkdown.rstudio.com/) it is an inedible versatile tool for data analysis and reporting. The tutorial you are reading is written in an R Markdown file.
 
+> R Markdown supports dozens of static and dynamic output formats including HTML, PDF, MS Word, Beamer, HTML5 slides, Tufte-style handouts, books, dashboards, shiny applications, scientific articles, websites, and more ([see gallery](https://rmarkdown.rstudio.com/gallery.html)). 
 
+You might have to write reports for your department, your hospital, the authorities, ... where you have to present data. With [knitr](https://yihui.org/knitr/) you can convert your R Markdown file into a Word document and even use word-templates you create or your organization provides for you. With an additional Latex-Installation like [TinyTeX](https://yihui.org/tinytex/) you can create pdf-documents and there are many more options.  
+<br>
 
-#-------------  
-
-## TESTING
-
-
+The easiest way to start is to create a report as html-file that you can then print to pdf with your browser.
