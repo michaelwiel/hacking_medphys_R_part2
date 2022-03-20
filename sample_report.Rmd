@@ -55,6 +55,11 @@ FROM staffdose
 WHERE hp10>=0 AND status = ?status_ok AND dosimeter_type = ?dos_type AND report_year = ?year AND department = ?dep
 ```
 
+\newpage
+
+## Graph on page 2
+With the LaTeX command `\\newpage` you can insert page breaks for printing the HTML-file to pdf.
+
 ```{r figure}
 rep_data %>% 
   ggplot(aes(x=report_year, y=hp10)) +

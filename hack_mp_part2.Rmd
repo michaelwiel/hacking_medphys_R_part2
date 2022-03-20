@@ -673,11 +673,11 @@ dbDisconnect(mp_db_conn)
 
 
 ## Reporting with RMarkdown
-R is one of the most important statistics software solutions out there and together with RStudio and its integration of [R Markdown](https://rmarkdown.rstudio.com/) it is an inedible versatile tool for data analysis and reporting. The tutorial you are reading is written in an R Markdown file.
+R is one of the most important statistics software solutions out there and together with RStudio and its integration of [R Markdown](https://rmarkdown.rstudio.com/) it is an inedible versatile tool for data analysis and reporting. The tutorial you are reading is compiled from a R Markdown file. From the [R Markdown website](https://rmarkdown.rstudio.com/):
 
 > R Markdown supports dozens of static and dynamic output formats including HTML, PDF, MS Word, Beamer, HTML5 slides, Tufte-style handouts, books, dashboards, shiny applications, scientific articles, websites, and more ([see gallery](https://rmarkdown.rstudio.com/gallery.html)). 
 
 You might have to write reports for your department, your hospital, the authorities, ... where you have to present data. With [knitr](https://yihui.org/knitr/) you can convert your R Markdown file into a Word document and even use word-templates you create or your organization provides for you. With an additional Latex-Installation like [TinyTeX](https://yihui.org/tinytex/) you can create pdf-documents and there are many more options.  
 <br>
 
-The easiest way to start is to create a report as html-file that you can then print to pdf with your browser.
+The easiest way to start is to create a report as html-file that you can then print to pdf with your browser. Check out the `sample_report.Rmd`-file for an example. I also included a parameterization for the departments in the YAML-header. With that parameterization you can create reports for each department from one R Markdown file. More on parameterized reports: [R Markdown: The Definitive Guide - Chapter 15](https://bookdown.org/yihui/rmarkdown/parameterized-reports.html). 

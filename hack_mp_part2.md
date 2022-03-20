@@ -1,7 +1,7 @@
 ---
 title: "Hacking Medical Physics with R"
 author: "Michael Wieland"
-date: "2022-03-20"
+date: "2022-03-21"
 output: 
   html_document: 
     highlight: pygments
@@ -1029,19 +1029,18 @@ As I will discuss in the next section, RMarkdown is an incredible powerful tool.
 
 
 ```sql
-SELECT name, department, hp10, report_uid FROM staffdose WHERE hp10>=0
+SELECT name, department, hp10 FROM staffdose WHERE hp10>=0 LIMIT 5
 ```
 
 
 <div class="knitsql-table">
 <table>
-<caption>Displaying records 1 - 10</caption>
+<caption>5 records</caption>
  <thead>
   <tr>
    <th style="text-align:left;"> name </th>
    <th style="text-align:left;"> department </th>
    <th style="text-align:right;"> hp10 </th>
-   <th style="text-align:right;"> report_uid </th>
   </tr>
  </thead>
 <tbody>
@@ -1049,61 +1048,26 @@ SELECT name, department, hp10, report_uid FROM staffdose WHERE hp10>=0
    <td style="text-align:left;"> Severus Snape </td>
    <td style="text-align:left;"> Nuclear Medicine </td>
    <td style="text-align:right;"> 0.09 </td>
-   <td style="text-align:right;"> 1137 </td>
   </tr>
   <tr>
    <td style="text-align:left;"> Cedric Diggory </td>
    <td style="text-align:left;"> Nuclear Medicine </td>
    <td style="text-align:right;"> 0.11 </td>
-   <td style="text-align:right;"> 1137 </td>
   </tr>
   <tr>
    <td style="text-align:left;"> Albus Dumbledore </td>
    <td style="text-align:left;"> Diagnostic Radiology </td>
    <td style="text-align:right;"> 0.08 </td>
-   <td style="text-align:right;"> 1137 </td>
   </tr>
   <tr>
    <td style="text-align:left;"> Filius Flitwick </td>
    <td style="text-align:left;"> Diagnostic Radiology </td>
    <td style="text-align:right;"> 0.11 </td>
-   <td style="text-align:right;"> 1137 </td>
   </tr>
   <tr>
    <td style="text-align:left;"> Neville Longbottom </td>
    <td style="text-align:left;"> Diagnostic Radiology </td>
    <td style="text-align:right;"> 0.13 </td>
-   <td style="text-align:right;"> 1137 </td>
-  </tr>
-  <tr>
-   <td style="text-align:left;"> Draco Malfoy </td>
-   <td style="text-align:left;"> Diagnostic Radiology </td>
-   <td style="text-align:right;"> 0.10 </td>
-   <td style="text-align:right;"> 1137 </td>
-  </tr>
-  <tr>
-   <td style="text-align:left;"> Minerva McGonagall </td>
-   <td style="text-align:left;"> Radiotherapy </td>
-   <td style="text-align:right;"> 0.09 </td>
-   <td style="text-align:right;"> 1137 </td>
-  </tr>
-  <tr>
-   <td style="text-align:left;"> Poppy Pomfrey </td>
-   <td style="text-align:left;"> Radiotherapy </td>
-   <td style="text-align:right;"> 0.13 </td>
-   <td style="text-align:right;"> 1137 </td>
-  </tr>
-  <tr>
-   <td style="text-align:left;"> Cho Chang </td>
-   <td style="text-align:left;"> Radiotherapy </td>
-   <td style="text-align:right;"> 0.08 </td>
-   <td style="text-align:right;"> 1137 </td>
-  </tr>
-  <tr>
-   <td style="text-align:left;"> Newton Scamander </td>
-   <td style="text-align:left;"> Radiotherapy </td>
-   <td style="text-align:right;"> 0.07 </td>
-   <td style="text-align:right;"> 1137 </td>
   </tr>
 </tbody>
 </table>
@@ -1119,11 +1083,11 @@ dbDisconnect(mp_db_conn)
 
 
 ## Reporting with RMarkdown
-R is one of the most important statistics software solutions out there and together with RStudio and its integration of [R Markdown](https://rmarkdown.rstudio.com/) it is an inedible versatile tool for data analysis and reporting. The tutorial you are reading is written in an R Markdown file.
+R is one of the most important statistics software solutions out there and together with RStudio and its integration of [R Markdown](https://rmarkdown.rstudio.com/) it is an inedible versatile tool for data analysis and reporting. The tutorial you are reading is compiled from a R Markdown file. From the [R Markdown website](https://rmarkdown.rstudio.com/):
 
 > R Markdown supports dozens of static and dynamic output formats including HTML, PDF, MS Word, Beamer, HTML5 slides, Tufte-style handouts, books, dashboards, shiny applications, scientific articles, websites, and more ([see gallery](https://rmarkdown.rstudio.com/gallery.html)). 
 
 You might have to write reports for your department, your hospital, the authorities, ... where you have to present data. With [knitr](https://yihui.org/knitr/) you can convert your R Markdown file into a Word document and even use word-templates you create or your organization provides for you. With an additional Latex-Installation like [TinyTeX](https://yihui.org/tinytex/) you can create pdf-documents and there are many more options.  
 <br>
 
-The easiest way to start is to create a report as html-file that you can then print to pdf with your browser.
+The easiest way to start is to create a report as html-file that you can then print to pdf with your browser. Check out the `sample_report.Rmd`-file for an example. I also included a parameterization for the departments in the YAML-header. With that parameterization you can create reports for each department from one R Markdown file. More on parameterized reports: [R Markdown: The Definitive Guide - Chapter 15](https://bookdown.org/yihui/rmarkdown/parameterized-reports.html). 
