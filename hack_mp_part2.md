@@ -28,7 +28,7 @@ library(DBI)
 ```
 
 ## Short Description
-This is a R Version for Part 2 of the Article Series "Hacking Medical Physics" by Jonas Andersson and Gavin Poludniowski (GitRepo: [rvbCMTS/EMP-News](https://github.com/rvbCMTS/EMP-News.git)) in the Newsletter of the European Federation of Organisations for Medical Physics (EFOMP)^[[European Medical Physics News](https://www.efomp.org/index.php?r=fc&id=emp-news)].
+This is a R/RStudio-Version for Part 2 of the article series "Hacking Medical Physics" by Jonas Andersson and Gavin Poludniowski (GitRepo: [rvbCMTS/EMP-News](https://github.com/rvbCMTS/EMP-News.git)) in the newsletter of the European Federation of Organisations for Medical Physics (EFOMP)^[[European Medical Physics News](https://www.efomp.org/index.php?r=fc&id=emp-news)].
 
 ### Ressources and Preparation
 In order to run this R-Markdown file you need to install RStudio/R ([RStudio Installer](https://www.rstudio.com/products/rstudio/download/)).  
@@ -44,7 +44,7 @@ I will make heavy use of the package collection `tidyverse` and the "pipe"-opera
 If you have not installed the packages loaded in the `setup code chunk` (see above) start with installing them via `Tools` -> `Install Packages`.
 
 ## Reading in Data
-If your data files reside in the working directory you can access them in a relative fashion. My current working directory is the folder where this R-Markdown-File is stored and the data files are stored in a subfolder called "reports".
+If your data files reside in the working directory you can access them in a relative fashion. My current working directory is the folder where this R-Markdown-file is stored and the data files are stored in a subfolder called "reports".
 
 ### Reading an Excel File
 My preferred method to read Excel files is to use the `readxl`-package:
@@ -100,6 +100,7 @@ report_column_names <- read_xls(path = "reports/StaffDoses_1.xls",
        replacement = "")  # deleting round brackets and dots; 
     # the square-brackets function as list operator (all characters inside the square-brackets are identified)
 
+#checking the rsult:
 report_column_names
 ```
 
@@ -137,7 +138,7 @@ list.files(path = "reports") # get a list of all files from a folder
 ```
 
 ```r
-all_reports_to_read_in <- list.files("reports") # read the list of files in a character vector
+all_reports_to_read_in <- list.files("reports") # read the list of file names in a character vector
 
 # number of reports in the folder:
 length(all_reports_to_read_in)
@@ -151,8 +152,10 @@ length(all_reports_to_read_in)
 all_reports <- data.frame() # create an empty dataframe
 
 for (i in 1:length(all_reports_to_read_in)) { # a for-loop to read in all reports
-  # reading in the i-th report into variable "rep"
+  
+  # reading in the i-th report into variable "rep":
   rep <- read_xls(path = paste0("reports/", all_reports_to_read_in[i])) 
+  
   all_reports <- rbind(all_reports, rep) # binding together the reports rowwise
 }  
 
@@ -164,7 +167,7 @@ Some data wrangling is needed to get the right data types:
 
 * All numerical variables should be defined as `double` or `integer`,  
 * Replace "," with "." in decimal numbers so R can recognise them as numbers ("English convention" for decimal numbers),  
-* Create a column `status` before converting `hp10` and `hp007` to numeric in order not to lose information. Where `hp10` and `hp007` have the values B, NR or `NA` (B: Below Measurement Treshold; NR: Not returned; `NA`: Missing Value) we transfer those values to the new column, if the values are numeric we set the value in the new column to OK.  
+* Create a column `status` before converting `hp10` and `hp007` to numeric in order not to lose information. Where `hp10` and `hp007` have the values "B", "NR" or `NA` (B: Below Measurement Treshold; NR: Not returned; `NA`: Missing Value) we transfer those values to the new column, if the values are numeric we set the value in the new column to "OK".  
 
 To fix the dates I needed a work around because my machine `locale` is set to German but the dates in the reports have abbreviated month names in English. One way to read in the data correctly with little coding is to set the `locale` on the machine to English temporarily. For date-time conversion to and from character see [`strptime`](https://www.rdocumentation.org/packages/base/versions/3.6.2/topics/strptime).
 
@@ -207,12 +210,12 @@ all_reports_fixed <- all_reports %>%
                             hp007 == "NR" ~ "NR",
                             is.na(hp007) ~ NA_character_,
                             is.numeric(as.numeric(hp007)) ~ "OK")) %>% 
-  # next we convert relevant columns to numeric 
+  # next we convert columns with numbers to numeric 
     # (non-numeric values in hp10 and hp007 will be converted to NA automatically)
   mutate(across(c(customer_uid, department_uid, person_uid, hp10, hp007, dosimeter_uid, report_uid), 
                 as.numeric)) %>% 
   # next we convert the columns representing dates from "character" to "date"
-    # with format = "%d-%b-%Y" we tell R that the date is in the form "01-Dec-2021"
+    # with "format = '%d-%b-%Y'" we tell R that the date is in the form "01-Dec-2021"
   mutate(across(c(measurement_period_start:report_date), 
                 as.Date, 
                 format = "%d-%b-%Y")) %>% 
@@ -407,7 +410,7 @@ mp_db_conn <- dbConnect(drv = RSQLite::SQLite(),
 
 
 ### Creating a Table for the Dosimeter Data
-In a database all data is stored in tables. For simplicity we will create a single table for the staff dosimeter readings and don't go into details of optimal table design like [functional dependencies](https://opentextbc.ca/dbdesign01/chapter/chapter-11-functional-dependencies/) and [Normalization](https://en.wikipedia.org/wiki/Database_normalization). 
+In a database all data is stored in tables. For simplicity we will create a single table for the staff dosimeter readings and don't go into details of optimal table design like [functional dependencies](https://opentextbc.ca/dbdesign01/chapter/chapter-11-functional-dependencies/) and [normalization](https://en.wikipedia.org/wiki/Database_normalization). 
 <br>
 
 #### Our First Table
@@ -446,7 +449,7 @@ dbListTables(conn = mp_db_conn)
 ```
 
 ```
-## [1] "test01"
+## [1] "staffdose" "stage"     "test01"
 ```
 
 Now we execute our first SQL queries with `dbGetQuery()` which returns the result of the query as dataframe.
@@ -569,13 +572,13 @@ dbGetQuery(conn = mp_db_conn,
 ## 13 Neville Longbottom      12377         90084        1137
 ```
 
-Now we have 13 rows in the table which means that we created a duplicate by adding row 10 again (Entry for the dosimeter reading of Albus Dumbledore from December 2019).  
+Now we have 13 rows in the table which means that we created a duplicate by adding row 10 a second time (entry for the dosimeter reading of Albus Dumbledore from December 2019).  
 
 
 #### Table with Constraints
 In order to avoid duplicates we need constraints like a `PRIMARY KEY` and/or a `UNIQUE` constraint.
 There are different strategies to implement constraints but for consistency reasons we will build our dosimeter readings table analogous to the Python tutorial "by hand" and call it `staffdose`.  
-As `PRIMARY KEY` we add an `id`-column which we will fill with `AUTOINCREMENT` and set a `UNIQUE`-constraint with `report_uid, person_uid, dosimeter_placement`.  
+As `PRIMARY KEY` we add an `id`-column and set a `UNIQUE`-constraint with `report_uid, person_uid, dosimeter_placement`.  
 <br>
 First we delete the table `test01` with the function `dbExecute`. This function executes data manipulation statements without returning a result set.
 
@@ -592,7 +595,7 @@ dbExecute(conn = mp_db_conn,
 ```r
 # If you run this script a second time 
 # you will get an error message if you try to create a table that already exists.
-# To avoid this we will delete the table "staffdose" if it exists:
+# Therefore we will run the command "DROP TABLE IF EXISTS" to delete the table "staffdose" if it already exists:
 dbExecute(conn = mp_db_conn, 
           statement = "DROP TABLE IF EXISTS staffdose")
 ```
@@ -607,7 +610,7 @@ dbListTables(mp_db_conn)
 ```
 
 ```
-## character(0)
+## [1] "stage"
 ```
 
 ```r
@@ -615,7 +618,7 @@ dbListTables(mp_db_conn)
 dbExecute(conn = mp_db_conn,
           statement = 
             "CREATE TABLE staffdose (
-                id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+                id INTEGER NOT NULL PRIMARY KEY,
                 customer_name VARCHAR,
                 customer_uid INTEGER,
                 department VARCHAR,
@@ -649,7 +652,7 @@ dbListTables(mp_db_conn)
 ```
 
 ```
-## [1] "sqlite_sequence" "staffdose"
+## [1] "staffdose" "stage"
 ```
 
 ```r
@@ -727,7 +730,8 @@ We have achieved our goal to prevent duplicates but unfortunately there is no ea
 #### Adding only unique Data
 For details and source of the following approach see the forum thread "[RStudio Community - Creating and populating a SQLite database via R - How to ignore duplicate rows?](https://community.rstudio.com/t/creating-and-populating-a-sqlite-database-via-r-how-to-ignore-duplicate-rows/85470/3)".
 
-For the work around we will use a second table called `stage` with the same structure as `staffdose` but without any constraints:
+For the work around we will use a second table called `stage` with the same structure as `staffdose` but without any constraints. The table `stage` will therefore accept any data even if it already exists in `staffdose`. Next we will read in the new data into the intermediary table `stag` and can then transfer only the new data 
+to the table `staffdose` with the command `INSERT OR IGNORE INTO staffdose`:
 
 
 ```r
@@ -772,7 +776,7 @@ dbExecute(conn = mp_db_conn,
 ## [1] 0
 ```
 
-To make life a little bit easier in the future we will define a function that will read in new data into the `stage` table and then transfers only the unique data to the `staffdose` table:
+To make life a little bit easier in the future we will define a function `dbAppendUniqueStaffDose` that will read in new data into the `stage` table and then transfers only the unique data to the `staffdose` table:
 
 
 ```r
@@ -898,23 +902,6 @@ dbGetQuery(conn = mp_db_conn,
 
 ![](hack_mp_part2_files/figure-html/sql_datana_sumstat-1.png)<!-- -->
 
-```r
-dbListFields(mp_db_conn, "staffdose")
-```
-
-```
-##  [1] "id"                       "customer_name"           
-##  [3] "customer_uid"             "department"              
-##  [5] "department_uid"           "name"                    
-##  [7] "person_uid"               "radiation_type"          
-##  [9] "hp10"                     "hp007"                   
-## [11] "user_type"                "dosimeter_type"          
-## [13] "dosimeter_placement"      "dosimeter_uid"           
-## [15] "measurement_period_start" "measurement_period_end"  
-## [17] "read_date"                "report_date"             
-## [19] "report_uid"               "status"
-```
-
 #### SQL: Number of Staff Dose Readings per Dosimeter Type
 
 ```r
@@ -1019,6 +1006,7 @@ dbGetQuery(conn = mp_db_conn,
               params = c(year, stat, dos_type)) %>% 
   ggplot(aes(x=reorder(name, desc(hp10_total)), y=hp10_total, fill = department)) +
   geom_col() +
+  scale_fill_manual(values = c("#6186B0", "#B06186", "#86B061")) +
   labs(x = "", y = "HP(10) [mSv]", fill = "",
        title = "Total Dose per Person and Department for 2020",
        subtitle = "   Type: Badge") +
