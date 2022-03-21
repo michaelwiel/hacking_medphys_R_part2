@@ -26,22 +26,7 @@ params:
     sep: ""
 ---
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE, error = TRUE)
 
-library(tidyverse)
-library(readxl)
-library(ggthemes)
-library(kableExtra)
-library(tibble)
-library(DBI)
-
-# params for SQL
-dep <- params$department
-status_ok <- "OK"
-dos_type <- "Badge"
-year <- as.character(params$year)
-```
 
 ## Report Styling
 As little teaser I added a logo to the report via the YAML header. There are a lot of packages that allow you to use templates for all kinds of formats. If you know your way around HMTL & CSS you can create your own templates and even write a package which adds your own template to the selection of templates when you create a new R Markdown file. The possibilities are almost endless. Here are some ressources:  
@@ -59,50 +44,18 @@ As little teaser I added a logo to the report via the YAML header. There are a l
 If you have a look in the YAML header you will find a `params`-section. With that configuration you can use `Knit with parameters...`. This opens a dialogue where you can select one of the departments and create the report for that department. For this sample report it is definitely an overkill but imagine you have a 20 page report...  
 More on parameterized reports: [R Markdown: The Definitive Guide - Chapter 15](https://bookdown.org/yihui/rmarkdown/parameterized-reports.html).
 
-```{r conect_to_db}
-mp_db_conn <- dbConnect(drv = RSQLite::SQLite(), 
-                        dbname = "medical_physics_db.sqlite")
-```
 
-```{sql, connection=mp_db_conn, output.var="rep_data"}
--- RMarkdown supports SQL and many other languages
--- https://bookdown.org/yihui/rmarkdown/language-engines.html#sql
--- Within a SQL-code chunk you can write SQL statements directly without using any function from the DBI-package
--- If you want to assign the output to a variable you have to specify it with the output.var option
 
---SELECT * from staffdose WHERE department = ?dep
 
-SELECT hp10, department, STRFTIME('%Y', measurement_period_end) AS report_year 
-FROM staffdose 
-WHERE hp10>=0 AND status = ?status_ok AND dosimeter_type = ?dos_type AND report_year = ?year AND department = ?dep
-```
 
 \newpage
 
 ## Graph on page 2
 With the LaTeX command `\newpage` in the R Markdown file you can insert page breaks for printing the HTML-file to pdf.
 
-```{r figure}
-rep_data %>% 
-  ggplot(aes(x=report_year, y=hp10)) +
-  geom_boxplot() +
-  scale_y_continuous(limits = c(0,NA), 
-                      # set lower bound to 0 and let ggplot automatically set upper bound
-                     breaks = pretty(c(0, max(rep_data$hp10, na.rm = T)), n=10)) + 
-                      # getting 10 breaks in the y-axis from 0 to maximum value of hp10
-  labs(x = "", y = "Hp(10) [mSv]", # Axis names
-       title = paste0("Monthly Hp(10) values in the ", params$department, " department"),
-       subtitle = paste0("  Year: ", year),
-       caption = "Hacking Medical Physics. Data and Idea: J. Andersson and G. Poludniowski") +
-  # tweaking the plot style (optional) with the function "theme":
-  theme(panel.background = element_blank(),
-        panel.grid.major.y = element_line(linetype = 3, color = "gray"))
-
-```
+![](sample_report_files/figure-html/figure-1.png)<!-- -->
 
 
 
 
-```{r closing_connection_to_db}
-dbDisconnect(mp_db_conn)
-```
+

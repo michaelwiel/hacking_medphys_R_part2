@@ -28,10 +28,10 @@ library(DBI)
 ```
 
 ## Short Description
-This is a R/RStudio-Version for Part 2 of the article series "Hacking Medical Physics" by Jonas Andersson and Gavin Poludniowski (GitRepo: [rvbCMTS/EMP-News](https://github.com/rvbCMTS/EMP-News.git)) in the newsletter of the European Federation of Organisations for Medical Physics (EFOMP)^[[European Medical Physics News](https://www.efomp.org/index.php?r=fc&id=emp-news)].
+This is a R/RStudio-Version for Part 2 of the article series "Hacking Medical Physics" by Jonas Andersson and Gavin Poludniowski (GitRepo: [rvbCMTS/EMP-News](https://github.com/rvbCMTS/EMP-News.git)) in the newsletter of the European Federation of Organisations for Medical Physics (EFOMP)^[[European Medical Physics News](https://www.efomp.org/index.php?r=fc&id=emp-news)]. GitRepo for this R/RStudio version: [Michael Wieland - Hacking Medical Physics - R Version](https://github.com/michaelwiel/hacking_medphys_R_part2.git).
 
 ### Ressources and Preparation
-In order to run this R-Markdown file you need to install RStudio/R ([RStudio Installer](https://www.rstudio.com/products/rstudio/download/)).  
+In order to run this R Markdown file you need to install RStudio with R ([RStudio Installer](https://www.rstudio.com/products/rstudio/download/)).  
 
 Ressources to get started with R:  
 
@@ -44,13 +44,12 @@ I will make heavy use of the package collection `tidyverse` and the "pipe"-opera
 If you have not installed the packages loaded in the `setup code chunk` (see above) start with installing them via `Tools` -> `Install Packages`.
 
 ### Executing Code
-You can run the code in the console window or directly in the RMarkdwon-file by clicking on the little "Play"-button in the top right hand corner of the code chunks:
+You can run the code in the RStudio console window or directly in the RMarkdwon-file by clicking on the little "Play"-button in the top right hand corner of the code chunks:
 
 ![Code chunk example - Execute code with play button in the top right hand corner](figures/example_codechunk.png)
 
-
 ## Reading in Data
-If your data files reside in the working directory you can access them in a relative fashion. My current working directory is the folder where this R-Markdown-file is stored and the data files are stored in a subfolder called "reports".
+If your data files reside in the working directory you can access them in a relative fashion. My current working directory is the folder where this R Markdown-file is stored and the data files are stored in a subfolder called "reports".
 
 ### Reading an Excel File
 My preferred method to read Excel files is to use the `readxl`-package:
@@ -81,11 +80,11 @@ _Note for R Newcomers:_ If you know the order of the arguments of a function you
 <br>
 `read_xls(path, sheet = NULL, range = NULL, col_names = TRUE, col_types = NULL, ...)`  
 <br>
-Since `path` is the first argument we could also read in the data by just writing `read_xls("reports/StaffDoses_1.xls")`. It is of course faster to type but on the other side makes the code harder to read if you don't know the function. The second thing to note is that there are a lot of other mandatory arguments but they all have default value. For example `col_names` is set to `TRUE` by default and this will cause the function to regard the first line in the excel file as column names and not as data.  
+Since `path` is the first argument we could also read in the data by just writing `read_xls("reports/StaffDoses_1.xls")`. It is of course faster to type but on the other side makes the code harder to read if you don't know the function. The second thing to note is that there are a lot of other mandatory arguments but they all have default a value. For example `col_names` is set to `TRUE` by default and this will cause the function to regard the first line in the Excel file as column names and not as data.  
 
 
 ### Fixing the column names
-Reading the Excel-File with the function `read_xls` from the package `readxl` gives a decent first result. A few things should be changed though in order to work with the data properly. The variable names (column titles) should adhere to the following convention^[[Social Science Computing Cooperative - Naming Variables](https://sscc.wisc.edu/sscc/pubs/DWE/book/4-2-naming-variables.html)]:  
+Reading the Excel file with the function `read_xls` from the package `readxl` gives a decent first result. A few things should be changed though in order to work with the data properly. There are a lot of code style guides out there^[[Coding style, coding etiquette](https://blog.r-hub.io/2022/03/21/code-style/)] but I am going to adhere to the following convention of naming the variable names (column titles)^[[Social Science Computing Cooperative - Naming Variables](https://sscc.wisc.edu/sscc/pubs/DWE/book/4-2-naming-variables.html)]:  
 
 > * Use only lower case.  
 > * Use the underscore, "_" as a replacment for spaces to separate words (called __snake coding__).
@@ -106,7 +105,7 @@ report_column_names <- read_xls(path = "reports/StaffDoses_1.xls",
        replacement = "")  # deleting round brackets and dots; 
     # the square-brackets function as list operator (all characters inside the square-brackets are identified)
 
-#checking the rsult:
+#checking the result:
 report_column_names
 ```
 
@@ -172,7 +171,7 @@ colnames(all_reports) <- report_column_names # replacing the column names with t
 Some data wrangling is needed to get the right data types: 
 
 * All numerical variables should be defined as `double` or `integer`,  
-* Replace "," with "." in decimal numbers so R can recognise them as numbers ("English convention" for decimal numbers),  
+* Replace semicolons with dots in decimal numbers so R can recognize them as numbers ("English convention" for decimal numbers),  
 * Create a column `status` before converting `hp10` and `hp007` to numeric in order not to lose information. Where `hp10` and `hp007` have the values "B", "NR" or `NA` (B: Below Measurement Treshold; NR: Not returned; `NA`: Missing Value) we transfer those values to the new column, if the values are numeric we set the value in the new column to "OK".  
 
 To fix the dates I needed a work around because my machine `locale` is set to German but the dates in the reports have abbreviated month names in English. One way to read in the data correctly with little coding is to set the `locale` on the machine to English temporarily. For date-time conversion to and from character see [`strptime`](https://www.rdocumentation.org/packages/base/versions/3.6.2/topics/strptime).
@@ -275,7 +274,7 @@ all_reports_fixed %>%
   drop_na(hp10) %>%  # droping all rows where no dose was recorded (altough ggplot can handle NAs)
   mutate(report_year = format(report_date, "%Y")) %>% # extracting the year from the report date
   filter(report_year %in% c("2020", "2021")) %>% # chose years 2020 and 2021
-  ggplot(aes(x=report_year, y=hp10)) +
+  ggplot(aes(x = report_year, y = hp10)) +
   geom_boxplot() +
   scale_y_continuous(limits = c(0,NA), 
                       # set lower bound to 0 and let ggplot automatically set upper bound
@@ -395,7 +394,7 @@ For a limited number of files like in the example above working with a database 
 
 If you are new to SQL and you want to have a possibilty to "look into" a SQLite database check out the leightweight and open source GUI [SQLiteStudio](https://sqlitestudio.pl/).
 <br>
-To connect R to a database management system (DBMS) we need the [`DBI`-package](https://dbi.r-dbi.org/) and [`RSQLite`](https://rsqlite.r-dbi.org/). If you not have done it already go ahead and install the `RSQLite`-package which will automatically install the `DBI`-package. For detailed information on the `DBI` functions we will use see the [DBI - Reference](https://dbi.r-dbi.org/reference/).
+To connect R to a database management system (DBMS) we need the [`DBI`-package](https://dbi.r-dbi.org/) and [`RSQLite`](https://rsqlite.r-dbi.org/). If you not have done it already go ahead and install the `RSQLite`-package which will automatically install the `DBI`-package. For detailed information on the `DBI` functions we will use, see the [DBI - Reference](https://dbi.r-dbi.org/reference/).
 
 ### Creating (or opening a connection to) a Database
 With the funciton `dbConnect` you create a database file or open a connection to an already existing database.  
@@ -418,6 +417,13 @@ mp_db_conn <- dbConnect(drv = RSQLite::SQLite(),
 ### Creating a Table for the Dosimeter Data
 In a database all data is stored in tables. For simplicity we will create a single table for the staff dosimeter readings and don't go into details of optimal table design like [functional dependencies](https://opentextbc.ca/dbdesign01/chapter/chapter-11-functional-dependencies/) and [normalization](https://en.wikipedia.org/wiki/Database_normalization). 
 <br>
+
+
+
+
+
+
+
 
 #### Our First Table
 Before we create our final personnel dosimeter table we are going to have a look at some useful functions and run a view tests. As data we will use a subset (first 10 rows) of the cleaned data we already prepared before (section "Fix data types"). 
@@ -455,7 +461,7 @@ dbListTables(conn = mp_db_conn)
 ```
 
 ```
-## [1] "staffdose" "stage"     "test01"
+## [1] "test01"
 ```
 
 Now we execute our first SQL queries with `dbGetQuery()` which returns the result of the query as dataframe.
@@ -489,7 +495,7 @@ dbGetQuery(conn = mp_db_conn,
 ```
 
 ```r
-# Lets select a subset of columns
+# Let's select a subset of columns
 dbGetQuery(conn = mp_db_conn,
            statement = "SELECT name, person_uid, dosimeter_uid, report_uid, report_date FROM test01")
 ```
@@ -540,7 +546,7 @@ dbGetQuery(conn = mp_db_conn,
 
 As you can see from the output we don't have a primary key (all "pk" are set to 0) and neither have we set a UNIQUE constraint.  
 <br>
-Lets see what happens if we add some more data. This time we create a dataframe with rows 10 to 12 from `all_reports_fixed_dateastext`. Row 10 is already in the database and rows 11 and 12 are new data.
+Let's see what happens if we add some more data. This time we create a dataframe with rows 10 to 12 from `all_reports_fixed_dateastext`. Row 10 is already in the database and rows 11 and 12 are new data.
 
 
 ```r
@@ -555,27 +561,27 @@ dbWriteTable(conn = mp_db_conn,
 # otherwise we will get an error message
 
 dbGetQuery(conn = mp_db_conn,
-           statement = "SELECT name, person_uid, dosimeter_uid, report_uid report_date FROM test01") %>% 
+           statement = "SELECT name, person_uid, dosimeter_uid, report_date FROM test01") %>% 
   tibble()
 ```
 
 ```
 ## # A tibble: 13 x 4
 ##    name               person_uid dosimeter_uid report_date
-##    <chr>                   <dbl>         <dbl>       <dbl>
-##  1 Severus Snape           12368         90072        1137
-##  2 Harry Potter            12369         90073        1137
-##  3 Parvati Patil           12370         90075        1137
-##  4 Parvati Patil           12370         90076        1137
-##  5 Cedric Diggory          12371         90077        1137
-##  6 Cedric Diggory          12371         90078        1137
-##  7 Ron Weasley             12372         90079        1137
-##  8 Tom Marvolo Riddle      12373         90080        1137
-##  9 Hermione Grainger       12374         90081        1137
-## 10 Albus Dumbledore        12375         90082        1137
-## 11 Albus Dumbledore        12375         90082        1137
-## 12 Filius Flitwick         12376         90083        1137
-## 13 Neville Longbottom      12377         90084        1137
+##    <chr>                   <dbl>         <dbl> <chr>      
+##  1 Severus Snape           12368         90072 2019-12-28 
+##  2 Harry Potter            12369         90073 2019-12-28 
+##  3 Parvati Patil           12370         90075 2019-12-28 
+##  4 Parvati Patil           12370         90076 2019-12-28 
+##  5 Cedric Diggory          12371         90077 2019-12-28 
+##  6 Cedric Diggory          12371         90078 2019-12-28 
+##  7 Ron Weasley             12372         90079 2019-12-28 
+##  8 Tom Marvolo Riddle      12373         90080 2019-12-28 
+##  9 Hermione Grainger       12374         90081 2019-12-28 
+## 10 Albus Dumbledore        12375         90082 2019-12-28 
+## 11 Albus Dumbledore        12375         90082 2019-12-28 
+## 12 Filius Flitwick         12376         90083 2019-12-28 
+## 13 Neville Longbottom      12377         90084 2019-12-28
 ```
 
 Now we have 13 rows in the table which means that we created a duplicate by adding row 10 a second time (entry for the dosimeter reading of Albus Dumbledore from December 2019).  
@@ -612,11 +618,11 @@ dbExecute(conn = mp_db_conn,
 
 ```r
 # check content of the database
-dbListTables(mp_db_conn)
+dbListTables(conn = mp_db_conn)
 ```
 
 ```
-## [1] "stage"
+## character(0)
 ```
 
 ```r
@@ -654,22 +660,17 @@ dbExecute(conn = mp_db_conn,
 
 ```r
 # check if it worked
-dbListTables(mp_db_conn)
+dbListTables(conn = mp_db_conn)
 ```
 
 ```
-## [1] "staffdose" "stage"
+## [1] "staffdose"
 ```
 
 ```r
-# you can see that there are two tables:
-  # "staffdose" (the one we defined) and 
-  # "sqlite_sequence" automatically created because we used "AUTOINCREMENT"
-    # for info on "sqlite_sequence" see: https://www.sqlite.org/autoinc.html
-
 # check if "id" is the primary key of the table:
-dbGetQuery(mp_db_conn, 
-           "pragma table_info('staffdose')") %>% 
+dbGetQuery(conn = mp_db_conn, 
+           statement = "pragma table_info('staffdose')") %>% 
   head(1)
 ```
 
@@ -682,7 +683,7 @@ dbGetQuery(mp_db_conn,
 # the id-column should have the values 1 for "notnull" and "pk" (primary key)
 ```
 
-Lets try again, add data and then try to add some more data including duplicates:
+Let's try again, add data and then try to add some more data including duplicates:
 
 
 ```r
@@ -717,7 +718,7 @@ dbGetQuery(conn = mp_db_conn,
 ```
 
 ```r
-# add dataset with duplicates
+# add dataset with rows already contained in the table
 dbWriteTable(conn = mp_db_conn,
              name = "staffdose",
              value = arf_rows10to12,
@@ -736,7 +737,7 @@ We have achieved our goal to prevent duplicates but unfortunately there is no ea
 #### Adding only unique Data
 For details and source of the following approach see the forum thread "[RStudio Community - Creating and populating a SQLite database via R - How to ignore duplicate rows?](https://community.rstudio.com/t/creating-and-populating-a-sqlite-database-via-r-how-to-ignore-duplicate-rows/85470/3)".
 
-For the work around we will use a second table called `stage` with the same structure as `staffdose` but without any constraints. The table `stage` will therefore accept any data even if it already exists in `staffdose`. Next we will read in the new data into the intermediary table `stag` and can then transfer only the new data 
+For the work around we will use a second table called `stage` with the same structure as `staffdose` but without any constraints. The table `stage` will therefore accept any data even if it already exists in `staffdose`. Next we will read in the new data into the intermediary table `stage` and can then transfer only the new data 
 to the table `staffdose` with the command `INSERT OR IGNORE INTO staffdose`:
 
 
@@ -814,8 +815,9 @@ dbAppendUniqueStaffDose(connection = mp_db_conn,
 ```
 
 ```r
-# lets view the table:
-check <- dbGetQuery(mp_db_conn, "SELECT name, person_uid, dosimeter_placement, dosimeter_uid, report_uid FROM staffdose"); check
+# Let's view the table:
+check <- dbGetQuery(conn = mp_db_conn, 
+                    statement = "SELECT name, person_uid, dosimeter_placement, dosimeter_uid, report_uid FROM staffdose"); check
 ```
 
 ```
@@ -839,7 +841,8 @@ check <- dbGetQuery(mp_db_conn, "SELECT name, person_uid, dosimeter_placement, d
 
 # Check if the data of the first 12 rows is really without duplicates
   # by comparing the table content with the data from the dataframe 
-check == all_reports_fixed[1:12, c("name", "person_uid", "dosimeter_placement", "dosimeter_uid", "report_uid")]
+check == all_reports_fixed[1:12, 
+                           c("name", "person_uid", "dosimeter_placement", "dosimeter_uid", "report_uid")]
 ```
 
 ```
@@ -861,8 +864,9 @@ check == all_reports_fixed[1:12, c("name", "person_uid", "dosimeter_placement", 
 ```r
 # if we have only TRUEs we only added unuique data
 
-# lets add all the data to the staffdose table
-dbAppendUniqueStaffDose(mp_db_conn, all_reports_fixed_dateastext)
+# Let's add all the data to the staffdose table
+dbAppendUniqueStaffDose(connection = mp_db_conn, 
+                        newreportdata = all_reports_fixed_dateastext)
 ```
 
 ```
@@ -880,6 +884,7 @@ stat <- "OK"
 dos_type <- "Badge"
 year <- c(2020,2021)
 
+# query and graph
 dbGetQuery(conn = mp_db_conn,
            statement = 
              "SELECT hp10, department, STRFTIME('%Y', measurement_period_end) AS report_year 
@@ -889,9 +894,10 @@ dbGetQuery(conn = mp_db_conn,
                 params = c(stat, dos_type, year)) %>% 
   ggplot(aes(x=report_year, y=hp10)) +
   geom_boxplot() +
-  scale_y_continuous(limits = c(0,NA), 
+  scale_y_continuous(limits = c(0, NA), 
                       # set lower bound to 0 and let ggplot automatically set upper bound
-                     breaks = pretty(c(0, max(all_reports_fixed$hp10, na.rm = T)), n=10)) + 
+                     breaks = pretty(c(0, max(all_reports_fixed$hp10, na.rm = T)), 
+                                     n=10)) + 
                       # getting 10 breaks in the y-axis from 0 to maximum value of hp10
   labs(x = "", y = "Hp(10) [mSv]", # Axis names
        title = "Summary Statistics for monthly Hp(10) values",
@@ -1001,8 +1007,7 @@ stat = "OK"
 year = 2020
 dos_type = "Badge"
 
-#query and figure
-
+#query and graph
 dbGetQuery(conn = mp_db_conn,
            statement = 
              "SELECT name, department, SUM(hp10) AS hp10_total, STRFTIME('%Y', measurement_period_end) AS report_year
@@ -1024,8 +1029,8 @@ dbGetQuery(conn = mp_db_conn,
 
 ![](hack_mp_part2_files/figure-html/sql_total_dose_2020-1.png)<!-- -->
 
-### SQL Engine in RMarkdown
-As I will discuss in the next section, RMarkdown is an incredible powerful tool. One of its cool features is its ability to ["speak" SQL](https://bookdown.org/yihui/rmarkdown/language-engines.html#sql) and other languages. You can not only use "r code chunks" but others too. When using a "SQL code chunk" you don't need the `DBI`-functions, you can write native SQL queries:
+### SQL Engine in R Markdown
+As I will discuss in the next section, R Markdown is an incredible powerful tool. One of its cool features is its ability to ["speak" SQL](https://bookdown.org/yihui/R Markdown/language-engines.html#sql) and other languages. You can not only use "r code chunks" but others too. When using a "SQL code chunk" you don't need the `DBI`-functions, you can write native SQL queries:
 
 
 ```sql
@@ -1082,12 +1087,14 @@ dbDisconnect(mp_db_conn)
 ```
 
 
-## Reporting with RMarkdown
-R is one of the most important statistics software solutions out there and together with RStudio and its integration of [R Markdown](https://rmarkdown.rstudio.com/) it is an inedible versatile tool for data analysis and reporting. The tutorial you are reading is compiled from a R Markdown file. From the [R Markdown website](https://rmarkdown.rstudio.com/):
+## Reporting with R Markdown
+R is one of the most important statistics software solutions out there and together with RStudio and its integration of [R Markdown](https://R Markdown.rstudio.com/) it is an incredible versatile tool for data analysis and reporting. The tutorial you are reading is compiled from a R Markdown file.  
+<br>
+From the [R Markdown website](https://R Markdown.rstudio.com/):
 
-> R Markdown supports dozens of static and dynamic output formats including HTML, PDF, MS Word, Beamer, HTML5 slides, Tufte-style handouts, books, dashboards, shiny applications, scientific articles, websites, and more ([see gallery](https://rmarkdown.rstudio.com/gallery.html)). 
+> R Markdown supports dozens of static and dynamic output formats including HTML, PDF, MS Word, Beamer, HTML5 slides, Tufte-style handouts, books, dashboards, shiny applications, scientific articles, websites, and more ([see gallery](https://R Markdown.rstudio.com/gallery.html)). 
 
 You might have to write reports for your department, your hospital, the authorities, ... where you have to present data. With [knitr](https://yihui.org/knitr/) you can convert your R Markdown file into a Word document and even use word-templates you create or your organization provides for you. With an additional Latex-Installation like [TinyTeX](https://yihui.org/tinytex/) you can create pdf-documents and there are many more options.  
 <br>
 
-The easiest way to start is to create a report as html-file that you can then print to pdf with your browser. Check out the `sample_report.Rmd`-file for an example. I also included a parameterization for the departments in the YAML-header. With that parameterization you can create reports for each department from one R Markdown file. More on parameterized reports: [R Markdown: The Definitive Guide - Chapter 15](https://bookdown.org/yihui/rmarkdown/parameterized-reports.html). 
+The easiest way to start is to create a report as html-file that you can then print to pdf with your browser. Check out the `sample_report.Rmd`-file for an example. I also included a parameterization for the departments in the YAML-header. With that parameterization you can create reports for each department from one R Markdown file. More on parameterized reports: [R Markdown: The Definitive Guide - Chapter 15](https://bookdown.org/yihui/RMarkdown/parameterized-reports.html). 
