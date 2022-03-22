@@ -1,6 +1,8 @@
 ---
 title: "Hacking Medical Physics with R"
-author: "Michael Wieland"
+author: |
+  Michael Wieland  
+  mchl.wieland@gmail.com
 date: "`r Sys.Date()`"
 output: 
   html_document: 
@@ -43,7 +45,7 @@ I will make heavy use of the package collection `tidyverse` and the "pipe"-opera
 If you have not installed the packages loaded in the `setup code chunk` (see above) start with installing them via `Tools` -> `Install Packages`.
 
 ### Executing Code
-You can run the code in the RStudio console window or directly in the RMarkdwon-file by clicking on the little "Play"-button in the top right hand corner of the code chunks:
+You can run the code in the RStudio console window or directly in the R Markdown file by clicking on the little "Play"-button in the top right hand corner of the code chunks:
 
 ![Code chunk example - Execute code with play button in the top right hand corner](figures/example_codechunk.png)
 
@@ -62,7 +64,7 @@ _Note for R Newcomers:_ If you know the order of the arguments of a function you
 <br>
 `read_xls(path, sheet = NULL, range = NULL, col_names = TRUE, col_types = NULL, ...)`  
 <br>
-Since `path` is the first argument we could also read in the data by just writing `read_xls("reports/StaffDoses_1.xls")`. It is of course faster to type but on the other side makes the code harder to read if you don't know the function. The second thing to note is that there are a lot of other mandatory arguments but they all have default a value. For example `col_names` is set to `TRUE` by default and this will cause the function to regard the first line in the Excel file as column names and not as data.  
+Since `path` is the first argument we could also read in the data by just writing `read_xls("reports/StaffDoses_1.xls")`. It is of course faster to type but on the other side makes the code harder to read if you don't know the function. The second thing to note is that there are a lot of other mandatory arguments but they all have a default value. For example `col_names` is set to `TRUE` by default and this will cause the function to regard the first line in the Excel file as column names and not as data.  
 
 
 ### Fixing the column names
@@ -250,7 +252,7 @@ all_reports_fixed %>%
   filter(! status %in% c("NR", "B")) %>% # filter out "NR" and "B"
   # grouping by dosimeter type to count both types separately
   group_by(dosimeter_type) %>% # to count dosimeter readings depending on type
-  summarise(sum(!is.na(hp10)), length(!is.na(hp007))) %>% 
+  summarise(sum(!is.na(hp10)), sum(!is.na(hp007))) %>% 
    # counting the rows with numeric values only (that are not NA)
     # OBS: !is.na(a) gives back TRUE if a variable is NOT NA. 
           # In R the logical value TRUE is equivalent to 1. 

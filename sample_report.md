@@ -3,7 +3,9 @@ title: |
   ![](figures/logo_for_report_header.png)  
   <br>
   <span style="color:black">Sample Report</span>
-author: "Michael Wieland"
+author: |
+  Michael Wieland  
+  mchl.wieland@gmail.com
 date: "20 3 2022"
 output: 
   html_document: 
