@@ -10,7 +10,7 @@
 
 
 
-<meta name="date" content="2022-03-22" />
+<meta name="date" content="2022-03-24" />
 
 <title>Hacking Medical Physics with R</title>
 
@@ -348,7 +348,7 @@ div.tocify {
 <h1 class="title toc-ignore">Hacking Medical Physics with R</h1>
 <h4 class="author"><p>Michael Wieland<br />
 <a href="mailto:mchl.wieland@gmail.com" class="email">mchl.wieland@gmail.com</a></p></h4>
-<h4 class="date">2022-03-22</h4>
+<h4 class="date">2022-03-24</h4>
 
 </div>
 
@@ -465,7 +465,7 @@ If you have not installed the packages loaded in the <code>setup code chunk</cod
 ## [22] &quot;StaffDoses_3.xls&quot;  &quot;StaffDoses_4.xls&quot;  &quot;StaffDoses_5.xls&quot; 
 ## [25] &quot;StaffDoses_6.xls&quot;  &quot;StaffDoses_7.xls&quot;  &quot;StaffDoses_8.xls&quot; 
 ## [28] &quot;StaffDoses_9.xls&quot;</code></pre>
-<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>all_reports_to_read_in <span class="ot">&lt;-</span> <span class="fu">list.files</span>(<span class="st">&quot;reports&quot;</span>) <span class="co"># read the list of file names in a character vector</span></span>
+<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>all_reports_to_read_in <span class="ot">&lt;-</span> <span class="fu">list.files</span>(<span class="st">&quot;reports&quot;</span>) <span class="co"># read the list of file names into a character vector</span></span>
 <span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="co"># number of reports in the folder:</span></span>
 <span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="fu">length</span>(all_reports_to_read_in)</span></code></pre></div>
@@ -792,20 +792,24 @@ See <a href="https://rsqlite.r-dbi.org/reference/sqlite">RSQLite Packages Vignet
 ## #   dosimeter_uid &lt;dbl&gt;, measurement_period_start &lt;chr&gt;,
 ## #   measurement_period_end &lt;chr&gt;, read_date &lt;chr&gt;, report_date &lt;chr&gt;,
 ## #   report_uid &lt;dbl&gt;, status &lt;chr&gt;</code></pre>
-<div class="sourceCode" id="cb26"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Let&#39;s select a subset of columns</span></span>
-<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a><span class="fu">dbGetQuery</span>(<span class="at">conn =</span> mp_db_conn,</span>
-<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a>           <span class="at">statement =</span> <span class="st">&quot;SELECT name, person_uid, dosimeter_uid, report_uid, report_date FROM test01&quot;</span>)</span></code></pre></div>
-<pre><code>##                  name person_uid dosimeter_uid report_uid report_date
-## 1       Severus Snape      12368         90072       1137  2019-12-28
-## 2        Harry Potter      12369         90073       1137  2019-12-28
-## 3       Parvati Patil      12370         90075       1137  2019-12-28
-## 4       Parvati Patil      12370         90076       1137  2019-12-28
-## 5      Cedric Diggory      12371         90077       1137  2019-12-28
-## 6      Cedric Diggory      12371         90078       1137  2019-12-28
-## 7         Ron Weasley      12372         90079       1137  2019-12-28
-## 8  Tom Marvolo Riddle      12373         90080       1137  2019-12-28
-## 9   Hermione Grainger      12374         90081       1137  2019-12-28
-## 10   Albus Dumbledore      12375         90082       1137  2019-12-28</code></pre>
+<div class="sourceCode" id="cb26"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Conversion of the resulting dataframe into a tibble (a special form of dataframe) only for visualisation reasons (more compact output in the rendered html)</span></span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Let&#39;s select a subset of columns</span></span>
+<span id="cb26-4"><a href="#cb26-4" aria-hidden="true" tabindex="-1"></a><span class="fu">dbGetQuery</span>(<span class="at">conn =</span> mp_db_conn,</span>
+<span id="cb26-5"><a href="#cb26-5" aria-hidden="true" tabindex="-1"></a>           <span class="at">statement =</span> <span class="st">&quot;SELECT name, person_uid, dosimeter_uid, report_uid,</span></span>
+<span id="cb26-6"><a href="#cb26-6" aria-hidden="true" tabindex="-1"></a><span class="st">                        STRFTIME(&#39;%Y-%m&#39;, report_date) as report_month </span></span>
+<span id="cb26-7"><a href="#cb26-7" aria-hidden="true" tabindex="-1"></a><span class="st">                        FROM test01&quot;</span>)</span></code></pre></div>
+<pre><code>##                  name person_uid dosimeter_uid report_uid report_month
+## 1       Severus Snape      12368         90072       1137      2019-12
+## 2        Harry Potter      12369         90073       1137      2019-12
+## 3       Parvati Patil      12370         90075       1137      2019-12
+## 4       Parvati Patil      12370         90076       1137      2019-12
+## 5      Cedric Diggory      12371         90077       1137      2019-12
+## 6      Cedric Diggory      12371         90078       1137      2019-12
+## 7         Ron Weasley      12372         90079       1137      2019-12
+## 8  Tom Marvolo Riddle      12373         90080       1137      2019-12
+## 9   Hermione Grainger      12374         90081       1137      2019-12
+## 10   Albus Dumbledore      12375         90082       1137      2019-12</code></pre>
 <div class="sourceCode" id="cb28"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="co"># See the structure of the table by using built in pragma statements</span></span>
 <span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a>  <span class="co"># (https://www.sqlite.org/pragma.html) in a query</span></span>
 <span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a><span class="fu">dbGetQuery</span>(<span class="at">conn =</span> mp_db_conn,</span>
@@ -843,24 +847,26 @@ See <a href="https://rsqlite.r-dbi.org/reference/sqlite">RSQLite Packages Vignet
 <span id="cb30-9"><a href="#cb30-9" aria-hidden="true" tabindex="-1"></a><span class="co"># otherwise we will get an error message</span></span>
 <span id="cb30-10"><a href="#cb30-10" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb30-11"><a href="#cb30-11" aria-hidden="true" tabindex="-1"></a><span class="fu">dbGetQuery</span>(<span class="at">conn =</span> mp_db_conn,</span>
-<span id="cb30-12"><a href="#cb30-12" aria-hidden="true" tabindex="-1"></a>           <span class="at">statement =</span> <span class="st">&quot;SELECT name, person_uid, dosimeter_uid, report_date FROM test01&quot;</span>) <span class="sc">%&gt;%</span> </span>
-<span id="cb30-13"><a href="#cb30-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tibble</span>()</span></code></pre></div>
+<span id="cb30-12"><a href="#cb30-12" aria-hidden="true" tabindex="-1"></a>           <span class="at">statement =</span> <span class="st">&quot;SELECT name, person_uid, dosimeter_uid, </span></span>
+<span id="cb30-13"><a href="#cb30-13" aria-hidden="true" tabindex="-1"></a><span class="st">                        STRFTIME(&#39;%Y-%m&#39;,report_date) AS report_month</span></span>
+<span id="cb30-14"><a href="#cb30-14" aria-hidden="true" tabindex="-1"></a><span class="st">                        FROM test01&quot;</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb30-15"><a href="#cb30-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tibble</span>()</span></code></pre></div>
 <pre><code>## # A tibble: 13 x 4
-##    name               person_uid dosimeter_uid report_date
-##    &lt;chr&gt;                   &lt;dbl&gt;         &lt;dbl&gt; &lt;chr&gt;      
-##  1 Severus Snape           12368         90072 2019-12-28 
-##  2 Harry Potter            12369         90073 2019-12-28 
-##  3 Parvati Patil           12370         90075 2019-12-28 
-##  4 Parvati Patil           12370         90076 2019-12-28 
-##  5 Cedric Diggory          12371         90077 2019-12-28 
-##  6 Cedric Diggory          12371         90078 2019-12-28 
-##  7 Ron Weasley             12372         90079 2019-12-28 
-##  8 Tom Marvolo Riddle      12373         90080 2019-12-28 
-##  9 Hermione Grainger       12374         90081 2019-12-28 
-## 10 Albus Dumbledore        12375         90082 2019-12-28 
-## 11 Albus Dumbledore        12375         90082 2019-12-28 
-## 12 Filius Flitwick         12376         90083 2019-12-28 
-## 13 Neville Longbottom      12377         90084 2019-12-28</code></pre>
+##    name               person_uid dosimeter_uid report_month
+##    &lt;chr&gt;                   &lt;dbl&gt;         &lt;dbl&gt; &lt;chr&gt;       
+##  1 Severus Snape           12368         90072 2019-12     
+##  2 Harry Potter            12369         90073 2019-12     
+##  3 Parvati Patil           12370         90075 2019-12     
+##  4 Parvati Patil           12370         90076 2019-12     
+##  5 Cedric Diggory          12371         90077 2019-12     
+##  6 Cedric Diggory          12371         90078 2019-12     
+##  7 Ron Weasley             12372         90079 2019-12     
+##  8 Tom Marvolo Riddle      12373         90080 2019-12     
+##  9 Hermione Grainger       12374         90081 2019-12     
+## 10 Albus Dumbledore        12375         90082 2019-12     
+## 11 Albus Dumbledore        12375         90082 2019-12     
+## 12 Filius Flitwick         12376         90083 2019-12     
+## 13 Neville Longbottom      12377         90084 2019-12</code></pre>
 <p>Now we have 13 rows in the table which means that we created a duplicate by adding row 10 a second time (entry for the dosimeter reading of Albus Dumbledore from December 2019).</p>
 </div>
 <div id="table-with-constraints" class="section level4">
@@ -950,7 +956,7 @@ As <code>PRIMARY KEY</code> we add an <code>id</code>-column and set a <code>UNI
 <div id="adding-only-unique-data" class="section level4">
 <h4>Adding only unique Data</h4>
 <p>For details and source of the following approach see the forum thread “<a href="https://community.rstudio.com/t/creating-and-populating-a-sqlite-database-via-r-how-to-ignore-duplicate-rows/85470/3">RStudio Community - Creating and populating a SQLite database via R - How to ignore duplicate rows?</a>”.</p>
-<p>For the work around we will use a second table called <code>stage</code> with the same structure as <code>staffdose</code> but without any constraints. The table <code>stage</code> will therefore accept any data even if it already exists in <code>staffdose</code>. Next we will read in the new data into the intermediary table <code>stage</code> and can then transfer only the new data to the table <code>staffdose</code> with the command <code>INSERT OR IGNORE INTO staffdose</code>:</p>
+<p>For the work around we will use a second table called <code>stage</code> with the same structure as <code>staffdose</code> but without any constraints. The table <code>stage</code> will therefore accept any data even if it already exists in <code>staffdose</code>. First we will read in the new data into the intermediary table <code>stage</code> and can then transfer only the new data to the table <code>staffdose</code> with the command <code>INSERT OR IGNORE INTO staffdose</code>:</p>
 <div class="sourceCode" id="cb51"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb51-1"><a href="#cb51-1" aria-hidden="true" tabindex="-1"></a><span class="co"># we use &quot;DROP TABLE IF EXISTS&quot; in case we run the script more than once</span></span>
 <span id="cb51-2"><a href="#cb51-2" aria-hidden="true" tabindex="-1"></a><span class="fu">dbExecute</span>(<span class="at">conn =</span> mp_db_conn, </span>
 <span id="cb51-3"><a href="#cb51-3" aria-hidden="true" tabindex="-1"></a>          <span class="at">statement =</span> <span class="st">&quot;DROP TABLE IF EXISTS stage&quot;</span>)</span></code></pre></div>
@@ -1318,7 +1324,7 @@ Diagnostic Radiology
 </blockquote>
 <p>You might have to write reports for your department, your hospital, the authorities, … where you have to present data. With <a href="https://yihui.org/knitr/">knitr</a> you can convert your R Markdown file into a Word document and even use word-templates you create or your organization provides for you. With an additional Latex-Installation like <a href="https://yihui.org/tinytex/">TinyTeX</a> you can create pdf-documents and there are many more options.<br />
 <br></p>
-<p>The easiest way to start is to create a report as html-file that you can then print to pdf with your browser. Check out the <code>sample_report.Rmd</code>-file for an example. I also included a parameterization for the departments in the YAML-header. With that parameterization you can create reports for each department from one R Markdown file. More on parameterized reports: <a href="https://bookdown.org/yihui/RMarkdown/parameterized-reports.html">R Markdown: The Definitive Guide - Chapter 15</a>.</p>
+<p>The easiest way to start is to create a report as html-file that you can then print to pdf with your browser. Check out the <code>sample_report.Rmd</code>-file for an example. I also included a parameterization for departments and years in the YAML-header. With that parameterization you can create reports for each department and year from one R Markdown file. More on parameterized reports: <a href="https://bookdown.org/yihui/RMarkdown/parameterized-reports.html">R Markdown: The Definitive Guide - Chapter 15</a>.</p>
 </div>
 <div class="footnotes">
 <hr />

@@ -3,7 +3,7 @@ title: "Hacking Medical Physics with R"
 author: |
   Michael Wieland  
   mchl.wieland@gmail.com
-date: "2022-03-22"
+date: "2022-03-24"
 output: 
   html_document: 
     highlight: pygments
@@ -145,7 +145,7 @@ list.files(path = "reports") # get a list of all files from a folder
 ```
 
 ```r
-all_reports_to_read_in <- list.files("reports") # read the list of file names in a character vector
+all_reports_to_read_in <- list.files("reports") # read the list of file names into a character vector
 
 # number of reports in the folder:
 length(all_reports_to_read_in)
@@ -497,23 +497,27 @@ dbGetQuery(conn = mp_db_conn,
 ```
 
 ```r
+# Conversion of the resulting dataframe into a tibble (a special form of dataframe) only for visualisation reasons (more compact output in the rendered html)
+
 # Let's select a subset of columns
 dbGetQuery(conn = mp_db_conn,
-           statement = "SELECT name, person_uid, dosimeter_uid, report_uid, report_date FROM test01")
+           statement = "SELECT name, person_uid, dosimeter_uid, report_uid,
+                        STRFTIME('%Y-%m', report_date) as report_month 
+                        FROM test01")
 ```
 
 ```
-##                  name person_uid dosimeter_uid report_uid report_date
-## 1       Severus Snape      12368         90072       1137  2019-12-28
-## 2        Harry Potter      12369         90073       1137  2019-12-28
-## 3       Parvati Patil      12370         90075       1137  2019-12-28
-## 4       Parvati Patil      12370         90076       1137  2019-12-28
-## 5      Cedric Diggory      12371         90077       1137  2019-12-28
-## 6      Cedric Diggory      12371         90078       1137  2019-12-28
-## 7         Ron Weasley      12372         90079       1137  2019-12-28
-## 8  Tom Marvolo Riddle      12373         90080       1137  2019-12-28
-## 9   Hermione Grainger      12374         90081       1137  2019-12-28
-## 10   Albus Dumbledore      12375         90082       1137  2019-12-28
+##                  name person_uid dosimeter_uid report_uid report_month
+## 1       Severus Snape      12368         90072       1137      2019-12
+## 2        Harry Potter      12369         90073       1137      2019-12
+## 3       Parvati Patil      12370         90075       1137      2019-12
+## 4       Parvati Patil      12370         90076       1137      2019-12
+## 5      Cedric Diggory      12371         90077       1137      2019-12
+## 6      Cedric Diggory      12371         90078       1137      2019-12
+## 7         Ron Weasley      12372         90079       1137      2019-12
+## 8  Tom Marvolo Riddle      12373         90080       1137      2019-12
+## 9   Hermione Grainger      12374         90081       1137      2019-12
+## 10   Albus Dumbledore      12375         90082       1137      2019-12
 ```
 
 ```r
@@ -563,27 +567,29 @@ dbWriteTable(conn = mp_db_conn,
 # otherwise we will get an error message
 
 dbGetQuery(conn = mp_db_conn,
-           statement = "SELECT name, person_uid, dosimeter_uid, report_date FROM test01") %>% 
+           statement = "SELECT name, person_uid, dosimeter_uid, 
+                        STRFTIME('%Y-%m',report_date) AS report_month
+                        FROM test01") %>% 
   tibble()
 ```
 
 ```
 ## # A tibble: 13 x 4
-##    name               person_uid dosimeter_uid report_date
-##    <chr>                   <dbl>         <dbl> <chr>      
-##  1 Severus Snape           12368         90072 2019-12-28 
-##  2 Harry Potter            12369         90073 2019-12-28 
-##  3 Parvati Patil           12370         90075 2019-12-28 
-##  4 Parvati Patil           12370         90076 2019-12-28 
-##  5 Cedric Diggory          12371         90077 2019-12-28 
-##  6 Cedric Diggory          12371         90078 2019-12-28 
-##  7 Ron Weasley             12372         90079 2019-12-28 
-##  8 Tom Marvolo Riddle      12373         90080 2019-12-28 
-##  9 Hermione Grainger       12374         90081 2019-12-28 
-## 10 Albus Dumbledore        12375         90082 2019-12-28 
-## 11 Albus Dumbledore        12375         90082 2019-12-28 
-## 12 Filius Flitwick         12376         90083 2019-12-28 
-## 13 Neville Longbottom      12377         90084 2019-12-28
+##    name               person_uid dosimeter_uid report_month
+##    <chr>                   <dbl>         <dbl> <chr>       
+##  1 Severus Snape           12368         90072 2019-12     
+##  2 Harry Potter            12369         90073 2019-12     
+##  3 Parvati Patil           12370         90075 2019-12     
+##  4 Parvati Patil           12370         90076 2019-12     
+##  5 Cedric Diggory          12371         90077 2019-12     
+##  6 Cedric Diggory          12371         90078 2019-12     
+##  7 Ron Weasley             12372         90079 2019-12     
+##  8 Tom Marvolo Riddle      12373         90080 2019-12     
+##  9 Hermione Grainger       12374         90081 2019-12     
+## 10 Albus Dumbledore        12375         90082 2019-12     
+## 11 Albus Dumbledore        12375         90082 2019-12     
+## 12 Filius Flitwick         12376         90083 2019-12     
+## 13 Neville Longbottom      12377         90084 2019-12
 ```
 
 Now we have 13 rows in the table which means that we created a duplicate by adding row 10 a second time (entry for the dosimeter reading of Albus Dumbledore from December 2019).  
@@ -739,7 +745,7 @@ We have achieved our goal to prevent duplicates but unfortunately there is no ea
 #### Adding only unique Data
 For details and source of the following approach see the forum thread "[RStudio Community - Creating and populating a SQLite database via R - How to ignore duplicate rows?](https://community.rstudio.com/t/creating-and-populating-a-sqlite-database-via-r-how-to-ignore-duplicate-rows/85470/3)".
 
-For the work around we will use a second table called `stage` with the same structure as `staffdose` but without any constraints. The table `stage` will therefore accept any data even if it already exists in `staffdose`. Next we will read in the new data into the intermediary table `stage` and can then transfer only the new data 
+For the work around we will use a second table called `stage` with the same structure as `staffdose` but without any constraints. The table `stage` will therefore accept any data even if it already exists in `staffdose`. First we will read in the new data into the intermediary table `stage` and can then transfer only the new data 
 to the table `staffdose` with the command `INSERT OR IGNORE INTO staffdose`:
 
 
@@ -1099,4 +1105,4 @@ From the [R Markdown website](https://R Markdown.rstudio.com/):
 You might have to write reports for your department, your hospital, the authorities, ... where you have to present data. With [knitr](https://yihui.org/knitr/) you can convert your R Markdown file into a Word document and even use word-templates you create or your organization provides for you. With an additional Latex-Installation like [TinyTeX](https://yihui.org/tinytex/) you can create pdf-documents and there are many more options.  
 <br>
 
-The easiest way to start is to create a report as html-file that you can then print to pdf with your browser. Check out the `sample_report.Rmd`-file for an example. I also included a parameterization for the departments in the YAML-header. With that parameterization you can create reports for each department from one R Markdown file. More on parameterized reports: [R Markdown: The Definitive Guide - Chapter 15](https://bookdown.org/yihui/RMarkdown/parameterized-reports.html). 
+The easiest way to start is to create a report as html-file that you can then print to pdf with your browser. Check out the `sample_report.Rmd`-file for an example. I also included a parameterization for departments and years in the YAML-header. With that parameterization you can create reports for each department and year from one R Markdown file. More on parameterized reports: [R Markdown: The Definitive Guide - Chapter 15](https://bookdown.org/yihui/RMarkdown/parameterized-reports.html). 
