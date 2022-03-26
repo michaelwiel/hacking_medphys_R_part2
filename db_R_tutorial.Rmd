@@ -245,7 +245,7 @@ To connect R to a database management system (DBMS) we need the [`DBI`-package](
 
 ### Creating (or opening a connection to) a Database
 With the funciton `dbConnect` you create a database file or open a connection to an already existing database.  
-See [RSQLite Packages Vignette](https://rsqlite.r-dbi.org/reference/sqlite) for a list of optional arguments. The argument "flags" specifies the connection mode:  
+See [RSQLite Packages Vignette](https://rsqlite.r-dbi.org/reference/sqlite) for a list of optional arguments. The argument `flags` specifies the connection mode:  
 
 * SQLITE_RWC: open the database in read/write mode and create the database file if it does not already exist [DEFAULT];  
 * SQLITE_RW: open the database in read/write mode. Raise an error if the file does not already exist;  
@@ -255,8 +255,8 @@ Since a database can hold many different kinds of data, not only personnel dosim
 ```{r creating_a_db}
 mp_db_conn <- dbConnect(drv = RSQLite::SQLite(), 
                         dbname = "medical_physics_db.sqlite")
-# opening the connection and 
-# creating a connection object called "staff_dose_db_conn" that represents the database.
+# opening the connection to the database "medical_physics_db.sqlite" and 
+# creating a connection object called "mp_db_conn" that represents the database.
 ```
 
 
@@ -265,7 +265,8 @@ In a database all data is stored in tables. For simplicity we will create a sing
 <br>
 
 ```{sql dropping_tables1, connection=mp_db_conn, echo=FALSE}
--- This sql-code chunks are not visible in the tutorial.
+-- This SQL code chunks are not visible in the tutorial.
+-- More on SQL code chunks in the section "SQL Engine in R Markdown" later in the tutorial
 -- We will use the command DROP TABLE IF EXISTS for all tables we will create later on.
 -- This is useful in case the script is run more than once. 
 -- The second time the database already exists and contains tables which can result in problems.
@@ -318,9 +319,10 @@ Now we execute our first SQL queries with `dbGetQuery()` which returns the resul
 
 ```{r table_test03}
 dbGetQuery(conn = mp_db_conn,
-           statement = "SELECT * FROM test01") %>% # "SELECT *": to select all columns 
+           statement = "SELECT * FROM test01") %>% 
   tibble::tibble()
-# Conversion of the resulting dataframe into a tibble (a special form of dataframe) only for visualisation reasons (more compact output in the rendered html)
+# Conversion of the resulting dataframe into a tibble (a special form of dataframe) 
+  # only for visualisation reasons (more compact output in the rendered html)
 
 # Let's select a subset of columns
 dbGetQuery(conn = mp_db_conn,
@@ -351,7 +353,7 @@ dbWriteTable(conn = mp_db_conn,
 
 dbGetQuery(conn = mp_db_conn,
            statement = "SELECT name, person_uid, dosimeter_uid, 
-                        STRFTIME('%Y-%m',report_date) AS report_month
+                        STRFTIME('%Y-%m', report_date) AS report_month
                         FROM test01") %>% 
   tibble()
 ```
@@ -372,7 +374,8 @@ dbExecute(conn = mp_db_conn,
 
 # If you run this script a second time 
 # you will get an error message if you try to create a table that already exists.
-# Therefore we will run the command "DROP TABLE IF EXISTS" to delete the table "staffdose" if it already exists:
+# Therefore we will run the command "DROP TABLE IF EXISTS" 
+  # to delete the table "staffdose" should it already exist:
 dbExecute(conn = mp_db_conn, 
           statement = "DROP TABLE IF EXISTS staffdose")
 
@@ -408,6 +411,8 @@ dbExecute(conn = mp_db_conn,
 
 # check if it worked
 dbListTables(conn = mp_db_conn)
+dbListFields(conn = mp_db_conn,
+             name = "staffdose")
 
 # check if "id" is the primary key of the table:
 dbGetQuery(conn = mp_db_conn, 
@@ -501,6 +506,8 @@ Now we can add data successfully without getting an error message, even if it co
 ```{r add_new_data_with_some_duplicates}
 dbAppendUniqueStaffDose(connection = mp_db_conn,
                         newreportdata = arf_rows10to12)
+# The output should be "##[1] 2" -> Two rows added (out of the 3 rows 2 were new data)
+
 
 # Let's view the table:
 check <- dbGetQuery(conn = mp_db_conn, 
@@ -513,7 +520,7 @@ check == all_reports_fixed[1:12,
                            c("name", "person_uid", "dosimeter_placement", "dosimeter_uid", "report_uid")]
 # if we have only TRUEs we only added unuique data
 
-# Let's add all the data to the staffdose table
+# Let's add all the data to the staffdose table with the function we created
 dbAppendUniqueStaffDose(connection = mp_db_conn, 
                         newreportdata = all_reports_fixed_dateastext)
 ```
@@ -569,7 +576,7 @@ dbGetQuery(conn = mp_db_conn,
               WHERE status != ?
               GROUP BY dosimeter_type",
               params = stat) %>% 
-  relocate(dosimeter_type) %>% # settingr dosimeter_type as first column
+  relocate(dosimeter_type) %>% # setting dosimeter_type as first column
   kable(align = "lcc", # kable is a function to produce tables
         col.names = c("Dosimeter Type", "Hp(10)", "Hp(0.07)"), 
         caption = "Number of dosimeter readings per dosimeter type") %>% 
@@ -625,7 +632,7 @@ dbGetQuery(conn = mp_db_conn,
 
 ### SQL Engine in R Markdown
 As I will discuss in the next section, R Markdown is an incredible powerful tool. One of its cool features is its ability to ["speak" SQL](https://bookdown.org/yihui/R Markdown/language-engines.html#sql) and other languages. You can not only use R code chunks but others too. When using a SQL code chunk you don't need the `DBI`-functions, you can write native SQL queries.  
-Here is an example of a SQL code chunk (note that it starts with "sql" instead of "r" and you have to provide a connection to a database):  
+Here is an example of a SQL code chunk (note that it starts with `sql` instead of `r` and you have to provide a connection to a database):  
 
 ![Example of a SQL code chunk](figures/example_codechunk_sql.png)
 
@@ -656,14 +663,14 @@ The easiest way to start is to create a report as html-file that you can then pr
 
 ## Bonus
 
-### Extended function for reading in data to database
+### Extended Function for reading in Data to the Table staffdose
+
 ```{r extended_function01, eval=FALSE}
 mp_db_conn <- dbConnect(drv = RSQLite::SQLite(),
                         dbname = "medical_physics_db.sqlite")
 
-dbExecute(mp_db_conn, "DELETE FROM staffdose")
-
-dbAppendUniqueDataToStaffdose_Ext <- function(path_data="reports", file_name_beginning="StaffDose") {
+dbAppendUniqueDataToStaffdose_Ext <- function(path_data = "reports", 
+                                              file_name_beginning = "StaffDose") {
   # function to add unique data to table "staffdose" in "medical_physics_db.sqlite"
   
   # checking and fixing arguments
@@ -754,5 +761,7 @@ dbAppendUniqueDataToStaffdose_Ext()
 
 dbGetQuery(mp_db_conn, "SELECT * FROM staffdose")
 dbExecute(mp_db_conn, "DELETE FROM staffdose")
+
+dbDisconnect(conn = mp_db_conn)
 ```
 
