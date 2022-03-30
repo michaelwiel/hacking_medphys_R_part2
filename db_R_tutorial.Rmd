@@ -673,51 +673,33 @@ The easiest way to start is to create a report as html-file that you can then pr
 <br>
 
 ### Multiple Parameterized Reports
-You can of course automate this task to. Say you have to create a version of the sample report each year for all departments. If you already have prepared the parameterized report
+You can of course automate this task too. Say you have to create a version of the sample report each year for all departments. If you already have prepared the parameterized report you can automate this with `rmarkdown::render()`. Executing the next code chunk by clicking the "play button" generates reports for all departments for the year 2021.
 
-```{r, eval=FALSE, echo=FALSE}
+```{r, eval=FALSE}
 # eval= FALSE / echo=FALSE -> delete when junk ready
 
 # set a year (character for SQL query)
 year <- 2021
 
+
 # get list of department names for which dosimeter readings for chosen year exist
 # opening connection
 mp_db_conn <- dbConnect(drv = RSQLite::SQLite(),
-                        dbname = "medical_physics_db.sqlite")
+                        dbname = "medical_physics_db.sqlite",
+                        flags = SQLITE_RO)
 # getting a list of departments for which the 
 dep <- dbGetQuery(mp_db_conn, 
            "SELECT department, hp10, STRFTIME('%Y', report_date) AS report_year 
            FROM staffdose
            WHERE hp10 >=0 AND report_year = ?",
            params = as.character(year)) %>% 
-  distinct(department)
+  distinct(department) 
 # closing connection
 dbDisconnect(conn = mp_db_conn)
 
 
-for(year in 2021:2022) {
-  rmarkdown::render(
-    input = "sample_report.Rmd",
-    params = list(
-      year = year,
-      department = department
-    ),
-    output_file = paste0("Sample Report for year ", year, ".html")
-)
-}
-
-for(department in dep) {
-  rmarkdown::render(
-    input = "sample_report.Rmd",
-    params = list(
-      department = department
-    ),
-    output_file = paste0("Sample Report for year ", department, ".html")
-)
-}
-
 # creating reports for all departments for which dosimeter readings for chosen year exist
+# creating a function with parameters department and year
 render_report = function(department, year) {
   rmarkdown::render(
     "sample_report.Rmd", params = list(
@@ -728,10 +710,10 @@ render_report = function(department, year) {
   )
 }
 
-for (department in dep) {
+# looping through all departments
+for (department in dep[,1]) {
   render_report(department, year)
 }
-
 ```
 
 

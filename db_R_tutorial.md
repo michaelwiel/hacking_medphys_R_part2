@@ -3,7 +3,7 @@ title: "Hacking Medical Physics with R"
 author: |
   Michael Wieland  
   mchl.wieland@gmail.com
-date: "2022-03-30"
+date: "2022-03-31"
 output: 
   html_document: 
     highlight: pygments
@@ -805,7 +805,7 @@ dbAppendUniqueStaffDose(connection = mp_db_conn,
 # params:
 stat <- "OK"
 dos_type <- "Badge"
-year <- c(2020,2021)
+year <- c("2020", "2021")
 
 # query and graph
 dbGetQuery(conn = mp_db_conn,
@@ -1024,11 +1024,54 @@ From the [R Markdown website](https://R Markdown.rstudio.com/):
 You might have to write reports for your department, your hospital, the authorities, ... where you have to present data. With [knitr](https://yihui.org/knitr/) you can convert your R Markdown file into a Word document and even use word-templates you create or your organization provides for you. With an additional Latex-Installation like [TinyTeX](https://yihui.org/tinytex/) you can create pdf-documents and there are many more options.  
 <br>
 
+### Sample Report
 The easiest way to start is to create a report as html-file that you can then print to pdf with your browser. Check out the `sample_report.Rmd`-file for an example. I also included a parameterization for departments and years in the YAML-header. With that parameterization you can create reports for each department and year from one R Markdown file interactively. More on parameterized reports: [R Markdown: The Definitive Guide - Chapter 15](https://bookdown.org/yihui/RMarkdown/parameterized-reports.html). 
 <br>
-You can of course automate this task to. Say you have to create the same report 
+
+### Multiple Parameterized Reports
+You can of course automate this task too. Say you have to create a version of the sample report each year for all departments. If you already have prepared the parameterized report you can automate this with `rmarkdown::render()`. Executing the next code chunk by clicking the "play button" generates reports for all departments for the year 2021.
 
 
+```r
+# eval= FALSE / echo=FALSE -> delete when junk ready
+
+# set a year (character for SQL query)
+year <- 2021
+
+
+# get list of department names for which dosimeter readings for chosen year exist
+# opening connection
+mp_db_conn <- dbConnect(drv = RSQLite::SQLite(),
+                        dbname = "medical_physics_db.sqlite",
+                        flags = SQLITE_RO)
+# getting a list of departments for which the 
+dep <- dbGetQuery(mp_db_conn, 
+           "SELECT department, hp10, STRFTIME('%Y', report_date) AS report_year 
+           FROM staffdose
+           WHERE hp10 >=0 AND report_year = ?",
+           params = as.character(year)) %>% 
+  distinct(department) 
+# closing connection
+dbDisconnect(conn = mp_db_conn)
+
+
+# creating reports for all departments for which dosimeter readings for chosen year exist
+# creating a function with parameters department and year
+render_report = function(department, year) {
+  rmarkdown::render(
+    "sample_report.Rmd", params = list(
+      department = department,
+      year = year
+    ),
+    output_file = paste0("Report-", department, "-", year, ".html")
+  )
+}
+
+# looping through all departments
+for (department in dep[,1]) {
+  render_report(department, year)
+}
+```
 
 
 
