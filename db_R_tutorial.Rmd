@@ -34,12 +34,21 @@ This is a R/RStudio-Version for Part 2 of the article series "Hacking Medical Ph
 ### Ressources and Preparation
 In order to run this R Markdown file you need to install RStudio with R ([RStudio Installer](https://www.rstudio.com/products/rstudio/download/)).  
 
-Ressources to get started with R:  
+Resources to get started with R:  
 
 * [RStudio Education - Beginners](https://education.rstudio.com/learn/beginner/)  
 * [RStudio Support - Getting Started with R](https://support.rstudio.com/hc/en-us/articles/201141096-Getting-Started-with-R)  
 * [RStudio Book Collection](https://www.rstudio.com/products/rstudio/download/)  
 * [ggplot2 - Elegent Graphics for Data Analysis](https://ggplot2-book-solutions-3ed.netlify.app/index.html)  
+
+Resources on R Markdown, the tool this tutorial is written with:  
+
+* [R Markdown Cookbook](https://bookdown.org/yihui/rmarkdown-cookbook/)  
+* [R Markdown: The Definitive Guide](https://bookdown.org/yihui/rmarkdown/)  
+* []()  
+
+Open the the file "hacking_medphys_R_part2.Rproj" which should contain two [R Mardown files](https://rmarkdown.rstudio.com/) named "db_R_tutorial.Rmd" and "sample_report.Rmd". If you can't see them as tabs in the RStudio enviroment you can open the tutorial directly too.  
+<br>
 
 I will make heavy use of the package collection `tidyverse` and the "pipe"-operator (` %>% `). To learn more have a look at: [`tidyverse` - R packages for data science](https://www.tidyverse.org/).  
 If you have not installed the packages loaded in the `setup code chunk` (see above) start with installing them via `Tools` -> `Install Packages`.
@@ -55,7 +64,7 @@ If your data files reside in the working directory you can access them in a rela
 ### Reading an Excel File
 My preferred method to read Excel files is to use the `readxl`-package:
 
-```{r reading_excel}
+```{r readingExcel}
 read_xls(path = "reports/StaffDoses_1.xls") %>% 
   head(5)
 ```
@@ -76,7 +85,7 @@ Reading the Excel file with the function `read_xls` from the package `readxl` gi
 
 Assuming that the reports are always delivered in the same format and structure we can fix the column headers once and use them later on to replace the column names for all reports.
 
-```{r fixing_report_header}
+```{r fixingReportHeader}
 report_column_names <- read_xls(path = "reports/StaffDoses_1.xls",
                                 n_max = 0) %>% 
   # to extract the column names we don't need any data therefore we read in n=0 lines
@@ -95,7 +104,7 @@ report_column_names
 ### Read in all reports from a folder
 To read in all files from a folder we can make use of the function `read.files()` that gives a list of all files in a folder.
 
-```{r read_all_files_from_folder}
+```{r readAllFilesFromFolder}
 list.files(path = "reports") # get a list of all files from a folder
 all_reports_to_read_in <- list.files("reports") # read the list of file names into a character vector
 
@@ -126,7 +135,7 @@ To fix the dates I needed a work around because my machine `locale` is set to Ge
 
 
 
-```{r fix_data_types, warning=FALSE}
+```{r fixDataTypes, warning=FALSE}
 # getting locale
 loc <- Sys.getlocale("LC_TIME") # storing the machine locale setting for time and dates in variable "loc"
 Sys.setlocale("LC_TIME", locale = "English") # setting the machine locale for time and dates to "English"
@@ -252,7 +261,7 @@ See [RSQLite Packages Vignette](https://rsqlite.r-dbi.org/reference/sqlite) for 
 * SQLITE_RO: open the database in read only mode. Raise an error if the file does not already exist.  
 
 Since a database can hold many different kinds of data, not only personnel dosimeter readings, I will call the database `medical_physics_db.sqlite`.
-```{r creating_a_db}
+```{r creatingADatabase}
 mp_db_conn <- dbConnect(drv = RSQLite::SQLite(), 
                         dbname = "medical_physics_db.sqlite")
 # opening the connection to the database "medical_physics_db.sqlite" and 
@@ -264,7 +273,7 @@ mp_db_conn <- dbConnect(drv = RSQLite::SQLite(),
 In a database all data is stored in tables. For simplicity we will create a single table for the staff dosimeter readings and don't go into details of optimal table design like [functional dependencies](https://opentextbc.ca/dbdesign01/chapter/chapter-11-functional-dependencies/) and [normalization](https://en.wikipedia.org/wiki/Database_normalization). 
 <br>
 
-```{sql dropping_tables1, connection=mp_db_conn, echo=FALSE}
+```{sql droppingTables1, connection=mp_db_conn, echo=FALSE}
 -- This SQL code chunks are not visible in the tutorial.
 -- More on SQL code chunks in the section "SQL Engine in R Markdown" later in the tutorial
 -- We will use the command DROP TABLE IF EXISTS for all tables we will create later on.
@@ -273,11 +282,11 @@ In a database all data is stored in tables. For simplicity we will create a sing
 DROP TABLE IF EXISTS test01
 ```
 
-```{sql dropping_tables2, connection=mp_db_conn, echo=FALSE}
+```{sql droppingTables2, connection=mp_db_conn, echo=FALSE}
 DROP TABLE IF EXISTS staffdose
 ```
 
-```{sql dropping_tables3, connection=mp_db_conn, echo=FALSE}
+```{sql droppingTables3, connection=mp_db_conn, echo=FALSE}
 DROP TABLE IF EXISTS stage
 ```
 
@@ -285,7 +294,7 @@ DROP TABLE IF EXISTS stage
 #### Our First Table
 Before we create our final personnel dosimeter table we are going to have a look at some useful functions and run a view tests. As data we will use a subset (first 10 rows) of the cleaned data we already prepared before (section "Fix data types"). 
 
-```{r table_test_dataprep}
+```{r tableTestDataprep}
 # In SQL there are several possibilities to handle date, I prefer "text"; 
 # details see here: https://www.sqlite.org/lang_datefunc.html 
 # Therefore we first change the data type of the date columns to text
@@ -298,7 +307,7 @@ arf_rows01to10 <- all_reports_fixed_dateastext[1:10,]
 
 The easiest way to create a table is by using the function `dbWriteTable` which takes a dataframe as argument and writes the data into a table.  
 
-```{r table_test02}
+```{r tableTest02}
 # creating a table from a dataframe
 dbWriteTable(conn = mp_db_conn,
              name = "test01",
@@ -317,7 +326,7 @@ dbListTables(conn = mp_db_conn)
 
 Now we execute our first SQL queries with `dbGetQuery()` which returns the result of the query as dataframe.
 
-```{r table_test03}
+```{r tableTest03}
 dbGetQuery(conn = mp_db_conn,
            statement = "SELECT * FROM test01") %>% 
   tibble::tibble()
@@ -340,7 +349,7 @@ As you can see from the output we don't have a primary key (all "pk" are set to 
 <br>
 Let's see what happens if we add some more data. This time we create a dataframe with rows 10 to 12 from `all_reports_fixed_dateastext`. Row 10 is already in the database and rows 11 and 12 are new data.
 
-```{r table_test04}
+```{r tableTest04}
 arf_rows10to12 <- all_reports_fixed_dateastext[10:12,]
 
 dbWriteTable(conn = mp_db_conn,
@@ -367,8 +376,9 @@ There are different strategies to implement constraints but for consistency reas
 As `PRIMARY KEY` we add an `id`-column and set a `UNIQUE`-constraint with `report_uid, person_uid, dosimeter_placement`.  
 <br>
 First we delete the table `test01` with the function `dbExecute`. This function executes data manipulation statements without returning a result set.
-```{r creating_a_table, error=TRUE}
-# First we clean up the database by deleting the test01-table
+
+```{r creatingATable, error=TRUE}
+# Cleaning up DB: deleting the test01-table
 dbExecute(conn = mp_db_conn, 
           statement = "DROP TABLE IF EXISTS test01")
 
@@ -418,12 +428,12 @@ dbListFields(conn = mp_db_conn,
 dbGetQuery(conn = mp_db_conn, 
            statement = "pragma table_info('staffdose')") %>% 
   head(1)
-# the id-column should have the values 1 for "notnull" and "pk" (primary key)
+# the id-column should have the value 1 for "notnull" and "pk" (primary key)
 ```
 
 Let's try again, add data and then try to add some more data including duplicates:
 
-```{r table_add_data_duplicates, error=TRUE}
+```{r tableAddDataDuplicates, error=TRUE}
 # adding data
 dbAppendTable(conn = mp_db_conn,
              name = "staffdose",
@@ -451,7 +461,7 @@ For details and source of the following approach see the forum thread "[RStudio 
 For the work around we will use a second table called `stage` with the same structure as `staffdose` but without any constraints. The table `stage` will therefore accept any data even if it already exists in `staffdose`. First we will read in the new data into the intermediary table `stage` and can then transfer only the new data 
 to the table `staffdose` with the command `INSERT OR IGNORE INTO staffdose`:
 
-```{r create_stage}
+```{r createStage}
 # we use "DROP TABLE IF EXISTS" in case we run the script more than once
 dbExecute(conn = mp_db_conn, 
           statement = "DROP TABLE IF EXISTS stage")
@@ -485,7 +495,7 @@ dbExecute(conn = mp_db_conn,
 
 To make life a little bit easier in the future we will define a function `dbAppendUniqueStaffDose` that will read in new data into the `stage` table and then transfers only the unique data to the `staffdose` table:
 
-```{r add_only_unique_function}
+```{r addOnlyUniqueFunction}
 dbAppendUniqueStaffDose <- function(connection, newreportdata) {
   # function to add only unique data to the staffdose table
     # by using the stage table as intermediary
@@ -503,7 +513,7 @@ dbAppendUniqueStaffDose <- function(connection, newreportdata) {
 
 Now we can add data successfully without getting an error message, even if it contains duplicates that violate the `UNIQUE`-constraint we defined:
 
-```{r add_new_data_with_some_duplicates}
+```{r addNewDataWithSomeDuplicates}
 dbAppendUniqueStaffDose(connection = mp_db_conn,
                         newreportdata = arf_rows10to12)
 # The output should be "##[1] 2" -> Two rows added (out of the 3 rows 2 were new data)
@@ -516,9 +526,9 @@ check <- dbGetQuery(conn = mp_db_conn,
 
 # Check if the data of the first 12 rows is really without duplicates
   # by comparing the table content with the data from the dataframe 
-check == all_reports_fixed[1:12, 
-                           c("name", "person_uid", "dosimeter_placement", "dosimeter_uid", "report_uid")]
-# if we have only TRUEs we only added unuique data
+all(check == all_reports_fixed[1:12,
+                               c("name", "person_uid", "dosimeter_placement", "dosimeter_uid", "report_uid")])
+# if we have only TRUEs we only added unique data
 
 # Let's add all the data to the staffdose table with the function we created
 dbAppendUniqueStaffDose(connection = mp_db_conn, 
@@ -528,12 +538,12 @@ dbAppendUniqueStaffDose(connection = mp_db_conn,
 ### Data Analysis with SQL and R
 
 #### Hp(10) - Summary Statistics by Department and Year
-```{r sql_datana_sumstat}
+```{r sqlDataSumstat}
 # Preparing the parameterized query
 # params:
 stat <- "OK"
 dos_type <- "Badge"
-year <- c(2020,2021)
+year <- c("2020", "2021")
 
 # query and graph
 dbGetQuery(conn = mp_db_conn,
@@ -564,7 +574,7 @@ dbGetQuery(conn = mp_db_conn,
 ```
 
 #### Number of Staff Dose Readings per Dosimeter Type
-```{r sql_nr_staff_dose_readings}
+```{r sqlNrStaffDoseReadings}
 # params:
 stat = "NR"
 
@@ -584,7 +594,7 @@ dbGetQuery(conn = mp_db_conn,
 ```
 
 #### Individuals who did not return their Dosimeters
-```{r sql_individ_not_returned_dosim}
+```{r sqlIndividNotReturnedDosim}
 # params:
 stat = "NR"
 
@@ -604,7 +614,7 @@ dbGetQuery(conn = mp_db_conn,
 ```
 
 #### Total badge HP(10) Staff Dose Readings per Department
-```{r sql_total_dose_2020}
+```{r sqlTotalDose2020}
 #params
 stat = "OK"
 year = 2020
@@ -643,7 +653,7 @@ SELECT name, department, hp10 FROM staffdose WHERE hp10>=0 LIMIT 5
 
 ### Closing the connection to the database
 When we are finished we close the connection to the database:
-```{r closing_connection_to_db, error=TRUE}
+```{r closingConnectionToDB, error=TRUE}
 dbDisconnect(mp_db_conn)
 ```
 
@@ -658,16 +668,80 @@ From the [R Markdown website](https://R Markdown.rstudio.com/):
 You might have to write reports for your department, your hospital, the authorities, ... where you have to present data. With [knitr](https://yihui.org/knitr/) you can convert your R Markdown file into a Word document and even use word-templates you create or your organization provides for you. With an additional Latex-Installation like [TinyTeX](https://yihui.org/tinytex/) you can create pdf-documents and there are many more options.  
 <br>
 
-The easiest way to start is to create a report as html-file that you can then print to pdf with your browser. Check out the `sample_report.Rmd`-file for an example. I also included a parameterization for departments and years in the YAML-header. With that parameterization you can create reports for each department and year from one R Markdown file. More on parameterized reports: [R Markdown: The Definitive Guide - Chapter 15](https://bookdown.org/yihui/RMarkdown/parameterized-reports.html). 
+### Sample Report
+The easiest way to start is to create a report as html-file that you can then print to pdf with your browser. Check out the `sample_report.Rmd`-file for an example. I also included a parameterization for departments and years in the YAML-header. With that parameterization you can create reports for each department and year from one R Markdown file interactively. More on parameterized reports: [R Markdown: The Definitive Guide - Chapter 15](https://bookdown.org/yihui/RMarkdown/parameterized-reports.html). 
+<br>
+
+### Multiple Parameterized Reports
+You can of course automate this task to. Say you have to create a version of the sample report each year for all departments. If you already have prepared the parameterized report
+
+```{r, eval=FALSE, echo=FALSE}
+# eval= FALSE / echo=FALSE -> delete when junk ready
+
+# set a year (character for SQL query)
+year <- 2021
+
+# get list of department names for which dosimeter readings for chosen year exist
+# opening connection
+mp_db_conn <- dbConnect(drv = RSQLite::SQLite(),
+                        dbname = "medical_physics_db.sqlite")
+# getting a list of departments for which the 
+dep <- dbGetQuery(mp_db_conn, 
+           "SELECT department, hp10, STRFTIME('%Y', report_date) AS report_year 
+           FROM staffdose
+           WHERE hp10 >=0 AND report_year = ?",
+           params = as.character(year)) %>% 
+  distinct(department)
+# closing connection
+dbDisconnect(conn = mp_db_conn)
+
+
+for(year in 2021:2022) {
+  rmarkdown::render(
+    input = "sample_report.Rmd",
+    params = list(
+      year = year,
+      department = department
+    ),
+    output_file = paste0("Sample Report for year ", year, ".html")
+)
+}
+
+for(department in dep) {
+  rmarkdown::render(
+    input = "sample_report.Rmd",
+    params = list(
+      department = department
+    ),
+    output_file = paste0("Sample Report for year ", department, ".html")
+)
+}
+
+# creating reports for all departments for which dosimeter readings for chosen year exist
+render_report = function(department, year) {
+  rmarkdown::render(
+    "sample_report.Rmd", params = list(
+      department = department,
+      year = year
+    ),
+    output_file = paste0("Report-", department, "-", year, ".html")
+  )
+}
+
+for (department in dep) {
+  render_report(department, year)
+}
+
+```
+
 
 
 ## Bonus
 
 ### Extended Function for reading in Data to the Table staffdose
+The next step to automate the process is to put the code, you need to read in new data, in a function. This way you don't have to go through all steps manually.
 
-```{r extended_function01, eval=FALSE}
-mp_db_conn <- dbConnect(drv = RSQLite::SQLite(),
-                        dbname = "medical_physics_db.sqlite")
+```{r extendedFunction01, eval=FALSE}
 
 dbAppendUniqueDataToStaffdose_Ext <- function(path_data = "reports", 
                                               file_name_beginning = "StaffDose") {
@@ -679,14 +753,9 @@ dbAppendUniqueDataToStaffdose_Ext <- function(path_data = "reports",
   path_data <- as.character(path_data)
   if(!dir.exists(path_data)==TRUE) stop(paste0("Directory ", path_data, " does not exist -> data import not possible"))
   
+  # check file format xls
   file_name_beginning <- as.character(file_name_beginning)
   if(length(list.files(path = path_data, pattern = ".xls$")) == 0) stop("No xls-files in given folder")
-  
-  # opening connection to an exising database
-    # error if database does not exist
-  con <- dbConnect(drv = RSQLite::SQLite(), 
-                   dbname = "medical_physics_db.sqlite",
-                   flags = SQLITE_RW)
 
   # reading in all xls-files that start with "StaffDose"
   file_list_reports <- list.files(path = path_data,
@@ -697,11 +766,20 @@ dbAppendUniqueDataToStaffdose_Ext <- function(path_data = "reports",
   # create an empty dataframe
   all_reps <- data.frame() 
 
+  # read in all reports in folder in dataframe "all_reps"
   for (i in 1:length(file_list_reports)) { # a for-loop to read in all reports
     # reading in the i-th report into variable "rep":
     rep_loop <- read_xls(path = paste0(path_data, "/", file_list_reports[i])) 
     all_reps <- rbind(all_reps, rep_loop) # binding together the reports rowwise
   }  
+
+  # opening connection to an exising database
+    # error if database does not exist
+  con <- dbConnect(drv = RSQLite::SQLite(), 
+                   dbname = "medical_physics_db.sqlite",
+                   flags = SQLITE_RW)  
+  
+  # read column names from table staffdose to name columns in "all_reps"
   colnames(all_reps) <- dbListFields(conn = con,
                                      name = "staffdose")[-1]
   
@@ -709,6 +787,7 @@ dbAppendUniqueDataToStaffdose_Ext <- function(path_data = "reports",
   loc <- Sys.getlocale("LC_TIME") # storing the machine locale setting for time and dates in variable "loc"
   Sys.setlocale("LC_TIME", locale = "English") # setting the machine locale for time and dates to "English"
 
+  # fixing vvariables (see tutorial above)
   all_reps_fixed <- all_reps %>% 
   mutate(hp10 = str_replace_all(hp10, 
                                 pattern = ",", 
@@ -729,6 +808,7 @@ dbAppendUniqueDataToStaffdose_Ext <- function(path_data = "reports",
   distinct(report_uid, .keep_all = TRUE) %>%
   ungroup()
 
+  # setting back locale
   Sys.setlocale("LC_TIME", locale = loc) # setting back the locale 
   
   # wiping clean stage table
@@ -755,6 +835,13 @@ dbAppendUniqueDataToStaffdose_Ext <- function(path_data = "reports",
   
 }
 
+```
+
+```{r testingExtendedFunction01, eval=FALSE, echo=FALSE}
+# not in tutorial-html -> Functions to help testing the extended function
+mp_db_conn <- dbConnect(drv = RSQLite::SQLite(),
+                        dbname = "medical_physics_db.sqlite")
+
 dbAppendUniqueDataToStaffdose_Ext(path_data = "test")
 dbAppendUniqueDataToStaffdose_Ext(file_name_beginning = "test")
 dbAppendUniqueDataToStaffdose_Ext()
@@ -765,3 +852,6 @@ dbExecute(mp_db_conn, "DELETE FROM staffdose")
 dbDisconnect(conn = mp_db_conn)
 ```
 
+
+### Putting your code into a package
+You can go a step further and write your own little package that includes everything you need working with your data project and is not already available on [CRAN](https://cran.r-project.org/), [R-universe](https://r-universe.dev/search/) or [anywhere else](https://rdrr.io/find/?repos=cran%2Cbioc%2Crforge%2Cgithub&page=0&fuzzy_slug=). This way you have your own functions and report templates available within R and easily share them with your colleagues. Check out the book [R Packages](https://r-pkgs.org/index.html) by Headly Wickham and Jenny Bryan.

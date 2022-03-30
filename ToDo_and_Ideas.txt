@@ -1,17 +1,17 @@
 ToDo:
-- Screenshots for SQL-CodeChunks
-- New TutorialVersion (with better filename) 
-	* Eliminate Redundancies of Data Analysis
-	* Extend SampleReport
-	* Improve Function to read in data to DB
-		# read drictly from drive into table
-		# add arguments for path (source), table (destination),...
-		# check if data added and then move files into 
+* Use new verbatim option for code chunks in the tutorial instead of picture:
+	https://yihui.org/en/2022/01/knitr-news/
+* Extend SampleReport
+* Improve Function to read in data to DB
+	# read drictly from drive into table
+	# check if data added and then move files into directory \reports\read
 
 Ideas:
 - ShinyDashboard with SQL?
+	https://www.emilyriederer.com/post/shiny-db/
 
 
 Test:
 - PythonCode in RMarkdown? (maybe for Tutorial 1!?)
 	* https://www.r-bloggers.com/2022/03/how-to-use-r-and-python-together-try-these-2-packages/
+- Package with sample_report_template and function

@@ -3,7 +3,7 @@ title: "Hacking Medical Physics with R"
 author: |
   Michael Wieland  
   mchl.wieland@gmail.com
-date: "2022-03-27"
+date: "2022-03-30"
 output: 
   html_document: 
     highlight: pygments
@@ -35,12 +35,21 @@ This is a R/RStudio-Version for Part 2 of the article series "Hacking Medical Ph
 ### Ressources and Preparation
 In order to run this R Markdown file you need to install RStudio with R ([RStudio Installer](https://www.rstudio.com/products/rstudio/download/)).  
 
-Ressources to get started with R:  
+Resources to get started with R:  
 
 * [RStudio Education - Beginners](https://education.rstudio.com/learn/beginner/)  
 * [RStudio Support - Getting Started with R](https://support.rstudio.com/hc/en-us/articles/201141096-Getting-Started-with-R)  
 * [RStudio Book Collection](https://www.rstudio.com/products/rstudio/download/)  
 * [ggplot2 - Elegent Graphics for Data Analysis](https://ggplot2-book-solutions-3ed.netlify.app/index.html)  
+
+Resources on R Markdown, the tool this tutorial is written with:  
+
+* [R Markdown Cookbook](https://bookdown.org/yihui/rmarkdown-cookbook/)  
+* [R Markdown: The Definitive Guide](https://bookdown.org/yihui/rmarkdown/)  
+* []()  
+
+Open the the file "hacking_medphys_R_part2.Rproj" which should contain two [R Mardown files](https://rmarkdown.rstudio.com/) named "db_R_tutorial.Rmd" and "sample_report.Rmd". If you can't see them as tabs in the RStudio enviroment you can open the tutorial directly too.  
+<br>
 
 I will make heavy use of the package collection `tidyverse` and the "pipe"-operator (` %>% `). To learn more have a look at: [`tidyverse` - R packages for data science](https://www.tidyverse.org/).  
 If you have not installed the packages loaded in the `setup code chunk` (see above) start with installing them via `Tools` -> `Install Packages`.
@@ -497,8 +506,9 @@ As `PRIMARY KEY` we add an `id`-column and set a `UNIQUE`-constraint with `repor
 <br>
 First we delete the table `test01` with the function `dbExecute`. This function executes data manipulation statements without returning a result set.
 
+
 ```r
-# First we clean up the database by deleting the test01-table
+# Cleaning up DB: deleting the test01-table
 dbExecute(conn = mp_db_conn, 
           statement = "DROP TABLE IF EXISTS test01")
 ```
@@ -602,7 +612,7 @@ dbGetQuery(conn = mp_db_conn,
 ```
 
 ```r
-# the id-column should have the values 1 for "notnull" and "pk" (primary key)
+# the id-column should have the value 1 for "notnull" and "pk" (primary key)
 ```
 
 Let's try again, add data and then try to add some more data including duplicates:
@@ -766,28 +776,16 @@ check <- dbGetQuery(conn = mp_db_conn,
 
 # Check if the data of the first 12 rows is really without duplicates
   # by comparing the table content with the data from the dataframe 
-check == all_reports_fixed[1:12, 
-                           c("name", "person_uid", "dosimeter_placement", "dosimeter_uid", "report_uid")]
+all(check == all_reports_fixed[1:12,
+                               c("name", "person_uid", "dosimeter_placement", "dosimeter_uid", "report_uid")])
 ```
 
 ```
-##       name person_uid dosimeter_placement dosimeter_uid report_uid
-##  [1,] TRUE       TRUE                TRUE          TRUE       TRUE
-##  [2,] TRUE       TRUE                TRUE          TRUE       TRUE
-##  [3,] TRUE       TRUE                TRUE          TRUE       TRUE
-##  [4,] TRUE       TRUE                TRUE          TRUE       TRUE
-##  [5,] TRUE       TRUE                TRUE          TRUE       TRUE
-##  [6,] TRUE       TRUE                TRUE          TRUE       TRUE
-##  [7,] TRUE       TRUE                TRUE          TRUE       TRUE
-##  [8,] TRUE       TRUE                TRUE          TRUE       TRUE
-##  [9,] TRUE       TRUE                TRUE          TRUE       TRUE
-## [10,] TRUE       TRUE                TRUE          TRUE       TRUE
-## [11,] TRUE       TRUE                TRUE          TRUE       TRUE
-## [12,] TRUE       TRUE                TRUE          TRUE       TRUE
+## [1] TRUE
 ```
 
 ```r
-# if we have only TRUEs we only added unuique data
+# if we have only TRUEs we only added unique data
 
 # Let's add all the data to the staffdose table with the function we created
 dbAppendUniqueStaffDose(connection = mp_db_conn, 
@@ -837,7 +835,7 @@ dbGetQuery(conn = mp_db_conn,
   facet_wrap(~ department) # split up the data into subplots for the different departments
 ```
 
-![](db_R_tutorial_files/figure-html/sql_datana_sumstat-1.png)<!-- -->
+![](db_R_tutorial_files/figure-html/sqlDataSumstat-1.png)<!-- -->
 
 #### Number of Staff Dose Readings per Dosimeter Type
 
@@ -952,7 +950,7 @@ dbGetQuery(conn = mp_db_conn,
         panel.grid.major.y = element_line(linetype = 3, color = "gray"))
 ```
 
-![](db_R_tutorial_files/figure-html/sql_total_dose_2020-1.png)<!-- -->
+![](db_R_tutorial_files/figure-html/sqlTotalDose2020-1.png)<!-- -->
 
 ### SQL Engine in R Markdown
 As I will discuss in the next section, R Markdown is an incredible powerful tool. One of its cool features is its ability to ["speak" SQL](https://bookdown.org/yihui/R Markdown/language-engines.html#sql) and other languages. You can not only use R code chunks but others too. When using a SQL code chunk you don't need the `DBI`-functions, you can write native SQL queries.  
@@ -1026,18 +1024,21 @@ From the [R Markdown website](https://R Markdown.rstudio.com/):
 You might have to write reports for your department, your hospital, the authorities, ... where you have to present data. With [knitr](https://yihui.org/knitr/) you can convert your R Markdown file into a Word document and even use word-templates you create or your organization provides for you. With an additional Latex-Installation like [TinyTeX](https://yihui.org/tinytex/) you can create pdf-documents and there are many more options.  
 <br>
 
-The easiest way to start is to create a report as html-file that you can then print to pdf with your browser. Check out the `sample_report.Rmd`-file for an example. I also included a parameterization for departments and years in the YAML-header. With that parameterization you can create reports for each department and year from one R Markdown file. More on parameterized reports: [R Markdown: The Definitive Guide - Chapter 15](https://bookdown.org/yihui/RMarkdown/parameterized-reports.html). 
+The easiest way to start is to create a report as html-file that you can then print to pdf with your browser. Check out the `sample_report.Rmd`-file for an example. I also included a parameterization for departments and years in the YAML-header. With that parameterization you can create reports for each department and year from one R Markdown file interactively. More on parameterized reports: [R Markdown: The Definitive Guide - Chapter 15](https://bookdown.org/yihui/RMarkdown/parameterized-reports.html). 
+<br>
+You can of course automate this task to. Say you have to create the same report 
+
+
+
 
 
 ## Bonus
 
 ### Extended Function for reading in Data to the Table staffdose
+The next step to automate the process is to put the code, you need to read in new data, in a function. This way you don't have to go through all steps manually.
 
 
 ```r
-mp_db_conn <- dbConnect(drv = RSQLite::SQLite(),
-                        dbname = "medical_physics_db.sqlite")
-
 dbAppendUniqueDataToStaffdose_Ext <- function(path_data = "reports", 
                                               file_name_beginning = "StaffDose") {
   # function to add unique data to table "staffdose" in "medical_physics_db.sqlite"
@@ -1048,14 +1049,9 @@ dbAppendUniqueDataToStaffdose_Ext <- function(path_data = "reports",
   path_data <- as.character(path_data)
   if(!dir.exists(path_data)==TRUE) stop(paste0("Directory ", path_data, " does not exist -> data import not possible"))
   
+  # check file format xls
   file_name_beginning <- as.character(file_name_beginning)
   if(length(list.files(path = path_data, pattern = ".xls$")) == 0) stop("No xls-files in given folder")
-  
-  # opening connection to an exising database
-    # error if database does not exist
-  con <- dbConnect(drv = RSQLite::SQLite(), 
-                   dbname = "medical_physics_db.sqlite",
-                   flags = SQLITE_RW)
 
   # reading in all xls-files that start with "StaffDose"
   file_list_reports <- list.files(path = path_data,
@@ -1066,11 +1062,20 @@ dbAppendUniqueDataToStaffdose_Ext <- function(path_data = "reports",
   # create an empty dataframe
   all_reps <- data.frame() 
 
+  # read in all reports in folder in dataframe "all_reps"
   for (i in 1:length(file_list_reports)) { # a for-loop to read in all reports
     # reading in the i-th report into variable "rep":
     rep_loop <- read_xls(path = paste0(path_data, "/", file_list_reports[i])) 
     all_reps <- rbind(all_reps, rep_loop) # binding together the reports rowwise
   }  
+
+  # opening connection to an exising database
+    # error if database does not exist
+  con <- dbConnect(drv = RSQLite::SQLite(), 
+                   dbname = "medical_physics_db.sqlite",
+                   flags = SQLITE_RW)  
+  
+  # read column names from table staffdose to name columns in "all_reps"
   colnames(all_reps) <- dbListFields(conn = con,
                                      name = "staffdose")[-1]
   
@@ -1078,6 +1083,7 @@ dbAppendUniqueDataToStaffdose_Ext <- function(path_data = "reports",
   loc <- Sys.getlocale("LC_TIME") # storing the machine locale setting for time and dates in variable "loc"
   Sys.setlocale("LC_TIME", locale = "English") # setting the machine locale for time and dates to "English"
 
+  # fixing vvariables (see tutorial above)
   all_reps_fixed <- all_reps %>% 
   mutate(hp10 = str_replace_all(hp10, 
                                 pattern = ",", 
@@ -1098,6 +1104,7 @@ dbAppendUniqueDataToStaffdose_Ext <- function(path_data = "reports",
   distinct(report_uid, .keep_all = TRUE) %>%
   ungroup()
 
+  # setting back locale
   Sys.setlocale("LC_TIME", locale = loc) # setting back the locale 
   
   # wiping clean stage table
@@ -1123,14 +1130,10 @@ dbAppendUniqueDataToStaffdose_Ext <- function(path_data = "reports",
  # or move files: https://r-lang.com/how-to-move-files-in-r/
   
 }
-
-dbAppendUniqueDataToStaffdose_Ext(path_data = "test")
-dbAppendUniqueDataToStaffdose_Ext(file_name_beginning = "test")
-dbAppendUniqueDataToStaffdose_Ext()
-
-dbGetQuery(mp_db_conn, "SELECT * FROM staffdose")
-dbExecute(mp_db_conn, "DELETE FROM staffdose")
-
-dbDisconnect(conn = mp_db_conn)
 ```
 
+
+
+
+### Putting your code into a package
+You can go a step further and write your own little package that includes everything you need working with your data project and is not already available on [CRAN](https://cran.r-project.org/), [R-universe](https://r-universe.dev/search/) or [anywhere else](https://rdrr.io/find/?repos=cran%2Cbioc%2Crforge%2Cgithub&page=0&fuzzy_slug=). This way you have your own functions and report templates available within R and easily share them with your colleagues. Check out the book [R Packages](https://r-pkgs.org/index.html) by Headly Wickham and Jenny Bryan.
