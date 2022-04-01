@@ -9,7 +9,8 @@ ToDo:
 Ideas:
 - ShinyDashboard with SQL?
 	https://www.emilyriederer.com/post/shiny-db/
-
+- Add Cronjob/TaskschudeleR Section
+- Add warnings for doses above action levels
 
 Test:
 - PythonCode in RMarkdown? (maybe for Tutorial 1!?)

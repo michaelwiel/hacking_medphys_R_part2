@@ -30,6 +30,9 @@ library(DBI)
 ## Short Description
 This is a R/RStudio-Version for Part 2 of the article series "Hacking Medical Physics" by Jonas Andersson and Gavin Poludniowski (GitRepo: [rvbCMTS/EMP-News](https://github.com/rvbCMTS/EMP-News.git)) in the newsletter of the European Federation of Organisations for Medical Physics (EFOMP)^[[European Medical Physics News](https://www.efomp.org/index.php?r=fc&id=emp-news)]. GitRepo for this R/RStudio version: [Michael Wieland - Hacking Medical Physics - R Version](https://github.com/michaelwiel/hacking_medphys_R_part2.git).
 
+### Tutorial Overview
+In this tutorial we will read in personnel dosimeter data from dosimetry lab reports in the form of Excel-files. To store the data we create a SQLite database and then do some data analysis by querying the data from the database and produce some figures and tables. Additionally we will have a a look at the reporting capabilities of R Markdown and discuss parameterized reports and automating reporting tasks.
+
 ### Ressources and Preparation
 In order to run this R Markdown file you need to install RStudio with R ([RStudio Installer](https://www.rstudio.com/products/rstudio/download/)).  
 
@@ -138,6 +141,9 @@ To fix the dates I needed a work around because my machine `locale` is set to Ge
 
 
 ```{r fixDataTypes, warning=FALSE}
+# "warning = FALSE" set in this code chunk to avoid warning messages 
+  # raised by creation of NAs by coercion to numeric of the hp10 and hp007 columns
+
 # storing the machine locale setting for time and dates in variable "loc"
 loc <- Sys.getlocale("LC_TIME") #
 
@@ -542,6 +548,7 @@ dbAppendUniqueStaffDose(connection = mp_db_conn,
 ```
 
 ### Data Analysis with SQL and R
+Next we are going to analyze our data in the database and produce some nice graphs and tables.  
 
 #### Hp(10) - Summary Statistics by Department and Year
 ```{r sqlDataSumstat}
@@ -807,6 +814,7 @@ dbAppendUniqueDataToStaffdose_Ext <- function(path_data = "reports",
     mutate(across(c(measurement_period_start:report_date), 
                   as.Date, 
                   format = "%d-%b-%Y")) %>% 
+    mutate(across(c(measurement_period_start:report_date), as.character)) %>% 
     group_by(person_uid, dosimeter_uid) %>% 
     distinct(report_uid, .keep_all = TRUE) %>%
     ungroup()

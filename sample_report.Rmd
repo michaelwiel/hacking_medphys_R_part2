@@ -6,7 +6,7 @@ title: |
 author: |
   Michael Wieland  
   mchl.wieland@gmail.com
-date: "`r Sys.Date()`"
+date: "`r Sys.time()`"
 output: 
   html_document: 
     highlight: textmate
