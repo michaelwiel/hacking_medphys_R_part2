@@ -3,7 +3,7 @@ title: "Hacking Medical Physics with R"
 author: |
   Michael Wieland  
   mchl.wieland@gmail.com
-date: "2022-04-01"
+date: "2022-04-03"
 output: 
   html_document: 
     highlight: pygments
@@ -29,10 +29,13 @@ library(DBI)
 ```
 
 ## Short Description
-This is a R/RStudio-Version for Part 2 of the article series "Hacking Medical Physics" by Jonas Andersson and Gavin Poludniowski (GitRepo: [rvbCMTS/EMP-News](https://github.com/rvbCMTS/EMP-News.git)) in the newsletter of the European Federation of Organisations for Medical Physics (EFOMP)^[[European Medical Physics News](https://www.efomp.org/index.php?r=fc&id=emp-news)]. GitRepo for this R/RStudio version: [Michael Wieland - Hacking Medical Physics - R Version](https://github.com/michaelwiel/hacking_medphys_R_part2.git).
+This is a R/RStudio-Version for Part 2 of the article series "Hacking Medical Physics" by Jonas Andersson and Gavin Poludniowski (GitHub repository: [rvbCMTS/EMP-News](https://github.com/rvbCMTS/EMP-News.git)) in the newsletter of the European Federation of Organizations for Medical Physics (EFOMP)^[[European Medical Physics News](https://www.efomp.org/index.php?r=fc&id=emp-news)]. GitHub repository for this R/RStudio version: [Michael Wieland - Hacking Medical Physics - R Version](https://github.com/michaelwiel/hacking_medphys_R_part2.git).
+
+### Tutorial Overview
+In this tutorial we will read in personnel dosimeter data from dosimetry lab reports in the form of Excel-files. To store the data we create a SQLite database and then do some data analysis by querying the data from the database and produce some figures and tables. Additionally we will have a a look at the reporting capabilities of R Markdown and discuss parameterized reports and automating reporting tasks.
 
 ### Ressources and Preparation
-In order to run this R Markdown file you need to install RStudio with R ([RStudio Installer](https://www.rstudio.com/products/rstudio/download/)).  
+In order to run this R Markdown file you need to install [R](https://www.r-project.org/) and [RStudio](https://www.rstudio.com/) ([RStudio Installer](https://www.rstudio.com/products/rstudio/download/)). An alternative IDE to RStudio is the open source IDE [Bio7](https://bio7.org/). Bio7 can be extended with plug-ins, among others with an [ImageJ](https://imagej.nih.gov/ij/)-plug-in for image analysis.   
 
 Resources to get started with R:  
 
@@ -46,11 +49,11 @@ Resources on R Markdown, the tool this tutorial is written with:
 * [R Markdown Cookbook](https://bookdown.org/yihui/rmarkdown-cookbook/)  
 * [R Markdown: The Definitive Guide](https://bookdown.org/yihui/rmarkdown/)  
 
-Open the the file "hacking_medphys_R_part2.Rproj" which should contain two [R Mardown files](https://rmarkdown.rstudio.com/) named "db_R_tutorial.Rmd" and "sample_report.Rmd". If you can't see them as tabs in the RStudio enviroment you can open the tutorial directly too.  
+Open the the file "hacking_medphys_R_part2.Rproj" which should contain two [R Markdown files](https://rmarkdown.rstudio.com/) named "db_R_tutorial.Rmd" and "sample_report.Rmd". If you can't see them as tabs in the RStudio environment you can open them from the "Files"-pane or from "Files -> Open Files".  
 <br>
 
 I will make heavy use of the package collection `tidyverse` and the "pipe"-operator (` %>% `). Together with R Markdown they are facilitators of literate programming^[[Wikipeida: Literate programming](https://en.wikipedia.org/wiki/Literate_programming)]. To learn more have a look at: [`tidyverse` - R packages for data science](https://www.tidyverse.org/).  
-If you have not installed the packages loaded in the `setup code chunk` (see above) start with installing them via `Tools` -> `Install Packages`.
+If you have not installed the packages loaded in the `setup code chunk` (see above) start with installing them via "Tools -> Install Packages".
 
 ### Executing Code
 You can run the code in the RStudio console window or directly in the R Markdown file by clicking on the little "Play"-button in the top right hand corner of the code chunks:
@@ -86,7 +89,9 @@ read_xls(path = "reports/StaffDoses_1.xls") %>%
 ```
 
 ```r
-# if you get an error message here check the working directory is set correctly and if the subfolder "reports" is in the right position
+# if you get an error message here check
+  # if the working directory is set correctly and 
+  # if the subfolder "reports" is in the right position
 ```
 
 _Note for R Newcomers:_ If you know the order of the arguments of a function you don't have to supply the argument names. If you open the help for the function `read_xls` by typing `?read_xls` in the console the description of the function includes the list of arguments:  
@@ -109,14 +114,14 @@ Assuming that the reports are always delivered in the same format and structure 
 ```r
 report_column_names <- read_xls(path = "reports/StaffDoses_1.xls",
                                 n_max = 0) %>% 
-  # to extract the column names we don't need any data therefore we read in n=0 lines
+  # to extract the column names we don't need any data therefore we read in n_max=0 lines
   colnames() %>% # extracting the column names as a vector
   tolower() %>% # convert upper case to lower case
   gsub(pattern = " ", 
        replacement = "_") %>% # replacing blanks with underscores
   gsub(pattern = "[().]", 
        replacement = "")  # deleting round brackets and dots; 
-    # the square-brackets function as list operator (all characters inside the square-brackets are identified)
+    # the square-brackets function as operator (all characters inside the square-brackets are identified)
 
 #checking the result:
 report_column_names
@@ -155,6 +160,8 @@ list.files(path = "reports") # get a list of all files from a folder
 ## [28] "StaffDoses_9.xls"
 ```
 
+We will store the file names in the variable `all_reports_to_read_in`:
+
 ```r
 all_reports_to_read_in <- list.files("reports") # read the list of file names into a character vector
 
@@ -166,8 +173,11 @@ length(all_reports_to_read_in)
 ## [1] 28
 ```
 
+With a loop we read in all data from the folder `reports` into a [data.frame](https://www.rdocumentation.org/packages/base/versions/3.6.2/topics/data.frame)-object:
+
 ```r
-all_reports <- data.frame() # create an empty dataframe
+# create an empty dataframe (R object with )
+all_reports <- data.frame() 
 
 # a for-loop to read in all reports
 for (i in 1:length(all_reports_to_read_in)) { 
@@ -175,12 +185,30 @@ for (i in 1:length(all_reports_to_read_in)) {
   # reading in the i-th report into variable "rep":
   rep <- read_xls(path = paste0("reports/", all_reports_to_read_in[i])) 
   
-  # binding together the reports rowwise
+  # binding together the reports row-wise
   all_reports <- rbind(all_reports, rep) 
 }  
 
 # replacing the column names with the fixed names (see above)
 colnames(all_reports) <- report_column_names 
+
+# check result
+tibble(all_reports) %>% 
+  head(3)
+```
+
+```
+## # A tibble: 3 x 18
+##   customer_name      customer_uid department   department_uid name    person_uid
+##   <chr>              <chr>        <chr>        <chr>          <chr>   <chr>     
+## 1 Hogsmeade Royal I~ 141          Nuclear Med~ 1              Severu~ 12368     
+## 2 Hogsmeade Royal I~ 141          Nuclear Med~ 1              Harry ~ 12369     
+## 3 Hogsmeade Royal I~ 141          Nuclear Med~ 1              Parvat~ 12370     
+## # ... with 12 more variables: radiation_type <chr>, hp10 <chr>, hp007 <chr>,
+## #   user_type <chr>, dosimeter_type <chr>, dosimeter_placement <chr>,
+## #   dosimeter_uid <chr>, measurement_period_start <chr>,
+## #   measurement_period_end <chr>, read_date <chr>, report_date <chr>,
+## #   report_uid <chr>
 ```
 
 ### Fix data types
@@ -188,7 +216,8 @@ Some data wrangling is needed to get the right data types:
 
 * All numerical variables should be defined as `double` or `integer`,  
 * Replace semicolons with dots in decimal numbers so R can recognize them as numbers ("English convention" for decimal numbers),  
-* Create a column `status` before converting `hp10` and `hp007` to numeric in order not to lose information. Where `hp10` and `hp007` have the values "B", "NR" or `NA` (B: Below Measurement Treshold; NR: Not returned; `NA`: Missing Value) we transfer those values to the new column, if the values are numeric we set the value in the new column to "OK".  
+* Create a column `status` before converting `hp10` and `hp007` to numeric in order not to lose information. Where `hp10` and `hp007` have the values "B", "NR" or `NA` (B: Below Measurement Threshold; NR: Not returned; `NA`: Missing Value) we transfer those values to the new column, if the values are numeric we set the value in the new column to "OK".  
+* Convert dates to date format  
 
 To fix the dates I needed a work around because my machine `locale` is set to German but the dates in the reports have abbreviated month names in English. One way to read in the data correctly with little coding is to set the `locale` on the machine to English temporarily. For date-time conversion to and from character see [`strptime`](https://www.rdocumentation.org/packages/base/versions/3.6.2/topics/strptime).
 
@@ -196,6 +225,9 @@ To fix the dates I needed a work around because my machine `locale` is set to Ge
 
 
 ```r
+# "warning = FALSE" set in this code chunk to avoid warning messages 
+  # raised by creation of NAs by coercion to numeric of the hp10 and hp007 columns
+
 # storing the machine locale setting for time and dates in variable "loc"
 loc <- Sys.getlocale("LC_TIME") #
 
@@ -285,15 +317,16 @@ __Comment Michael: Discussion necessary regarding status column__
 #--------
 
 
-## Using R with SQL
+## Using R with SQLite
 
 ### Ressources and Motivation
-For this part I am drawing heavily on the following ressources:  
+For this part I am drawing heavily on the following resources:  
 
 * [RStudio - Databases using R](https://db.rstudio.com/)  
 * [Simona Picardi - Reproducible Data Science - Chapter 07 - Interfacing Databases in R with RSQLite](https://ecorepsci.github.io/reproducible-science/rsqlite.html)  
+* [SQLite](https://www.sqlite.org/about.html)  
 * [SQLite Tutorial](https://www.sqlitetutorial.net/)  
-
+* [RSQLite](https://rsqlite.r-dbi.org/)  
 
 For a limited number of files, like in the example above, working with a database is not necessary but databases have several advantages^[[opentextbc.ca - Database Design](https://opentextbc.ca/dbdesign01/chapter/chapter-3-characteristics-and-benefits-of-a-database)]:  
 
@@ -306,9 +339,9 @@ For a limited number of files, like in the example above, working with a databas
 >* Integrity constraints (rules that dictate what can be entered or edited)  
 >* Security constraints  
 
-If you are new to SQL and you want to have a possibilty to "look into" a SQLite database check out the leightweight and open source GUI [SQLiteStudio](https://sqlitestudio.pl/).
+If you are new to SQL and you want to have a possibility to "look into" a SQLite database check out the lightweight and open source GUI [SQLiteStudio](https://sqlitestudio.pl/).
 <br>
-To connect R to a database management system (DBMS) we need the [`DBI`-package](https://dbi.r-dbi.org/) and [`RSQLite`-package](https://rsqlite.r-dbi.org/). If you not have done it already go ahead and install the `RSQLite`-package. This will automatically install the `DBI`-package. For detailed information on the `DBI` functions we will use, see the [DBI - Reference](https://dbi.r-dbi.org/reference/).
+To connect R to the database management system (DBMS) SQLite we need the [`DBI`-package](https://dbi.r-dbi.org/) and [`RSQLite`-package](https://rsqlite.r-dbi.org/). If you not have done it already go ahead and install the `RSQLite`-package. This will automatically install the `DBI`-package. For detailed information on the `DBI` functions we will use, see the [DBI - Reference](https://dbi.r-dbi.org/reference/).
 
 ### Creating (or opening a connection to) a Database
 With the function `dbConnect` you create a database file or open a connection to an already existing database.  
@@ -350,7 +383,7 @@ Before we create our final personnel dosimeter table we are going to have a look
 all_reports_fixed_dateastext <- all_reports_fixed %>% 
   mutate(across(c(measurement_period_start:report_date), as.character))
 
-# storing the first 10 rows in a seperate dataframe
+# storing the first 10 rows in a separate dataframe
 arf_rows01to10 <- all_reports_fixed_dateastext[1:10,]
 ```
 
@@ -364,7 +397,7 @@ dbWriteTable(conn = mp_db_conn,
              value  = arf_rows01to10,
              overwrite = TRUE)
 # I set the argument "overwrite" to TRUE in case you run this script more than once.
-  # If you write data to a table with dbWriteTable() there are three possibilites:
+  # If you write data to a table with dbWriteTable() there are three possibilities:
   # 1) The table exists but you want to overwrite it: use the "overwrite = TRUE"
   # 2) The table exists and you want to add data: use "append = TRUE"
   # 3) The table does not exist: neither overwrite or append have to be used
@@ -465,7 +498,7 @@ dbGetQuery(conn = mp_db_conn,
 
 As you can see from the output we don't have a primary key (all "pk" are set to 0) and neither have we set a UNIQUE constraint.  
 <br>
-Let's see what happens if we add some more data. This time we create a dataframe with rows 10 to 12 from `all_reports_fixed_dateastext`. Row 10 is already in the database and rows 11 and 12 are new data.
+Let's see what happens when we add some more data. This time we create a dataframe with rows 10 to 12 from `all_reports_fixed_dateastext`. Row 10 is already in the database and rows 11 and 12 are new data.
 
 
 ```r
@@ -476,8 +509,8 @@ dbWriteTable(conn = mp_db_conn,
              value = arf_rows10to12,
              append = TRUE) 
 # if there is already a table with the given name we have to 
-# set one of the arguments "append" or "overwrite" to true, 
-# otherwise we will get an error message
+  # set one of the arguments "append" or "overwrite" to true, 
+  # otherwise we will get an error message
 
 dbGetQuery(conn = mp_db_conn,
            statement = "SELECT name, person_uid, dosimeter_uid, 
@@ -528,7 +561,7 @@ dbExecute(conn = mp_db_conn,
 
 ```r
 # If you run this script a second time 
-# you will get an error message if you try to create a table that already exists.
+  # you will get an error message if you try to create a table that already exists.
 # Therefore we will run the command "DROP TABLE IF EXISTS" 
   # to delete the table "staffdose" should it already exist:
 dbExecute(conn = mp_db_conn, 
@@ -549,7 +582,7 @@ dbListTables(conn = mp_db_conn)
 ```
 
 ```r
-# creating the table
+# creating the table staffdose
 dbExecute(conn = mp_db_conn,
           statement = 
             "CREATE TABLE staffdose (
@@ -628,7 +661,7 @@ Let's try again, add data and then try to add some more data including duplicate
 
 
 ```r
-# adding data
+# adding first set of data
 dbAppendTable(conn = mp_db_conn,
              name = "staffdose",
              value = arf_rows01to10)
@@ -805,12 +838,14 @@ dbAppendUniqueStaffDose(connection = mp_db_conn,
 ```
 
 ```r
-# The ouput states the number of rows added to the table (should be 600 in our case)
+# The output states the number of rows added to the table (should be 600 in our case)
 ```
 
 ### Data Analysis with SQL and R
+Next we are going to analyze our data in the database and produce some nice graphs and tables.  
 
 #### Hp(10) - Summary Statistics by Department and Year
+
 
 ```r
 # Preparing the parameterized query
@@ -819,22 +854,30 @@ stat <- "OK"
 dos_type <- "Badge"
 year <- c("2020", "2021")
 
-# query and graph
-dbGetQuery(conn = mp_db_conn,
-           statement = 
-             "SELECT hp10, department, STRFTIME('%Y', measurement_period_end) AS report_year 
-                FROM staffdose WHERE hp10>=0 
-                AND status = ? AND dosimeter_type = ?
-                AND report_year BETWEEN ? AND ?",
-                params = c(stat, dos_type, year)) %>% 
-  ggplot(aes(x=report_year, y=hp10)) +
-  geom_boxplot() +
+# query the data
+sumstat <- dbGetQuery(conn = mp_db_conn,
+                      statement = 
+                        "SELECT hp10, department, STRFTIME('%Y', measurement_period_end) AS report_year 
+                        FROM staffdose WHERE hp10>=0 
+                        AND status = ? AND dosimeter_type = ?
+                        AND report_year BETWEEN ? AND ?",
+                        params = c(stat, dos_type, year)) 
+```
+
+For plotting we will the popular `tidyverse`-package [`ggplot2`](https://ggplot2.tidyverse.org/):
+
+```r
+sumstat %>% 
+  ggplot(aes(x=report_year, y=hp10)) + # chosing x and y-axis variables
+  geom_boxplot() + # chosing form of the plot
+  # modifying y-axis:
   scale_y_continuous(limits = c(0, NA), 
                       # set lower bound to 0 and let ggplot automatically set upper bound
                      breaks = pretty(c(0, max(all_reports_fixed$hp10, na.rm = T)), 
                                      n=10)) + 
                       # getting 10 breaks in the y-axis from 0 to maximum value of hp10
-  labs(x = "", y = "Hp(10) [mSv]", # Axis names
+  # adding labels:
+  labs(x = "", y = "Hp(10) [mSv]",
        title = "Summary Statistics for monthly Hp(10) values",
        subtitle = "  by department and year",
        caption = "Hacking Medical Physics. Data and Idea: J. Andersson and G. Poludniowski") +
@@ -844,10 +887,11 @@ dbGetQuery(conn = mp_db_conn,
         panel.spacing.x = unit(1, "cm"),
         strip.text = element_text(face = "bold", color = "white"),
         strip.background = element_rect(fill = "#7395D1")) +
-  facet_wrap(~ department) # split up the data into subplots for the different departments
+  # split up the data into subplots for the different departments:
+  facet_wrap(~ department) 
 ```
 
-![](db_R_tutorial_files/figure-html/sqlDataSumstat-1.png)<!-- -->
+![](db_R_tutorial_files/figure-html/sqlDataSumstat_graph-1.png)<!-- -->
 
 #### Number of Staff Dose Readings per Dosimeter Type
 
@@ -855,15 +899,21 @@ dbGetQuery(conn = mp_db_conn,
 # params:
 stat = "NR"
 
-# query and print table
-dbGetQuery(conn = mp_db_conn,
-           statement = 
+# query data
+nr_staffd_readings <- dbGetQuery(conn = mp_db_conn,
+                                 statement = 
              "SELECT COUNT(hp10) AS hp10, COUNT(hp007) AS hp007, dosimeter_type  
               FROM staffdose 
               WHERE status != ?
               GROUP BY dosimeter_type",
               params = stat) %>% 
-  relocate(dosimeter_type) %>% # setting dosimeter_type as first column
+  relocate(dosimeter_type)
+```
+
+The packages `kable` and `kableExtra` help us to create [nice tables](https://cran.r-project.org/web/packages/kableExtra/vignettes/awesome_table_in_html.html):
+
+```r
+nr_staffd_readings %>% 
   kable(align = "lcc", # kable is a function to produce tables
         col.names = c("Dosimeter Type", "Hp(10)", "Hp(0.07)"), 
         caption = "Number of dosimeter readings per dosimeter type") %>% 
@@ -908,10 +958,10 @@ dbGetQuery(conn = mp_db_conn,
               GROUP BY name
               ORDER BY instances DESC",
               params = stat) %>% 
-  kable(align = "lc", # kable is a function to produce tables
+  kable(align = "lc", 
         col.names = c("Name", "Instances"), 
         caption = "Number of times a dosimeter was not returned per person") %>% 
-  kable_styling(bootstrap_options = c("striped", "hover")) # a function to further tweak tables
+  kable_styling(bootstrap_options = c("striped", "hover")) 
 ```
 
 <table class="table table-striped table-hover" style="margin-left: auto; margin-right: auto;">
@@ -1057,7 +1107,7 @@ year <- 2021
 mp_db_conn <- dbConnect(drv = RSQLite::SQLite(),
                         dbname = "medical_physics_db.sqlite",
                         flags = SQLITE_RO)
-# getting a list of departments for which the 
+# getting a list of departments for which data is available for the chosen year
 dep <- dbGetQuery(mp_db_conn, 
            "SELECT department, hp10, STRFTIME('%Y', report_date) AS report_year 
            FROM staffdose
@@ -1080,7 +1130,7 @@ render_report = function(department, year) {
   )
 }
 
-# looping through all departments
+# looping through all departments and using the function "render_report" to create the reports
 for (department in dep[,1]) {
   render_report(department, year)
 }
@@ -1089,9 +1139,10 @@ for (department in dep[,1]) {
 
 
 ## Bonus
+Everything that can be automated should be automated... 
 
 ### Extended Function for reading in Data to the Table staffdose
-The next step to automate the process is to put all the code, you need to read in new data, in a function. This way you don't have to go through all steps manually.
+Let's put all the code you need to read in new data in a function. This way you don't have to go through all steps manually.
 
 
 ```r
@@ -1131,7 +1182,7 @@ dbAppendUniqueDataToStaffdose_Ext <- function(path_data = "reports",
     rep_loop <- read_xls(path = paste0(path_data, "/", file_list_reports[i])) 
     # counting reports read
     counter <- counter + 1
-    # binding together the reports rowwise
+    # binding together the reports row-wise
     all_reps <- rbind(all_reps, rep_loop) 
   }  
   # message with nr of reports matching starting expression and are of type xls
@@ -1140,7 +1191,7 @@ dbAppendUniqueDataToStaffdose_Ext <- function(path_data = "reports",
   # message with nr of dosimeter readings read in
   cat(paste("Nr. of dosimeter readings read from reports:", nrow(all_reps), "\n"))
     
-  # opening connection to an exising database
+  # opening connection to an existing database
     # error if database does not exist
   con <- dbConnect(drv = RSQLite::SQLite(), 
                    dbname = "medical_physics_db.sqlite")  
@@ -1153,7 +1204,7 @@ dbAppendUniqueDataToStaffdose_Ext <- function(path_data = "reports",
   loc <- Sys.getlocale("LC_TIME") # storing the machine locale setting for time and dates in variable "loc"
   Sys.setlocale("LC_TIME", locale = "English") # setting the machine locale for time and dates to "English"
 
-  # fixing vvariables (see tutorial above)
+  # fixing variables (see tutorial above)
   all_reps_fixed <- all_reps %>% 
     mutate(hp10 = str_replace_all(hp10, 
                                   pattern = ",", 
@@ -1171,6 +1222,7 @@ dbAppendUniqueDataToStaffdose_Ext <- function(path_data = "reports",
     mutate(across(c(measurement_period_start:report_date), 
                   as.Date, 
                   format = "%d-%b-%Y")) %>% 
+    mutate(across(c(measurement_period_start:report_date), as.character)) %>% 
     group_by(person_uid, dosimeter_uid) %>% 
     distinct(report_uid, .keep_all = TRUE) %>%
     ungroup()
@@ -1191,7 +1243,7 @@ dbAppendUniqueDataToStaffdose_Ext <- function(path_data = "reports",
   cat(paste("Nr. of new dosimeter readings added to staffdose:", unique_dos_readings_added, "\n"))
   
   # checking if read in data is in database
-    # check how many rows of stage are exisiting in staffdose
+    # check how many rows of stage are existing in staffdose
   intersect_stage_staffdose <- dbGetQuery(con, 
                                           "SELECT report_uid, person_uid, dosimeter_placement FROM stage
                                           INTERSECT
@@ -1215,7 +1267,7 @@ Testing the new function:
 # opening a connection
 mp_db_conn <- dbConnect(drv = RSQLite::SQLite(),
                         dbname = "medical_physics_db.sqlite")
-# delete table staffdose
+# delete all data from table staffdose
 dbExecute(mp_db_conn, "DELETE FROM staffdose")
 ```
 
@@ -1224,7 +1276,7 @@ dbExecute(mp_db_conn, "DELETE FROM staffdose")
 ```
 
 ```r
-# using the function to add all the data
+# using the function to add back all the data
 dbAppendUniqueDataToStaffdose_Ext()
 ```
 
@@ -1282,4 +1334,4 @@ dbDisconnect(conn = mp_db_conn)
 
 
 ### Putting your code into a package
-You can go a step further and write your own little package that includes everything you need working with your data project and is not already available on [CRAN](https://cran.r-project.org/), [R-universe](https://r-universe.dev/search/) or [anywhere else](https://rdrr.io/find/?repos=cran%2Cbioc%2Crforge%2Cgithub&page=0&fuzzy_slug=). This way you have your own functions and report templates available within R and easily share them with your colleagues. Check out the book [R Packages](https://r-pkgs.org/index.html) by Headly Wickham and Jenny Bryan.
+You can take it a step further and write your own little package that includes everything you need working with your data project and is not already available on [CRAN](https://cran.r-project.org/), [R-universe](https://r-universe.dev/search/) or [anywhere else](https://rdrr.io/find/?repos=cran%2Cbioc%2Crforge%2Cgithub&page=0&fuzzy_slug=). This way you have your own functions and report templates available within R and easily share them with your colleagues. Check out the book [R Packages](https://r-pkgs.org/index.html) by Headly Wickham and Jenny Bryan.

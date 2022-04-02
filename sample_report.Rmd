@@ -52,12 +52,12 @@ mp_db_conn <- dbConnect(drv = RSQLite::SQLite(),
 ```
 
 ## Introduction
-This is a sample report written for the R/RStudio-Version tutorial for Part 2 of the article series "Hacking Medical Physics" by Jonas Andersson and Gavin Poludniowski (GitRepo: [rvbCMTS/EMP-News](https://github.com/rvbCMTS/EMP-News.git)) in the newsletter of the European Federation of Organisations for Medical Physics (EFOMP)^[[European Medical Physics News](https://www.efomp.org/index.php?r=fc&id=emp-news)]. GitRepo for this R/RStudio version: [Michael Wieland - Hacking Medical Physics - R Version](https://github.com/michaelwiel/hacking_medphys_R_part2.git).  
+This is a sample report written for the R/RStudio-Version tutorial for Part 2 of the article series "Hacking Medical Physics" by Jonas Andersson and Gavin Poludniowski (GitRepo: [rvbCMTS/EMP-News](https://github.com/rvbCMTS/EMP-News.git)) in the newsletter of the European Federation of Organizations for Medical Physics (EFOMP)^[[European Medical Physics News](https://www.efomp.org/index.php?r=fc&id=emp-news)]. GitRepo for this R/RStudio version: [Michael Wieland - Hacking Medical Physics - R Version](https://github.com/michaelwiel/hacking_medphys_R_part2.git).  
 <br>
 In order to make use of the report you have to execute the code of the tutorial first. This will fill the database used in the report with data, otherwise you will get empty graphs and/or error messages.
 
 ## Report Styling
-As little teaser I added a logo to the report via the YAML header. There are a lot of packages that allow you to use templates for all kinds of formats. If you know your way around HMTL & CSS you can create your own templates and even write a package which adds your own template to the selection of templates when you create a new R Markdown file. The possibilities are almost endless. Here are some ressources:  
+As little teaser I added a logo to the report via the YAML header. There are a lot of packages that allow you to use templates for all kinds of formats. If you know your way around HMTL & CSS you can create your own templates and even write a package which adds your own template to the selection of templates when you create a new R Markdown file. The possibilities are almost endless. Here are some resources:  
 
 * [RStudio - R Markdown Gallery](https://rmarkdown.rstudio.com/gallery.html)  
 * [The Epidemiologist R Handbook - Chapter 40 - Reports with R Markdown](https://epirhandbook.com/en/reports-with-r-markdown.html)  
