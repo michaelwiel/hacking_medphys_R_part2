@@ -63,11 +63,11 @@ if(!require(DBI)){
   library(DBI)
 }
 
-# # load RSQLite to make database engine in R and provides an interface compliant with the DBI package
-# if(!require(RSQLite)){
-#   install.packages("RSQLite")
-#   library(RSQLite)
-# }
+# load RSQLite to make database engine in R and provides an interface compliant with the DBI package
+if(!require(RSQLite)){
+  install.packages("RSQLite")
+  library(RSQLite)
+}
 # https://cran.r-project.org/web/packages/RSQLite/vignettes/RSQLite.html
 ```
 
