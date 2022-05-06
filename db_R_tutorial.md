@@ -1,9 +1,9 @@
 ---
 title: "Hacking Medical Physics with R"
 author: |
-  Michael Wieland  
-  mchl.wieland@gmail.com
-date: "2022-05-06"
+  Michael Wieland (mchl.wieland@gmail.com)   
+  Francois Gardavaud (francois.gardavaud@aphp.fr)
+date: "2022-05-07"
 output: 
   html_document: 
     highlight: pygments
@@ -13,21 +13,59 @@ output:
     toc_depth: 3
     keep_md: yes
 ---
+<!-- 
+If you are new to R and RStudio you might prefer reading the html- or md-file of the tutorial
+md-file on Github: https://github.com/michaelwiel/hacking_medphys_R_part2/blob/main/db_R_tutorial.md
+html-file: https://charmingquark.at/db_R_tutorial.html
+-->
 
-```r
-# define the mirror to download when Knitting the document the missing packages
-options(repos = list(CRAN="http://cran.rstudio.com/"))
-```
+## Short Description
+This is a R/RStudio-Version for Part 2 of the article series "Hacking Medical Physics" by Jonas Andersson and Gavin Poludniowski (GitHub repository: [rvbCMTS/EMP-News](https://github.com/rvbCMTS/EMP-News.git)) in the newsletter of the European Federation of Organizations for Medical Physics (EFOMP)^[[European Medical Physics News](https://www.efomp.org/index.php?r=fc&id=emp-news)]. GitHub repository for this R/RStudio version: [Michael Wieland - Hacking Medical Physics - R Version](https://github.com/michaelwiel/hacking_medphys_R_part2.git).
+
+### Tutorial Overview
+In this tutorial we will read in personnel dosimeter data from dosimetry lab reports in the form of Excel-files. To store the data we create a SQLite database and then do some data analysis by querying the data from the database and produce figures and tables. Additionally we will have a a look at the reporting capabilities of R Markdown, discuss parameterized reports and automating reporting tasks.
+
+### Ressources
+In order to run this R Markdown file you need to install [R](https://www.r-project.org/) and [RStudio](https://www.rstudio.com/) ([RStudio Installer](https://www.rstudio.com/products/rstudio/download/)). An alternative IDE to RStudio is the open source IDE [Bio7](https://bio7.org/). Bio7 can be extended with plug-ins, among others with an [ImageJ](https://imagej.nih.gov/ij/)-plug-in for image analysis.   
+
+Resources to get started with R:  
+
+* [RStudio Education - Beginners](https://education.rstudio.com/learn/beginner/)  
+* [RStudio Support - Getting Started with R](https://support.rstudio.com/hc/en-us/articles/201141096-Getting-Started-with-R)  
+* [RStudio Book Collection](https://www.rstudio.com/products/rstudio/download/)  
+* [ggplot2 - Elegent Graphics for Data Analysis](https://ggplot2-book-solutions-3ed.netlify.app/index.html)  
+
+Resources on R Markdown, the tool this tutorial is written with:  
+
+* [R Markdown Cookbook](https://bookdown.org/yihui/rmarkdown-cookbook/)  
+* [R Markdown: The Definitive Guide](https://bookdown.org/yihui/rmarkdown/)  
+
+### Working in RStudio
+If you haven't done so already, download all files from the GitHub-Repository [michaelwiel/hacking_medphys_R_part2](https://github.com/michaelwiel/hacking_medphys_R_part2). 
+Open the the file "hacking_medphys_R_part2.Rproj" which should contain two [R Markdown files](https://rmarkdown.rstudio.com/) named "db_R_tutorial.Rmd" and "sample_report.Rmd". If you can't see them as tabs in the RStudio environment you can open them from the "Files"-pane or from "Files -> Open Files".  
+<br>
+If you are still reading the html-version or md-version of this tutorial we highly recommend to switch to RStudio and keep on reading in the R Markdown file "db_R_tutorial.Rmd" in order to run the code in the tutorial yourself.
+
+### Executing Code
+You can run the code in the RStudio console window or directly in the R Markdown file by clicking on the little "Play"-button in the top right hand corner of the code chunks:
+
+![Code chunk example - Execute code with play button in the top right hand corner](figures/example_codechunk.png)
+If you want to test the code yourself you have to execute all of the code in the tutorial in order (i.e. press the green play button in each code chunk in the order it appears in the text). You can start at any point by executing the code until the code chunk you want to start with by pressing the button left from the play button (downfacing arrow with a green line below it). 
+
+
+### Package Setup
+<!-- We will make heavy use of the package collection `tidyverse` and the "pipe"-operator (` %>% `). Together with R Markdown they are facilitators of literate programming^[[Wikipedia: Literate programming](https://en.wikipedia.org/wiki/Literate_programming)]. To learn more have a look at: [`tidyverse` - R packages for data science](https://www.tidyverse.org/).   -->
+
+The functionality of R can be vastly extended by installing additional packages. You can download packages from different sources. A safe way to install packages is to do so from within RStudio by clicking on "Tools" -> "Install packages..." in the menu bar. For R newcomers we added the next code chunks which automate the installation process (don't forget to press the little green play buttons...). 
+
+
 
 
 ```r
 ###################### set-up environment section ################################
-# Set the project path to the root level -
-root.dir = rprojroot::find_rstudio_root_file()
 
-#knitr::opts_chunk$set(echo = TRUE)
-
-# the following lines test if the necessary packages are already installed.
+# The following lines check if the necessary packages are already installed. 
+# If a package is missing it will be installed.
 if(!require(tidyverse)){
   install.packages("tidyverse")
 }
@@ -49,60 +87,47 @@ if(!require(RSQLite)){
 if(!require(DBI)){
   install.packages("DBI")
 }
-# then load the necessary packages
-# load tidyverse for data science such as data handling and visualization
+```
+
+
+```r
+# loading the necessary packages
+
+# load tidyverse for data handling and visualization
+  # tidyverse is actually a collection of packages (ggplot2 for visualization and many more)
 library(tidyverse)
-# load readxl for excel file reading
+# load readxl for reading data from excel files
 library(readxl)
-# load ggthemes to have Extra Themes, Scales and Geoms for 'ggplot2'
+# load ggthemes for additional themes for the package ggplot2
 library(ggthemes)
 # load tibble to deal with tibble format
 library(tibble)
 # load kableExtra to improve table rendering
 library(kableExtra)
-# load DBI to manage communication between R and relational database management system
+# load DBI for communication between R and relational database management systems
 library(DBI)
-# load RSQLite to make database engine in R and provides an interface compliant with the DBI package
+# load RSQLite to embed the SQLite database engine in R and provides an DBI-compliant interface
 library(RSQLite)
 ```
 
-## Short Description
-This is a R/RStudio-Version for Part 2 of the article series "Hacking Medical Physics" by Jonas Andersson and Gavin Poludniowski (GitHub repository: [rvbCMTS/EMP-News](https://github.com/rvbCMTS/EMP-News.git)) in the newsletter of the European Federation of Organizations for Medical Physics (EFOMP)^[[European Medical Physics News](https://www.efomp.org/index.php?r=fc&id=emp-news)]. GitHub repository for this R/RStudio version: [Michael Wieland - Hacking Medical Physics - R Version](https://github.com/michaelwiel/hacking_medphys_R_part2.git).
-
-### Tutorial Overview
-In this tutorial we will read in personnel dosimeter data from dosimetry lab reports in the form of Excel-files. To store the data we create a SQLite database and then do some data analysis by querying the data from the database and produce some figures and tables. Additionally we will have a a look at the reporting capabilities of R Markdown and discuss parameterized reports and automating reporting tasks.
-
-### Ressources and Preparation
-In order to run this R Markdown file you need to install [R](https://www.r-project.org/) and [RStudio](https://www.rstudio.com/) ([RStudio Installer](https://www.rstudio.com/products/rstudio/download/)). An alternative IDE to RStudio is the open source IDE [Bio7](https://bio7.org/). Bio7 can be extended with plug-ins, among others with an [ImageJ](https://imagej.nih.gov/ij/)-plug-in for image analysis.   
-
-Resources to get started with R:  
-
-* [RStudio Education - Beginners](https://education.rstudio.com/learn/beginner/)  
-* [RStudio Support - Getting Started with R](https://support.rstudio.com/hc/en-us/articles/201141096-Getting-Started-with-R)  
-* [RStudio Book Collection](https://www.rstudio.com/products/rstudio/download/)  
-* [ggplot2 - Elegent Graphics for Data Analysis](https://ggplot2-book-solutions-3ed.netlify.app/index.html)  
-
-Resources on R Markdown, the tool this tutorial is written with:  
-
-* [R Markdown Cookbook](https://bookdown.org/yihui/rmarkdown-cookbook/)  
-* [R Markdown: The Definitive Guide](https://bookdown.org/yihui/rmarkdown/)  
-
-Open the the file "hacking_medphys_R_part2.Rproj" which should contain two [R Markdown files](https://rmarkdown.rstudio.com/) named "db_R_tutorial.Rmd" and "sample_report.Rmd". If you can't see them as tabs in the RStudio environment you can open them from the "Files"-pane or from "Files -> Open Files".  
-<br>
-
-I will make heavy use of the package collection `tidyverse` and the "pipe"-operator (` %>% `). Together with R Markdown they are facilitators of literate programming^[[Wikipedia: Literate programming](https://en.wikipedia.org/wiki/Literate_programming)]. To learn more have a look at: [`tidyverse` - R packages for data science](https://www.tidyverse.org/).  
-If you have not installed the packages loaded in the `setup code chunk` (see above) start with installing them via "Tools -> Install Packages".
-
-### Executing Code
-You can run the code in the RStudio console window or directly in the R Markdown file by clicking on the little "Play"-button in the top right hand corner of the code chunks:
-
-![Code chunk example - Execute code with play button in the top right hand corner](figures/example_codechunk.png)
 
 ## Reading in Data
-If your data files reside in the working directory you can access them in a relative fashion. My current working directory is the folder where this R Markdown-file is stored and the data files are stored in a subfolder called "reports". If you downloaded the whole repository from Github and open RStudio by clicking the `hacking_medphys_R_part2.RProj`-file you should have the same setup and are good to go.
+If your data files reside in the working directory you can access them in a relative fashion. Your current working directory should be the folder where this R Markdown-file is stored and the data files are stored in a subfolder called "reports". If you downloaded the whole repository from Github and open RStudio by clicking the `hacking_medphys_R_part2.RProj`-file you should have the same setup and are good to go.
+
+
+```r
+# If you followed the above steps your working directory should be set correctly.
+# Anyhow we will make sure that the working directory is set to the location of the Rproj-File with the next lines
+
+# Find the root directory of the R Project File
+root.dir = rprojroot::find_rstudio_root_file()
+# Set the project path to the root level
+setwd(root.dir)
+```
+
 
 ### Reading an Excel File
-My preferred method to read Excel files is to use the `readxl`-package:
+A quick way to read data from Excel files is to use the `readxl`-package:
 
 
 ```r
@@ -111,19 +136,19 @@ read_xls(path = "reports/StaffDoses_1.xls") %>%
 ```
 
 ```
-## # A tibble: 5 × 18
+## # A tibble: 5 x 18
 ##   `Customer name`  `Customer UID` Department `Department UID` Name  `Person UID`
 ##   <chr>            <chr>          <chr>      <chr>            <chr> <chr>       
-## 1 Hogsmeade Royal… 141            Nuclear M… 1                Seve… 12368       
-## 2 Hogsmeade Royal… 141            Nuclear M… 1                Harr… 12369       
-## 3 Hogsmeade Royal… 141            Nuclear M… 1                Parv… 12370       
-## 4 Hogsmeade Royal… 141            Nuclear M… 1                Parv… 12370       
-## 5 Hogsmeade Royal… 141            Nuclear M… 1                Cedr… 12371       
-## # … with 12 more variables: `Radiation type` <chr>, `Hp(10)` <chr>,
-## #   `Hp(0.07)` <chr>, `User type` <chr>, `Dosimeter type` <chr>,
-## #   `Dosimeter placement` <chr>, `Dosimeter UID` <chr>,
-## #   `Measurement period (start)` <chr>, `Measurement period (end)` <chr>,
-## #   `Read date` <chr>, `Report date` <chr>, `Report UID` <chr>
+## 1 Hogsmeade Royal~ 141            Nuclear M~ 1                Seve~ 12368       
+## 2 Hogsmeade Royal~ 141            Nuclear M~ 1                Harr~ 12369       
+## 3 Hogsmeade Royal~ 141            Nuclear M~ 1                Parv~ 12370       
+## 4 Hogsmeade Royal~ 141            Nuclear M~ 1                Parv~ 12370       
+## 5 Hogsmeade Royal~ 141            Nuclear M~ 1                Cedr~ 12371       
+## # ... with 12 more variables: Radiation type <chr>, Hp(10) <chr>,
+## #   Hp(0.07) <chr>, User type <chr>, Dosimeter type <chr>,
+## #   Dosimeter placement <chr>, Dosimeter UID <chr>,
+## #   Measurement period (start) <chr>, Measurement period (end) <chr>,
+## #   Read date <chr>, Report date <chr>, Report UID <chr>
 ```
 
 ```r
@@ -140,7 +165,7 @@ Since `path` is the first argument we could also read in the data by just writin
 
 
 ### Fixing the column names
-Reading the Excel file with the function `read_xls` from the package `readxl` gives a decent first result. A few things should be changed though in order to work with the data properly. There are a lot of code style guides out there^[[Coding style, coding etiquette](https://blog.r-hub.io/2022/03/21/code-style/)] but I am going to adhere to the following convention of naming the variable names (column titles)^[[Social Science Computing Cooperative - Naming Variables](https://sscc.wisc.edu/sscc/pubs/DWE/book/4-2-naming-variables.html)]:  
+Reading the Excel file with the function `read_xls` from the package `readxl` gives a decent first result. A few things should be changed though in order to work with the data properly. There are a lot of code style guides out there^[[Coding style, coding etiquette](https://blog.r-hub.io/2022/03/21/code-style/)] but we are going to adhere to the following convention of naming the variable names (column titles)^[[Social Science Computing Cooperative - Naming Variables](https://sscc.wisc.edu/sscc/pubs/DWE/book/4-2-naming-variables.html)]:  
 
 > * Use only lower case.  
 > * Use the underscore, "_" as a replacment for spaces to separate words (called __snake coding__).
@@ -236,13 +261,13 @@ tibble(all_reports) %>%
 ```
 
 ```
-## # A tibble: 3 × 18
-##   customer_name          customer_uid department department_uid name  person_uid
-##   <chr>                  <chr>        <chr>      <chr>          <chr> <chr>     
-## 1 Hogsmeade Royal Infir… 141          Nuclear M… 1              Seve… 12368     
-## 2 Hogsmeade Royal Infir… 141          Nuclear M… 1              Harr… 12369     
-## 3 Hogsmeade Royal Infir… 141          Nuclear M… 1              Parv… 12370     
-## # … with 12 more variables: radiation_type <chr>, hp10 <chr>, hp007 <chr>,
+## # A tibble: 3 x 18
+##   customer_name      customer_uid department   department_uid name    person_uid
+##   <chr>              <chr>        <chr>        <chr>          <chr>   <chr>     
+## 1 Hogsmeade Royal I~ 141          Nuclear Med~ 1              Severu~ 12368     
+## 2 Hogsmeade Royal I~ 141          Nuclear Med~ 1              Harry ~ 12369     
+## 3 Hogsmeade Royal I~ 141          Nuclear Med~ 1              Parvat~ 12370     
+## # ... with 12 more variables: radiation_type <chr>, hp10 <chr>, hp007 <chr>,
 ## #   user_type <chr>, dosimeter_type <chr>, dosimeter_placement <chr>,
 ## #   dosimeter_uid <chr>, measurement_period_start <chr>,
 ## #   measurement_period_end <chr>, read_date <chr>, report_date <chr>,
@@ -257,9 +282,7 @@ Some data wrangling is needed to get the right data types:
 * Create a column `status` before converting `hp10` and `hp007` to numeric in order not to lose information. Where `hp10` and `hp007` have the values "B", "NR" or `NA` (B: Below Measurement Threshold; NR: Not returned; `NA`: Missing Value) we transfer those values to the new column, if the values are numeric we set the value in the new column to "OK".  
 * Convert dates to date format  
 
-To fix the dates I needed a work around because my machine `locale` is set to German but the dates in the reports have abbreviated month names in English. One way to read in the data correctly with little coding is to set the `locale` on the machine to English temporarily. For date-time conversion to and from character see [`strptime`](https://www.rdocumentation.org/packages/base/versions/3.6.2/topics/strptime).
-
-
+The dates in the reports have abbreviated month names in English. If your machine `locale` is not set to English you might run into troubles when you convert the dates from the format `string` to format `date`. One way to read in the data correctly with little coding is to set the `locale` on the machine to English temporarily. For date-time conversion to and from character see [`strptime`](https://www.rdocumentation.org/packages/base/versions/3.6.2/topics/strptime).
 
 
 ```r
@@ -274,7 +297,7 @@ Sys.setlocale("LC_TIME", locale = "English")
 ```
 
 ```
-## [1] ""
+## [1] "English_United States.1252"
 ```
 
 ```r
@@ -323,16 +346,16 @@ head(all_reports_fixed)
 ```
 
 ```
-## # A tibble: 6 × 19
-##   customer_name          customer_uid department department_uid name  person_uid
-##   <chr>                         <dbl> <chr>               <dbl> <chr>      <dbl>
-## 1 Hogsmeade Royal Infir…          141 Nuclear M…              1 Seve…      12368
-## 2 Hogsmeade Royal Infir…          141 Nuclear M…              1 Harr…      12369
-## 3 Hogsmeade Royal Infir…          141 Nuclear M…              1 Parv…      12370
-## 4 Hogsmeade Royal Infir…          141 Nuclear M…              1 Parv…      12370
-## 5 Hogsmeade Royal Infir…          141 Nuclear M…              1 Cedr…      12371
-## 6 Hogsmeade Royal Infir…          141 Nuclear M…              1 Cedr…      12371
-## # … with 13 more variables: radiation_type <chr>, hp10 <dbl>, hp007 <dbl>,
+## # A tibble: 6 x 19
+##   customer_name     customer_uid department   department_uid name     person_uid
+##   <chr>                    <dbl> <chr>                 <dbl> <chr>         <dbl>
+## 1 Hogsmeade Royal ~          141 Nuclear Med~              1 Severus~      12368
+## 2 Hogsmeade Royal ~          141 Nuclear Med~              1 Harry P~      12369
+## 3 Hogsmeade Royal ~          141 Nuclear Med~              1 Parvati~      12370
+## 4 Hogsmeade Royal ~          141 Nuclear Med~              1 Parvati~      12370
+## 5 Hogsmeade Royal ~          141 Nuclear Med~              1 Cedric ~      12371
+## 6 Hogsmeade Royal ~          141 Nuclear Med~              1 Cedric ~      12371
+## # ... with 13 more variables: radiation_type <chr>, hp10 <dbl>, hp007 <dbl>,
 ## #   user_type <chr>, dosimeter_type <chr>, dosimeter_placement <chr>,
 ## #   dosimeter_uid <dbl>, measurement_period_start <date>,
 ## #   measurement_period_end <date>, read_date <date>, report_date <date>,
@@ -345,20 +368,14 @@ Sys.setlocale("LC_TIME", locale = loc)
 ```
 
 ```
-## [1] "fr_FR.UTF-8"
+## [1] "German_Austria.1252"
 ```
-
-#--------  
-__Comment Michael: Discussion necessary regarding status column__  
-
-
-#--------
 
 
 ## Using R with SQLite
 
 ### Ressources and Motivation
-For this part I am drawing heavily on the following resources:  
+For this part we are drawing heavily on the following resources:  
 
 * [RStudio - Databases using R](https://db.rstudio.com/)  
 * [Simona Picardi - Reproducible Data Science - Chapter 07 - Interfacing Databases in R with RSQLite](https://ecorepsci.github.io/reproducible-science/rsqlite.html)  
@@ -389,7 +406,7 @@ See [RSQLite Packages Vignette](https://rsqlite.r-dbi.org/reference/sqlite) for 
 * SQLITE_RW: open the database in read/write mode. Raise an error if the file does not already exist;  
 * SQLITE_RO: open the database in read only mode. Raise an error if the file does not already exist.  
 
-Since a database can hold many different kinds of data, not only personnel dosimeter readings, I will call the database `medical_physics_db.sqlite`.
+Since a database can hold many different kinds of data, not only personnel dosimeter readings, we will call the database `medical_physics_db.sqlite`.
 
 ```r
 mp_db_conn <- dbConnect(drv = RSQLite::SQLite(), 
@@ -459,20 +476,20 @@ dbGetQuery(conn = mp_db_conn,
 ```
 
 ```
-## # A tibble: 10 × 19
-##    customer_name         customer_uid department department_uid name  person_uid
-##    <chr>                        <dbl> <chr>               <dbl> <chr>      <dbl>
-##  1 Hogsmeade Royal Infi…          141 Nuclear M…              1 Seve…      12368
-##  2 Hogsmeade Royal Infi…          141 Nuclear M…              1 Harr…      12369
-##  3 Hogsmeade Royal Infi…          141 Nuclear M…              1 Parv…      12370
-##  4 Hogsmeade Royal Infi…          141 Nuclear M…              1 Parv…      12370
-##  5 Hogsmeade Royal Infi…          141 Nuclear M…              1 Cedr…      12371
-##  6 Hogsmeade Royal Infi…          141 Nuclear M…              1 Cedr…      12371
-##  7 Hogsmeade Royal Infi…          141 Nuclear M…              1 Ron …      12372
-##  8 Hogsmeade Royal Infi…          141 Nuclear M…              1 Tom …      12373
-##  9 Hogsmeade Royal Infi…          141 Diagnosti…              2 Herm…      12374
-## 10 Hogsmeade Royal Infi…          141 Diagnosti…              2 Albu…      12375
-## # … with 13 more variables: radiation_type <chr>, hp10 <dbl>, hp007 <dbl>,
+## # A tibble: 10 x 19
+##    customer_name    customer_uid department    department_uid name    person_uid
+##    <chr>                   <dbl> <chr>                  <dbl> <chr>        <dbl>
+##  1 Hogsmeade Royal~          141 Nuclear Medi~              1 Severu~      12368
+##  2 Hogsmeade Royal~          141 Nuclear Medi~              1 Harry ~      12369
+##  3 Hogsmeade Royal~          141 Nuclear Medi~              1 Parvat~      12370
+##  4 Hogsmeade Royal~          141 Nuclear Medi~              1 Parvat~      12370
+##  5 Hogsmeade Royal~          141 Nuclear Medi~              1 Cedric~      12371
+##  6 Hogsmeade Royal~          141 Nuclear Medi~              1 Cedric~      12371
+##  7 Hogsmeade Royal~          141 Nuclear Medi~              1 Ron We~      12372
+##  8 Hogsmeade Royal~          141 Nuclear Medi~              1 Tom Ma~      12373
+##  9 Hogsmeade Royal~          141 Diagnostic R~              2 Hermio~      12374
+## 10 Hogsmeade Royal~          141 Diagnostic R~              2 Albus ~      12375
+## # ... with 13 more variables: radiation_type <chr>, hp10 <dbl>, hp007 <dbl>,
 ## #   user_type <chr>, dosimeter_type <chr>, dosimeter_placement <chr>,
 ## #   dosimeter_uid <dbl>, measurement_period_start <chr>,
 ## #   measurement_period_end <chr>, read_date <chr>, report_date <chr>,
@@ -492,16 +509,16 @@ dbGetQuery(conn = mp_db_conn,
 
 ```
 ##                  name person_uid dosimeter_uid report_uid report_month
-## 1       Severus Snape      12368         90072       1137           NA
-## 2        Harry Potter      12369         90073       1137           NA
-## 3       Parvati Patil      12370         90075       1137           NA
-## 4       Parvati Patil      12370         90076       1137           NA
-## 5      Cedric Diggory      12371         90077       1137           NA
-## 6      Cedric Diggory      12371         90078       1137           NA
-## 7         Ron Weasley      12372         90079       1137           NA
-## 8  Tom Marvolo Riddle      12373         90080       1137           NA
-## 9   Hermione Grainger      12374         90081       1137           NA
-## 10   Albus Dumbledore      12375         90082       1137           NA
+## 1       Severus Snape      12368         90072       1137      2019-12
+## 2        Harry Potter      12369         90073       1137      2019-12
+## 3       Parvati Patil      12370         90075       1137      2019-12
+## 4       Parvati Patil      12370         90076       1137      2019-12
+## 5      Cedric Diggory      12371         90077       1137      2019-12
+## 6      Cedric Diggory      12371         90078       1137      2019-12
+## 7         Ron Weasley      12372         90079       1137      2019-12
+## 8  Tom Marvolo Riddle      12373         90080       1137      2019-12
+## 9   Hermione Grainger      12374         90081       1137      2019-12
+## 10   Albus Dumbledore      12375         90082       1137      2019-12
 ```
 
 ```r
@@ -558,22 +575,22 @@ dbGetQuery(conn = mp_db_conn,
 ```
 
 ```
-## # A tibble: 13 × 4
+## # A tibble: 13 x 4
 ##    name               person_uid dosimeter_uid report_month
-##    <chr>                   <dbl>         <dbl> <lgl>       
-##  1 Severus Snape           12368         90072 NA          
-##  2 Harry Potter            12369         90073 NA          
-##  3 Parvati Patil           12370         90075 NA          
-##  4 Parvati Patil           12370         90076 NA          
-##  5 Cedric Diggory          12371         90077 NA          
-##  6 Cedric Diggory          12371         90078 NA          
-##  7 Ron Weasley             12372         90079 NA          
-##  8 Tom Marvolo Riddle      12373         90080 NA          
-##  9 Hermione Grainger       12374         90081 NA          
-## 10 Albus Dumbledore        12375         90082 NA          
-## 11 Albus Dumbledore        12375         90082 NA          
-## 12 Filius Flitwick         12376         90083 NA          
-## 13 Neville Longbottom      12377         90084 NA
+##    <chr>                   <dbl>         <dbl> <chr>       
+##  1 Severus Snape           12368         90072 2019-12     
+##  2 Harry Potter            12369         90073 2019-12     
+##  3 Parvati Patil           12370         90075 2019-12     
+##  4 Parvati Patil           12370         90076 2019-12     
+##  5 Cedric Diggory          12371         90077 2019-12     
+##  6 Cedric Diggory          12371         90078 2019-12     
+##  7 Ron Weasley             12372         90079 2019-12     
+##  8 Tom Marvolo Riddle      12373         90080 2019-12     
+##  9 Hermione Grainger       12374         90081 2019-12     
+## 10 Albus Dumbledore        12375         90082 2019-12     
+## 11 Albus Dumbledore        12375         90082 2019-12     
+## 12 Filius Flitwick         12376         90083 2019-12     
+## 13 Neville Longbottom      12377         90084 2019-12
 ```
 
 Now we have 13 rows in the table which means that we created a duplicate by adding row 10 a second time (entry for the dosimeter reading of Albus Dumbledore from December 2019).  
@@ -902,7 +919,7 @@ sumstat <- dbGetQuery(conn = mp_db_conn,
                         params = c(stat, dos_type, year)) 
 ```
 
-For plotting we will the popular `tidyverse`-package [`ggplot2`](https://ggplot2.tidyverse.org/):
+For plotting we will use the popular `tidyverse`-package [`ggplot2`](https://ggplot2.tidyverse.org/):
 
 ```r
 sumstat %>% 
@@ -930,6 +947,8 @@ sumstat %>%
 ```
 
 ![](db_R_tutorial_files/figure-html/sqlDataSumstat_graph-1.png)<!-- -->
+
+It takes some time to learn ggplot (the grammar of graphics). If you need some help you might find the package [`esquisse`](https://cran.r-project.org/web/packages/esquisse/vignettes/get-started.html) useful. It provides a graphical interface to create plots with ggplot interactively.
 
 #### Number of Staff Dose Readings per Dosimeter Type
 
@@ -1053,7 +1072,7 @@ dbGetQuery(conn = mp_db_conn,
 ![](db_R_tutorial_files/figure-html/sqlTotalDose2020-1.png)<!-- -->
 
 ### SQL Engine in R Markdown
-As I will discuss in the next section, R Markdown is an incredible powerful tool. One of its cool features is its ability to ["speak" SQL](https://bookdown.org/yihui/R Markdown/language-engines.html#sql) and other languages. You can not only use R code chunks but others too. When using a SQL code chunk you don't need the `DBI`-functions, you can write native SQL queries.  
+As we will discuss in the next section, R Markdown is an incredible powerful tool. One of its cool features is its ability to ["speak" SQL](https://bookdown.org/yihui/R Markdown/language-engines.html#sql) and other languages. You can not only use R code chunks but others too. When using a SQL code chunk you don't need the `DBI`-functions, you can write native SQL queries.  
 Here is an example of a SQL code chunk (note that it starts with `sql` instead of `r` and you have to provide a connection to a database):  
 
 ![Example of a SQL code chunk - R Markdown Screenshot](figures/example_codechunk_sql.png)
@@ -1125,7 +1144,7 @@ You might have to write reports for your department, your hospital, the authorit
 <br>
 
 ### Sample Report
-The easiest way to start is to create a report as html-file that you can then print to pdf with your browser. Check out the `sample_report.Rmd`-file for an example. I also included a parameterization for departments and years in the so called YAML-header. With that parameterization you can create reports for each department and year from one R Markdown file interactively. More on parameterized reports: [R Markdown: The Definitive Guide - Chapter 15](https://bookdown.org/yihui/RMarkdown/parameterized-reports.html). 
+The easiest way to start is to create a report as html-file that you can then print to pdf with your browser. Check out the `sample_report.Rmd`-file for an example. We also included a parameterization for departments and years in the so called YAML-header. With that parameterization you can create reports for each department and year from one R Markdown file interactively. More on parameterized reports: [R Markdown: The Definitive Guide - Chapter 15](https://bookdown.org/yihui/RMarkdown/parameterized-reports.html). 
 <br>
 Open the file `sample_report.Rmd` and read the instructions for more information.
 
@@ -1174,218 +1193,3 @@ for (department in dep[,1]) {
 }
 ```
 
-
-
-## Bonus
-Everything that can be automated should be automated... 
-
-### Extended Function for reading in Data to the Table staffdose
-Let's put all the code you need to read in new data in a function. This way you don't have to go through all steps manually.
-
-
-```r
-# defining the function
-dbAppendUniqueDataToStaffdose_Ext <- function(path_data = "reports", 
-                                              file_name_beginning = "StaffDose") {
-  # function to add unique data to table "staffdose" in "medical_physics_db.sqlite"
-  
-  # checking and fixing arguments
-  
-  # checking file path
-  path_data <- as.character(path_data)
-  if(!dir.exists(path_data)==TRUE) stop(paste0("Directory ", path_data, " does not exist -> data import not possible"))
-  
-  # check file format xls
-  file_name_beginning <- as.character(file_name_beginning)
-  if(length(list.files(path = path_data, pattern = ".xls$")) == 0) stop("No xls-files in given folder")
-
-  # reading in all xls-files that start with "StaffDose"
-  file_list_reports <- list.files(path = path_data,
-                                  pattern = file_name_beginning)
-  # message with nr of reports matching starting expression and are of type xls
-  cat(paste("Nr. of reports in folder to read in:", length(file_list_reports), "\n"))
-  
-  # stop if no files in file path or expression not matching
-  if(length(file_list_reports) == 0) stop(paste0("Files in folder do not match \'", file_name_beginning, "\'"))
-
-  # create an empty dataframe
-  all_reps <- data.frame() 
-
-  # read in all reports in folder in dataframe "all_reps"
-  # set counter for read in reports to 0
-  counter <- 0
-  # loop
-  for (i in 1:length(file_list_reports)) { # a for-loop to read in all reports
-    # reading in the i-th report into variable "rep":
-    rep_loop <- read_xls(path = paste0(path_data, "/", file_list_reports[i])) 
-    # counting reports read
-    counter <- counter + 1
-    # binding together the reports row-wise
-    all_reps <- rbind(all_reps, rep_loop) 
-  }  
-  # message with nr of reports matching starting expression and are of type xls
-  cat(paste("Nr. of reports in folder read in sucessfully:", length(file_list_reports), "\n"))
-
-  # message with nr of dosimeter readings read in
-  cat(paste("Nr. of dosimeter readings read from reports:", nrow(all_reps), "\n"))
-    
-  # opening connection to an existing database
-    # error if database does not exist
-  con <- dbConnect(drv = RSQLite::SQLite(), 
-                   dbname = "medical_physics_db.sqlite")  
-  
-  # read column names from table staffdose to name columns in "all_reps"
-  colnames(all_reps) <- dbListFields(conn = con,
-                                     name = "staffdose")[-1]
-  
-  # getting locale
-  loc <- Sys.getlocale("LC_TIME") # storing the machine locale setting for time and dates in variable "loc"
-  Sys.setlocale("LC_TIME", locale = "English") # setting the machine locale for time and dates to "English"
-
-  # fixing variables (see tutorial above)
-  all_reps_fixed <- all_reps %>% 
-    mutate(hp10 = str_replace_all(hp10, 
-                                  pattern = ",", 
-                                  replacement = ".")) %>% 
-    mutate(hp007 = str_replace_all(hp007, 
-                                   pattern = ",", 
-                                   replacement = ".")) %>% 
-    mutate(status = case_when(hp007 == "B" ~ "B",
-                              hp007 == "NR" ~ "NR",
-                              is.na(hp007) ~ NA_character_,
-                              is.numeric(base::suppressWarnings(as.numeric(hp007))) ~ "OK")) %>% 
-    mutate(base::suppressWarnings(across(c(customer_uid, department_uid, person_uid, 
-                    hp10, hp007, dosimeter_uid, report_uid), 
-                    as.numeric))) %>% 
-    mutate(across(c(measurement_period_start:report_date), 
-                  as.Date, 
-                  format = "%d-%b-%Y")) %>% 
-    mutate(across(c(measurement_period_start:report_date), as.character)) %>% 
-    group_by(person_uid, dosimeter_uid) %>% 
-    distinct(report_uid, .keep_all = TRUE) %>%
-    ungroup()
-  
-  # setting back locale
-  Sys.setlocale("LC_TIME", locale = loc) # setting back the locale 
-  
-  # wiping clean stage table
-  dbExecute(con, "DELETE FROM stage")
-  
-  # add the new data to the stage table
-  dbAppendTable(con, "stage", all_reps_fixed)
-  
-  # transfer only unique data from the stage table to the staffdose table
-  unique_dos_readings_added <- dbExecute(con, "INSERT OR IGNORE INTO staffdose SELECT * FROM stage")
-  
-  # message with nr of unique dosimeter readings added
-  cat(paste("Nr. of new dosimeter readings added to staffdose:", unique_dos_readings_added, "\n"))
-  
-  # checking if read in data is in database
-    # check how many rows of stage are existing in staffdose
-  intersect_stage_staffdose <- dbGetQuery(con, 
-                                          "SELECT report_uid, person_uid, dosimeter_placement FROM stage
-                                          INTERSECT
-                                          SELECT report_uid, person_uid, dosimeter_placement FROM staffdose") %>% 
-    nrow()
-    # message
-  cat(paste("Nr. of dosimeter readings read from reports found in staffdose after transfer:", 
-            intersect_stage_staffdose, "of", nrow(all_reps), "\n"))
-  
-  # wiping clean stage table
-  dbExecute(con, "DELETE FROM stage")
-
-  # terminating connection
-  dbDisconnect(conn = con)
-}
-```
-
-Testing the new function:
-
-```r
-# opening a connection
-mp_db_conn <- dbConnect(drv = RSQLite::SQLite(),
-                        dbname = "medical_physics_db.sqlite")
-# delete all data from table staffdose
-dbExecute(mp_db_conn, "DELETE FROM staffdose")
-```
-
-```
-## [1] 612
-```
-
-```r
-# using the function to add back all the data
-dbAppendUniqueDataToStaffdose_Ext()
-```
-
-```
-## Nr. of reports in folder to read in: 28 
-## Nr. of reports in folder read in sucessfully: 28 
-## Nr. of dosimeter readings read from reports: 612
-```
-
-```
-## Warning in Sys.setlocale("LC_TIME", locale = "English"): La requête OS pour
-## spécifier la localisation à "English" n'a pas pu être honorée
-```
-
-```
-## Nr. of new dosimeter readings added to staffdose: 612 
-## Nr. of dosimeter readings read from reports found in staffdose after transfer: 612 of 612
-```
-
-```r
-# check result
-dbGetQuery(mp_db_conn, "SELECT * FROM staffdose") %>% tibble()
-```
-
-```
-## # A tibble: 612 × 20
-##       id customer_name   customer_uid department department_uid name  person_uid
-##    <int> <chr>                  <int> <chr>               <int> <chr>      <int>
-##  1     1 Hogsmeade Roya…          141 Nuclear M…              1 Seve…      12368
-##  2     2 Hogsmeade Roya…          141 Nuclear M…              1 Harr…      12369
-##  3     3 Hogsmeade Roya…          141 Nuclear M…              1 Parv…      12370
-##  4     4 Hogsmeade Roya…          141 Nuclear M…              1 Parv…      12370
-##  5     5 Hogsmeade Roya…          141 Nuclear M…              1 Cedr…      12371
-##  6     6 Hogsmeade Roya…          141 Nuclear M…              1 Cedr…      12371
-##  7     7 Hogsmeade Roya…          141 Nuclear M…              1 Ron …      12372
-##  8     8 Hogsmeade Roya…          141 Nuclear M…              1 Tom …      12373
-##  9     9 Hogsmeade Roya…          141 Diagnosti…              2 Herm…      12374
-## 10    10 Hogsmeade Roya…          141 Diagnosti…              2 Albu…      12375
-## # … with 602 more rows, and 13 more variables: radiation_type <chr>,
-## #   hp10 <dbl>, hp007 <dbl>, user_type <chr>, dosimeter_type <chr>,
-## #   dosimeter_placement <chr>, dosimeter_uid <int>,
-## #   measurement_period_start <chr>, measurement_period_end <chr>,
-## #   read_date <chr>, report_date <chr>, report_uid <dbl>, status <chr>
-```
-
-```r
-# see what happens when you try to add data that already exists in the database
-dbAppendUniqueDataToStaffdose_Ext()
-```
-
-```
-## Nr. of reports in folder to read in: 28 
-## Nr. of reports in folder read in sucessfully: 28 
-## Nr. of dosimeter readings read from reports: 612
-```
-
-```
-## Warning in Sys.setlocale("LC_TIME", locale = "English"): La requête OS pour
-## spécifier la localisation à "English" n'a pas pu être honorée
-```
-
-```
-## Nr. of new dosimeter readings added to staffdose: 0 
-## Nr. of dosimeter readings read from reports found in staffdose after transfer: 612 of 612
-```
-
-```r
-# closing connection
-dbDisconnect(conn = mp_db_conn)
-```
-
-
-### Putting your code into a package
-You can take it a step further and write your own little package that includes everything you need working with your data project and is not already available on [CRAN](https://cran.r-project.org/), [R-universe](https://r-universe.dev/search/) or [anywhere else](https://rdrr.io/find/?repos=cran%2Cbioc%2Crforge%2Cgithub&page=0&fuzzy_slug=). This way you have your own functions and report templates available within R and easily share them with your colleagues. Check out the book [R Packages](https://r-pkgs.org/index.html) by Headly Wickham and Jenny Bryan.
