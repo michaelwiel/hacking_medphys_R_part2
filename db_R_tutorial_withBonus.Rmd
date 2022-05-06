@@ -1,8 +1,8 @@
 ---
 title: "Hacking Medical Physics with R"
 author: |
-  Michael Wieland, Francois Gardavaud
-  mchl.wieland@gmail.com, francois.gardavaud@aphp.fr
+  Michael Wieland  
+  mchl.wieland@gmail.com
 date: "`r Sys.Date()`"
 output: 
   html_document: 
@@ -15,61 +15,16 @@ output:
 ---
 
 ```{r setup, warning=FALSE, message=FALSE}
-###################### set-up environment section ################################
-# Find the root directory of the R Project File
-root.dir = rprojroot::find_rstudio_root_file()
-# Set the project path to the root level
-setwd(root.dir)
-
 knitr::opts_chunk$set(echo = TRUE)
 
-# load tidyverse for data science such as data handling and visualization
-if(!require(tidyverse)){
-  install.packages("tidyverse")
-  library(tidyverse)
-}
-
-# load readxl for excel file reading
-if(!require(readxl)){
-  install.packages("readxl")
-  library(readxl)
-}
-
-# load ggthemes to have Extra Themes, Scales and Geoms for 'ggplot2'
-if(!require(ggthemes)){
-  install.packages("ggthemes")
-  library(ggthemes)
-}
-
-# load kableExtra to improve table rendering
-if(!require(kableExtra)){
-  install.packages("kableExtra")
-  library(kableExtra)
-}
-
-# load tibble to deal with tibble format
-if(!require(kableExtra)){
-  install.packages("kableExtra")
-  library(kableExtra)
-}
-
-# load tibble to deal with tibble format
-if(!require(kableExtra)){
-  install.packages("kableExtra")
-  library(kableExtra)
-}
-
-# load RSQLite to make database engine in R and provides an interface compliant with the DBI package
-if(!require(RSQLite)){
-  install.packages("RSQLite")
-  library(RSQLite)
-}
-
-# load DBI to manage communication between R and relational database management system
-if(!require(DBI)){
-  install.packages("DBI")
-  library(DBI)
-}
+library(tidyverse)
+library(readxl)
+library(ggthemes)
+library(kableExtra)
+library(tibble)
+library(DBI)
+#library(RSQLite)
+# https://cran.r-project.org/web/packages/RSQLite/vignettes/RSQLite.html
 ```
 
 ## Short Description
@@ -78,7 +33,7 @@ This is a R/RStudio-Version for Part 2 of the article series "Hacking Medical Ph
 ### Tutorial Overview
 In this tutorial we will read in personnel dosimeter data from dosimetry lab reports in the form of Excel-files. To store the data we create a SQLite database and then do some data analysis by querying the data from the database and produce some figures and tables. Additionally we will have a a look at the reporting capabilities of R Markdown and discuss parameterized reports and automating reporting tasks.
 
-### Ressources and Preparation
+### Ressources
 In order to run this R Markdown file you need to install [R](https://www.r-project.org/) and [RStudio](https://www.rstudio.com/) ([RStudio Installer](https://www.rstudio.com/products/rstudio/download/)). An alternative IDE to RStudio is the open source IDE [Bio7](https://bio7.org/). Bio7 can be extended with plug-ins, among others with an [ImageJ](https://imagej.nih.gov/ij/)-plug-in for image analysis.   
 
 Resources to get started with R:  
@@ -93,7 +48,8 @@ Resources on R Markdown, the tool this tutorial is written with:
 * [R Markdown Cookbook](https://bookdown.org/yihui/rmarkdown-cookbook/)  
 * [R Markdown: The Definitive Guide](https://bookdown.org/yihui/rmarkdown/)  
 
-Open the the file "hacking_medphys_R_part2.Rproj" which should contain two [R Markdown files](https://rmarkdown.rstudio.com/) named "db_R_tutorial.Rmd" and "sample_report.Rmd". If you can't see them as tabs in the RStudio environment you can open them from the "Files"-pane or from "Files -> Open Files".  
+### Getting started
+Open the the file `hacking_medphys_R_part2.Rproj` which should contain two [R Markdown files](https://rmarkdown.rstudio.com/) named `db_R_tutorial.Rmd` and `sample_report.Rmd`. If you can't see them as tabs in the RStudio environment you can open them from the `Files`-pane or from `Files -> Open Files`.
 <br>
 
 I will make heavy use of the package collection `tidyverse` and the "pipe"-operator (` %>% `). Together with R Markdown they are facilitators of literate programming^[[Wikipedia: Literate programming](https://en.wikipedia.org/wiki/Literate_programming)]. To learn more have a look at: [`tidyverse` - R packages for data science](https://www.tidyverse.org/).  
@@ -255,6 +211,48 @@ head(all_reports_fixed)
 # setting back the locale 
 Sys.setlocale("LC_TIME", locale = loc) 
 ```
+
+#--------  
+__Comment Michael: Discussion necessary regarding status column__  
+```{r testing, echo=FALSE, eval=FALSE}
+
+# DELETE CODE CHUNK IN FINAL VERSION  
+
+# DISCUSSION REGARDING STATUS COLUMN -> SEEMS IT IS ONLY NECESSARY TO READ STATUS FROM HP007
+
+colnames(all_reports)
+all_reports %>% 
+  select(hp10, hp007, user_type, dosimeter_type, dosimeter_placement)
+
+
+# First version where 
+all_reports_fixed <- all_reports %>% 
+  # In first step we are replacing the colon with dots as comma sign (needed to convert to numeric later on)
+  # with the function mutate we create new columns based on existing ones or modify the content of existing columns
+  mutate(hp10 = str_replace_all(hp10, pattern = ",", replacement = ".")) %>% 
+  mutate(hp007 = str_replace_all(hp007, pattern = ",", replacement = ".")) %>% 
+  # before we convert hp10 and hp007 to numeric we create new columns with non-numeric values of hp10 and hp007 in order not to lose information
+  # "B": Below Measurement Threshold, "NR": Not returned, "NA": missing value; "OK" where a numeric value exists for the variables hp10 and hp007)
+  mutate(hp10_status = case_when(hp10 == "B" ~ "B", 
+                                 hp10 == "NR" ~ "NR",
+                                 is.na(hp10) ~ NA_character_, 
+                                 is.numeric(as.numeric(hp10)) ~ "OK"),
+         hp007_status = case_when(hp007 == "B" ~ "B", 
+                                 hp007 == "NR" ~ "NR",
+                                 is.na(hp007) ~ NA_character_, 
+                                 is.numeric(as.numeric(hp007)) ~ "OK")) %>% 
+  # next we convert relevant columns to numeric (non-numeric values in hp10 and hp007 will be converted to NA automatically)
+  mutate(across(c(customer_uid, department_uid, person_uid, hp10, hp007, dosimeter_uid, report_uid), as.numeric)) %>% 
+  # to make sure we have no duplicated data (same report read in more than once, identified by "report_uid") 
+  # we eliminate duplicates with the function "distinct"... after grouping by person_uid and dosimeter_uid
+  mutate(across(c(measurement_period_start:report_date), as.Date, format = "%d-%b-%Y")) %>% 
+  group_by(person_uid, dosimeter_uid) %>% 
+  distinct(report_uid, .keep_all = TRUE) %>%
+  ungroup()
+
+```
+
+#--------
 
 
 ## Using R with SQLite
@@ -588,7 +586,7 @@ sumstat <- dbGetQuery(conn = mp_db_conn,
                         params = c(stat, dos_type, year)) 
 ```
 
-For plotting we will the popular `tidyverse`-package [`ggplot2`](https://ggplot2.tidyverse.org/):
+For plotting we will use the popular `tidyverse`-package [`ggplot2`](https://ggplot2.tidyverse.org/):
 ```{r sqlDataSumstat_graph}
 sumstat %>% 
   ggplot(aes(x=report_year, y=hp10)) + # chosing x and y-axis variables
@@ -723,7 +721,8 @@ Open the file `sample_report.Rmd` and read the instructions for more information
 You can of course automate this task too. Say you have to create a version of the sample report each year for all departments. If you already have prepared the parameterized report you can automate this with `rmarkdown::render()`. Executing the next code chunk by clicking the "play button" generates reports for all departments for the year 2021 in your working directory (called "Report-Radiotherapy-2021",...).
 
 ```{r, eval=FALSE}
-# chunk option "eval= FALSE" -> not executed when Rmd rendered.
+# This code chunk is not executed automatically when the Rmd is rendered to html because
+  # chunk option "eval= FALSE"
 
 # set a year (character for SQL query)
 year <- 2021
@@ -898,12 +897,17 @@ dbExecute(mp_db_conn, "DELETE FROM staffdose")
 
 # using the function to add back all the data
 dbAppendUniqueDataToStaffdose_Ext()
+# 612 new dosimeter readings should have been read in
+# if the table was empty before running this function 612 lines should have been added
+  # and should be found in the table after the execution
 
 # check result
 dbGetQuery(mp_db_conn, "SELECT * FROM staffdose") %>% tibble()
 
 # see what happens when you try to add data that already exists in the database
 dbAppendUniqueDataToStaffdose_Ext()
+# 612 dosimeter readings are read in but 0 are added to the database because
+  # they were already present
 
 # closing connection
 dbDisconnect(conn = mp_db_conn)
@@ -911,4 +915,4 @@ dbDisconnect(conn = mp_db_conn)
 
 
 ### Putting your code into a package
-You can take it a step further and write your own little package that includes everything you need working with your data project and is not already available on [CRAN](https://cran.r-project.org/), [R-universe](https://r-universe.dev/search/) or [anywhere else](https://rdrr.io/find/?repos=cran%2Cbioc%2Crforge%2Cgithub&page=0&fuzzy_slug=). This way you have your own functions and report templates available within R and easily share them with your colleagues. Check out the book [R Packages](https://r-pkgs.org/index.html) by Headly Wickham and Jenny Bryan.
+You can take it a step further and write your own little package that includes everything you need working with your data project and is not already available on [CRAN](https://cran.r-project.org/), [R-universe](https://r-universe.dev/search/) or [anywhere else](https://rdrr.io/find/?repos=cran%2Cbioc%2Crforge%2Cgithub&page=0&fuzzy_slug=). This way you have your own functions (like the one above) and report templates available within R and easily share them with your colleagues. Check out the book [R Packages](https://r-pkgs.org/index.html) by Headly Wickham and Jenny Bryan.

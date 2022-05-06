@@ -3,5 +3,9 @@
 .RData
 .Ruserdata
 /package_test
-db_R_tutorial.html
 medical_physics_db.sqlite
+/_old
+/_save
+/db_R_tutorial_files
+sss
+ToDo_and_Ideas.txt

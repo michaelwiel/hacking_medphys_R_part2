@@ -4,8 +4,8 @@ title: |
   <br>
   <span style="color:black">Sample Report - `r params$department` - `r params$year`</span>
 author: |
-  Michael Wieland  
-  mchl.wieland@gmail.com
+  Michael Wieland, Francois Gardavaud
+  mchl.wieland@gmail.com, francois.gardavaud@aphp.fr
 date: "`r Sys.time()`"
 output: 
   html_document: 
