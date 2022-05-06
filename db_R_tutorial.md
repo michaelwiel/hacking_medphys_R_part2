@@ -3,7 +3,7 @@ title: "Hacking Medical Physics with R"
 author: |
   Michael Wieland  
   mchl.wieland@gmail.com
-date: "2022-04-03"
+date: "2022-04-19"
 output: 
   html_document: 
     highlight: pygments
@@ -16,15 +16,59 @@ output:
 
 
 ```r
+###################### set-up environment section ################################
+# Set the project path to the root level -
+root.dir = rprojroot::find_rstudio_root_file()
+
 knitr::opts_chunk$set(echo = TRUE)
 
-library(tidyverse)
-library(readxl)
-library(ggthemes)
-library(kableExtra)
-library(tibble)
-library(DBI)
-#library(RSQLite)
+# load tidyverse for data science such as data handling and visualization
+if(!require(tidyverse)){
+  install.packages("tidyverse")
+  library(tidyverse)
+}
+
+# load readxl for excel file reading
+if(!require(readxl)){
+  install.packages("readxl")
+  library(readxl)
+}
+
+# load ggthemes to have Extra Themes, Scales and Geoms for 'ggplot2'
+if(!require(ggthemes)){
+  install.packages("ggthemes")
+  library(ggthemes)
+}
+
+# load kableExtra to improve table rendering
+if(!require(kableExtra)){
+  install.packages("kableExtra")
+  library(kableExtra)
+}
+
+# load tibble to deal with tibble format
+if(!require(kableExtra)){
+  install.packages("kableExtra")
+  library(kableExtra)
+}
+
+# load tibble to deal with tibble format
+if(!require(kableExtra)){
+  install.packages("kableExtra")
+  library(kableExtra)
+}
+
+# load DBI to manage communication between R and relational database management system
+if(!require(DBI)){
+  install.packages("DBI")
+  library(DBI)
+}
+
+# # load RSQLite to make database engine in R and provides an interface compliant with the DBI package
+# if(!require(RSQLite)){
+#   install.packages("RSQLite")
+#   library(RSQLite)
+# }
 # https://cran.r-project.org/web/packages/RSQLite/vignettes/RSQLite.html
 ```
 
@@ -73,19 +117,19 @@ read_xls(path = "reports/StaffDoses_1.xls") %>%
 ```
 
 ```
-## # A tibble: 5 x 18
+## # A tibble: 5 × 18
 ##   `Customer name`  `Customer UID` Department `Department UID` Name  `Person UID`
 ##   <chr>            <chr>          <chr>      <chr>            <chr> <chr>       
-## 1 Hogsmeade Royal~ 141            Nuclear M~ 1                Seve~ 12368       
-## 2 Hogsmeade Royal~ 141            Nuclear M~ 1                Harr~ 12369       
-## 3 Hogsmeade Royal~ 141            Nuclear M~ 1                Parv~ 12370       
-## 4 Hogsmeade Royal~ 141            Nuclear M~ 1                Parv~ 12370       
-## 5 Hogsmeade Royal~ 141            Nuclear M~ 1                Cedr~ 12371       
-## # ... with 12 more variables: Radiation type <chr>, Hp(10) <chr>,
-## #   Hp(0.07) <chr>, User type <chr>, Dosimeter type <chr>,
-## #   Dosimeter placement <chr>, Dosimeter UID <chr>,
-## #   Measurement period (start) <chr>, Measurement period (end) <chr>,
-## #   Read date <chr>, Report date <chr>, Report UID <chr>
+## 1 Hogsmeade Royal… 141            Nuclear M… 1                Seve… 12368       
+## 2 Hogsmeade Royal… 141            Nuclear M… 1                Harr… 12369       
+## 3 Hogsmeade Royal… 141            Nuclear M… 1                Parv… 12370       
+## 4 Hogsmeade Royal… 141            Nuclear M… 1                Parv… 12370       
+## 5 Hogsmeade Royal… 141            Nuclear M… 1                Cedr… 12371       
+## # … with 12 more variables: `Radiation type` <chr>, `Hp(10)` <chr>,
+## #   `Hp(0.07)` <chr>, `User type` <chr>, `Dosimeter type` <chr>,
+## #   `Dosimeter placement` <chr>, `Dosimeter UID` <chr>,
+## #   `Measurement period (start)` <chr>, `Measurement period (end)` <chr>,
+## #   `Read date` <chr>, `Report date` <chr>, `Report UID` <chr>
 ```
 
 ```r
@@ -198,13 +242,13 @@ tibble(all_reports) %>%
 ```
 
 ```
-## # A tibble: 3 x 18
-##   customer_name      customer_uid department   department_uid name    person_uid
-##   <chr>              <chr>        <chr>        <chr>          <chr>   <chr>     
-## 1 Hogsmeade Royal I~ 141          Nuclear Med~ 1              Severu~ 12368     
-## 2 Hogsmeade Royal I~ 141          Nuclear Med~ 1              Harry ~ 12369     
-## 3 Hogsmeade Royal I~ 141          Nuclear Med~ 1              Parvat~ 12370     
-## # ... with 12 more variables: radiation_type <chr>, hp10 <chr>, hp007 <chr>,
+## # A tibble: 3 × 18
+##   customer_name          customer_uid department department_uid name  person_uid
+##   <chr>                  <chr>        <chr>      <chr>          <chr> <chr>     
+## 1 Hogsmeade Royal Infir… 141          Nuclear M… 1              Seve… 12368     
+## 2 Hogsmeade Royal Infir… 141          Nuclear M… 1              Harr… 12369     
+## 3 Hogsmeade Royal Infir… 141          Nuclear M… 1              Parv… 12370     
+## # … with 12 more variables: radiation_type <chr>, hp10 <chr>, hp007 <chr>,
 ## #   user_type <chr>, dosimeter_type <chr>, dosimeter_placement <chr>,
 ## #   dosimeter_uid <chr>, measurement_period_start <chr>,
 ## #   measurement_period_end <chr>, read_date <chr>, report_date <chr>,
@@ -236,7 +280,7 @@ Sys.setlocale("LC_TIME", locale = "English")
 ```
 
 ```
-## [1] "English_United States.1252"
+## [1] ""
 ```
 
 ```r
@@ -285,16 +329,16 @@ head(all_reports_fixed)
 ```
 
 ```
-## # A tibble: 6 x 19
-##   customer_name     customer_uid department   department_uid name     person_uid
-##   <chr>                    <dbl> <chr>                 <dbl> <chr>         <dbl>
-## 1 Hogsmeade Royal ~          141 Nuclear Med~              1 Severus~      12368
-## 2 Hogsmeade Royal ~          141 Nuclear Med~              1 Harry P~      12369
-## 3 Hogsmeade Royal ~          141 Nuclear Med~              1 Parvati~      12370
-## 4 Hogsmeade Royal ~          141 Nuclear Med~              1 Parvati~      12370
-## 5 Hogsmeade Royal ~          141 Nuclear Med~              1 Cedric ~      12371
-## 6 Hogsmeade Royal ~          141 Nuclear Med~              1 Cedric ~      12371
-## # ... with 13 more variables: radiation_type <chr>, hp10 <dbl>, hp007 <dbl>,
+## # A tibble: 6 × 19
+##   customer_name          customer_uid department department_uid name  person_uid
+##   <chr>                         <dbl> <chr>               <dbl> <chr>      <dbl>
+## 1 Hogsmeade Royal Infir…          141 Nuclear M…              1 Seve…      12368
+## 2 Hogsmeade Royal Infir…          141 Nuclear M…              1 Harr…      12369
+## 3 Hogsmeade Royal Infir…          141 Nuclear M…              1 Parv…      12370
+## 4 Hogsmeade Royal Infir…          141 Nuclear M…              1 Parv…      12370
+## 5 Hogsmeade Royal Infir…          141 Nuclear M…              1 Cedr…      12371
+## 6 Hogsmeade Royal Infir…          141 Nuclear M…              1 Cedr…      12371
+## # … with 13 more variables: radiation_type <chr>, hp10 <dbl>, hp007 <dbl>,
 ## #   user_type <chr>, dosimeter_type <chr>, dosimeter_placement <chr>,
 ## #   dosimeter_uid <dbl>, measurement_period_start <date>,
 ## #   measurement_period_end <date>, read_date <date>, report_date <date>,
@@ -307,7 +351,7 @@ Sys.setlocale("LC_TIME", locale = loc)
 ```
 
 ```
-## [1] "German_Austria.1252"
+## [1] "fr_FR.UTF-8"
 ```
 
 #--------  
@@ -421,20 +465,20 @@ dbGetQuery(conn = mp_db_conn,
 ```
 
 ```
-## # A tibble: 10 x 19
-##    customer_name    customer_uid department    department_uid name    person_uid
-##    <chr>                   <dbl> <chr>                  <dbl> <chr>        <dbl>
-##  1 Hogsmeade Royal~          141 Nuclear Medi~              1 Severu~      12368
-##  2 Hogsmeade Royal~          141 Nuclear Medi~              1 Harry ~      12369
-##  3 Hogsmeade Royal~          141 Nuclear Medi~              1 Parvat~      12370
-##  4 Hogsmeade Royal~          141 Nuclear Medi~              1 Parvat~      12370
-##  5 Hogsmeade Royal~          141 Nuclear Medi~              1 Cedric~      12371
-##  6 Hogsmeade Royal~          141 Nuclear Medi~              1 Cedric~      12371
-##  7 Hogsmeade Royal~          141 Nuclear Medi~              1 Ron We~      12372
-##  8 Hogsmeade Royal~          141 Nuclear Medi~              1 Tom Ma~      12373
-##  9 Hogsmeade Royal~          141 Diagnostic R~              2 Hermio~      12374
-## 10 Hogsmeade Royal~          141 Diagnostic R~              2 Albus ~      12375
-## # ... with 13 more variables: radiation_type <chr>, hp10 <dbl>, hp007 <dbl>,
+## # A tibble: 10 × 19
+##    customer_name         customer_uid department department_uid name  person_uid
+##    <chr>                        <dbl> <chr>               <dbl> <chr>      <dbl>
+##  1 Hogsmeade Royal Infi…          141 Nuclear M…              1 Seve…      12368
+##  2 Hogsmeade Royal Infi…          141 Nuclear M…              1 Harr…      12369
+##  3 Hogsmeade Royal Infi…          141 Nuclear M…              1 Parv…      12370
+##  4 Hogsmeade Royal Infi…          141 Nuclear M…              1 Parv…      12370
+##  5 Hogsmeade Royal Infi…          141 Nuclear M…              1 Cedr…      12371
+##  6 Hogsmeade Royal Infi…          141 Nuclear M…              1 Cedr…      12371
+##  7 Hogsmeade Royal Infi…          141 Nuclear M…              1 Ron …      12372
+##  8 Hogsmeade Royal Infi…          141 Nuclear M…              1 Tom …      12373
+##  9 Hogsmeade Royal Infi…          141 Diagnosti…              2 Herm…      12374
+## 10 Hogsmeade Royal Infi…          141 Diagnosti…              2 Albu…      12375
+## # … with 13 more variables: radiation_type <chr>, hp10 <dbl>, hp007 <dbl>,
 ## #   user_type <chr>, dosimeter_type <chr>, dosimeter_placement <chr>,
 ## #   dosimeter_uid <dbl>, measurement_period_start <chr>,
 ## #   measurement_period_end <chr>, read_date <chr>, report_date <chr>,
@@ -454,16 +498,16 @@ dbGetQuery(conn = mp_db_conn,
 
 ```
 ##                  name person_uid dosimeter_uid report_uid report_month
-## 1       Severus Snape      12368         90072       1137      2019-12
-## 2        Harry Potter      12369         90073       1137      2019-12
-## 3       Parvati Patil      12370         90075       1137      2019-12
-## 4       Parvati Patil      12370         90076       1137      2019-12
-## 5      Cedric Diggory      12371         90077       1137      2019-12
-## 6      Cedric Diggory      12371         90078       1137      2019-12
-## 7         Ron Weasley      12372         90079       1137      2019-12
-## 8  Tom Marvolo Riddle      12373         90080       1137      2019-12
-## 9   Hermione Grainger      12374         90081       1137      2019-12
-## 10   Albus Dumbledore      12375         90082       1137      2019-12
+## 1       Severus Snape      12368         90072       1137           NA
+## 2        Harry Potter      12369         90073       1137           NA
+## 3       Parvati Patil      12370         90075       1137           NA
+## 4       Parvati Patil      12370         90076       1137           NA
+## 5      Cedric Diggory      12371         90077       1137           NA
+## 6      Cedric Diggory      12371         90078       1137           NA
+## 7         Ron Weasley      12372         90079       1137           NA
+## 8  Tom Marvolo Riddle      12373         90080       1137           NA
+## 9   Hermione Grainger      12374         90081       1137           NA
+## 10   Albus Dumbledore      12375         90082       1137           NA
 ```
 
 ```r
@@ -520,22 +564,22 @@ dbGetQuery(conn = mp_db_conn,
 ```
 
 ```
-## # A tibble: 13 x 4
+## # A tibble: 13 × 4
 ##    name               person_uid dosimeter_uid report_month
-##    <chr>                   <dbl>         <dbl> <chr>       
-##  1 Severus Snape           12368         90072 2019-12     
-##  2 Harry Potter            12369         90073 2019-12     
-##  3 Parvati Patil           12370         90075 2019-12     
-##  4 Parvati Patil           12370         90076 2019-12     
-##  5 Cedric Diggory          12371         90077 2019-12     
-##  6 Cedric Diggory          12371         90078 2019-12     
-##  7 Ron Weasley             12372         90079 2019-12     
-##  8 Tom Marvolo Riddle      12373         90080 2019-12     
-##  9 Hermione Grainger       12374         90081 2019-12     
-## 10 Albus Dumbledore        12375         90082 2019-12     
-## 11 Albus Dumbledore        12375         90082 2019-12     
-## 12 Filius Flitwick         12376         90083 2019-12     
-## 13 Neville Longbottom      12377         90084 2019-12
+##    <chr>                   <dbl>         <dbl> <lgl>       
+##  1 Severus Snape           12368         90072 NA          
+##  2 Harry Potter            12369         90073 NA          
+##  3 Parvati Patil           12370         90075 NA          
+##  4 Parvati Patil           12370         90076 NA          
+##  5 Cedric Diggory          12371         90077 NA          
+##  6 Cedric Diggory          12371         90078 NA          
+##  7 Ron Weasley             12372         90079 NA          
+##  8 Tom Marvolo Riddle      12373         90080 NA          
+##  9 Hermione Grainger       12374         90081 NA          
+## 10 Albus Dumbledore        12375         90082 NA          
+## 11 Albus Dumbledore        12375         90082 NA          
+## 12 Filius Flitwick         12376         90083 NA          
+## 13 Neville Longbottom      12377         90084 NA
 ```
 
 Now we have 13 rows in the table which means that we created a duplicate by adding row 10 a second time (entry for the dosimeter reading of Albus Dumbledore from December 2019).  
@@ -1283,7 +1327,15 @@ dbAppendUniqueDataToStaffdose_Ext()
 ```
 ## Nr. of reports in folder to read in: 28 
 ## Nr. of reports in folder read in sucessfully: 28 
-## Nr. of dosimeter readings read from reports: 612 
+## Nr. of dosimeter readings read from reports: 612
+```
+
+```
+## Warning in Sys.setlocale("LC_TIME", locale = "English"): La requête OS pour
+## spécifier la localisation à "English" n'a pas pu être honorée
+```
+
+```
 ## Nr. of new dosimeter readings added to staffdose: 612 
 ## Nr. of dosimeter readings read from reports found in staffdose after transfer: 612 of 612
 ```
@@ -1294,20 +1346,20 @@ dbGetQuery(mp_db_conn, "SELECT * FROM staffdose") %>% tibble()
 ```
 
 ```
-## # A tibble: 612 x 20
-##       id customer_name  customer_uid department  department_uid name  person_uid
-##    <int> <chr>                 <int> <chr>                <int> <chr>      <int>
-##  1     1 Hogsmeade Roy~          141 Nuclear Me~              1 Seve~      12368
-##  2     2 Hogsmeade Roy~          141 Nuclear Me~              1 Harr~      12369
-##  3     3 Hogsmeade Roy~          141 Nuclear Me~              1 Parv~      12370
-##  4     4 Hogsmeade Roy~          141 Nuclear Me~              1 Parv~      12370
-##  5     5 Hogsmeade Roy~          141 Nuclear Me~              1 Cedr~      12371
-##  6     6 Hogsmeade Roy~          141 Nuclear Me~              1 Cedr~      12371
-##  7     7 Hogsmeade Roy~          141 Nuclear Me~              1 Ron ~      12372
-##  8     8 Hogsmeade Roy~          141 Nuclear Me~              1 Tom ~      12373
-##  9     9 Hogsmeade Roy~          141 Diagnostic~              2 Herm~      12374
-## 10    10 Hogsmeade Roy~          141 Diagnostic~              2 Albu~      12375
-## # ... with 602 more rows, and 13 more variables: radiation_type <chr>,
+## # A tibble: 612 × 20
+##       id customer_name   customer_uid department department_uid name  person_uid
+##    <int> <chr>                  <int> <chr>               <int> <chr>      <int>
+##  1     1 Hogsmeade Roya…          141 Nuclear M…              1 Seve…      12368
+##  2     2 Hogsmeade Roya…          141 Nuclear M…              1 Harr…      12369
+##  3     3 Hogsmeade Roya…          141 Nuclear M…              1 Parv…      12370
+##  4     4 Hogsmeade Roya…          141 Nuclear M…              1 Parv…      12370
+##  5     5 Hogsmeade Roya…          141 Nuclear M…              1 Cedr…      12371
+##  6     6 Hogsmeade Roya…          141 Nuclear M…              1 Cedr…      12371
+##  7     7 Hogsmeade Roya…          141 Nuclear M…              1 Ron …      12372
+##  8     8 Hogsmeade Roya…          141 Nuclear M…              1 Tom …      12373
+##  9     9 Hogsmeade Roya…          141 Diagnosti…              2 Herm…      12374
+## 10    10 Hogsmeade Roya…          141 Diagnosti…              2 Albu…      12375
+## # … with 602 more rows, and 13 more variables: radiation_type <chr>,
 ## #   hp10 <dbl>, hp007 <dbl>, user_type <chr>, dosimeter_type <chr>,
 ## #   dosimeter_placement <chr>, dosimeter_uid <int>,
 ## #   measurement_period_start <chr>, measurement_period_end <chr>,
@@ -1322,7 +1374,15 @@ dbAppendUniqueDataToStaffdose_Ext()
 ```
 ## Nr. of reports in folder to read in: 28 
 ## Nr. of reports in folder read in sucessfully: 28 
-## Nr. of dosimeter readings read from reports: 612 
+## Nr. of dosimeter readings read from reports: 612
+```
+
+```
+## Warning in Sys.setlocale("LC_TIME", locale = "English"): La requête OS pour
+## spécifier la localisation à "English" n'a pas pu être honorée
+```
+
+```
 ## Nr. of new dosimeter readings added to staffdose: 0 
 ## Nr. of dosimeter readings read from reports found in staffdose after transfer: 612 of 612
 ```

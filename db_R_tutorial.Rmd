@@ -15,15 +15,59 @@ output:
 ---
 
 ```{r setup, warning=FALSE, message=FALSE}
+###################### set-up environment section ################################
+# Set the project path to the root level -
+root.dir = rprojroot::find_rstudio_root_file()
+
 knitr::opts_chunk$set(echo = TRUE)
 
-library(tidyverse)
-library(readxl)
-library(ggthemes)
-library(kableExtra)
-library(tibble)
-library(DBI)
-#library(RSQLite)
+# load tidyverse for data science such as data handling and visualization
+if(!require(tidyverse)){
+  install.packages("tidyverse")
+  library(tidyverse)
+}
+
+# load readxl for excel file reading
+if(!require(readxl)){
+  install.packages("readxl")
+  library(readxl)
+}
+
+# load ggthemes to have Extra Themes, Scales and Geoms for 'ggplot2'
+if(!require(ggthemes)){
+  install.packages("ggthemes")
+  library(ggthemes)
+}
+
+# load kableExtra to improve table rendering
+if(!require(kableExtra)){
+  install.packages("kableExtra")
+  library(kableExtra)
+}
+
+# load tibble to deal with tibble format
+if(!require(kableExtra)){
+  install.packages("kableExtra")
+  library(kableExtra)
+}
+
+# load tibble to deal with tibble format
+if(!require(kableExtra)){
+  install.packages("kableExtra")
+  library(kableExtra)
+}
+
+# load DBI to manage communication between R and relational database management system
+if(!require(DBI)){
+  install.packages("DBI")
+  library(DBI)
+}
+
+# load RSQLite to make database engine in R and provides an interface compliant with the DBI package
+if(!require(RSQLite)){
+  install.packages("RSQLite")
+  library(RSQLite)
+}
 # https://cran.r-project.org/web/packages/RSQLite/vignettes/RSQLite.html
 ```
 
@@ -51,7 +95,7 @@ Resources on R Markdown, the tool this tutorial is written with:
 Open the the file "hacking_medphys_R_part2.Rproj" which should contain two [R Markdown files](https://rmarkdown.rstudio.com/) named "db_R_tutorial.Rmd" and "sample_report.Rmd". If you can't see them as tabs in the RStudio environment you can open them from the "Files"-pane or from "Files -> Open Files".  
 <br>
 
-I will make heavy use of the package collection `tidyverse` and the "pipe"-operator (` %>% `). Together with R Markdown they are facilitators of literate programming^[[Wikipeida: Literate programming](https://en.wikipedia.org/wiki/Literate_programming)]. To learn more have a look at: [`tidyverse` - R packages for data science](https://www.tidyverse.org/).  
+I will make heavy use of the package collection `tidyverse` and the "pipe"-operator (` %>% `). Together with R Markdown they are facilitators of literate programming^[[Wikipedia: Literate programming](https://en.wikipedia.org/wiki/Literate_programming)]. To learn more have a look at: [`tidyverse` - R packages for data science](https://www.tidyverse.org/).  
 If you have not installed the packages loaded in the `setup code chunk` (see above) start with installing them via "Tools -> Install Packages".
 
 ### Executing Code
