@@ -3,7 +3,7 @@ title: "Hacking Medical Physics with R"
 author: |
   Michael Wieland  
   mchl.wieland@gmail.com
-date: "2022-04-19"
+date: "2022-05-06"
 output: 
   html_document: 
     highlight: pygments
@@ -14,62 +14,56 @@ output:
     keep_md: yes
 ---
 
+```r
+# define the mirror to download when Knitting the document the missing packages
+options(repos = list(CRAN="http://cran.rstudio.com/"))
+```
+
 
 ```r
 ###################### set-up environment section ################################
 # Set the project path to the root level -
 root.dir = rprojroot::find_rstudio_root_file()
 
-knitr::opts_chunk$set(echo = TRUE)
+#knitr::opts_chunk$set(echo = TRUE)
 
-# load tidyverse for data science such as data handling and visualization
+# the following lines test if the necessary packages are already installed.
 if(!require(tidyverse)){
   install.packages("tidyverse")
-  library(tidyverse)
 }
-
-# load readxl for excel file reading
 if(!require(readxl)){
   install.packages("readxl")
-  library(readxl)
 }
-
-# load ggthemes to have Extra Themes, Scales and Geoms for 'ggplot2'
 if(!require(ggthemes)){
   install.packages("ggthemes")
-  library(ggthemes)
 }
-
-# load kableExtra to improve table rendering
+if(!require(tibble)){
+  install.packages("tibble")
+}
 if(!require(kableExtra)){
   install.packages("kableExtra")
-  library(kableExtra)
 }
-
-# load tibble to deal with tibble format
-if(!require(kableExtra)){
-  install.packages("kableExtra")
-  library(kableExtra)
+if(!require(RSQLite)){
+  install.packages("RSQLite")
 }
-
-# load tibble to deal with tibble format
-if(!require(kableExtra)){
-  install.packages("kableExtra")
-  library(kableExtra)
-}
-
-# load DBI to manage communication between R and relational database management system
 if(!require(DBI)){
   install.packages("DBI")
-  library(DBI)
 }
-
-# # load RSQLite to make database engine in R and provides an interface compliant with the DBI package
-# if(!require(RSQLite)){
-#   install.packages("RSQLite")
-#   library(RSQLite)
-# }
-# https://cran.r-project.org/web/packages/RSQLite/vignettes/RSQLite.html
+# then load the necessary packages
+# load tidyverse for data science such as data handling and visualization
+library(tidyverse)
+# load readxl for excel file reading
+library(readxl)
+# load ggthemes to have Extra Themes, Scales and Geoms for 'ggplot2'
+library(ggthemes)
+# load tibble to deal with tibble format
+library(tibble)
+# load kableExtra to improve table rendering
+library(kableExtra)
+# load DBI to manage communication between R and relational database management system
+library(DBI)
+# load RSQLite to make database engine in R and provides an interface compliant with the DBI package
+library(RSQLite)
 ```
 
 ## Short Description
@@ -96,7 +90,7 @@ Resources on R Markdown, the tool this tutorial is written with:
 Open the the file "hacking_medphys_R_part2.Rproj" which should contain two [R Markdown files](https://rmarkdown.rstudio.com/) named "db_R_tutorial.Rmd" and "sample_report.Rmd". If you can't see them as tabs in the RStudio environment you can open them from the "Files"-pane or from "Files -> Open Files".  
 <br>
 
-I will make heavy use of the package collection `tidyverse` and the "pipe"-operator (` %>% `). Together with R Markdown they are facilitators of literate programming^[[Wikipeida: Literate programming](https://en.wikipedia.org/wiki/Literate_programming)]. To learn more have a look at: [`tidyverse` - R packages for data science](https://www.tidyverse.org/).  
+I will make heavy use of the package collection `tidyverse` and the "pipe"-operator (` %>% `). Together with R Markdown they are facilitators of literate programming^[[Wikipedia: Literate programming](https://en.wikipedia.org/wiki/Literate_programming)]. To learn more have a look at: [`tidyverse` - R packages for data science](https://www.tidyverse.org/).  
 If you have not installed the packages loaded in the `setup code chunk` (see above) start with installing them via "Tools -> Install Packages".
 
 ### Executing Code

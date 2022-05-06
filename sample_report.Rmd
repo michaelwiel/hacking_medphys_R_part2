@@ -28,9 +28,10 @@ params:
     sep: ""
 ---
 
-
-
-
+```{r network, warning=FALSE, message=FALSE}
+# define the mirror to download when Knitting the document the missing packages
+options(repos = list(CRAN="http://cran.rstudio.com/"))
+```
 
 
 ```{r setup, include=FALSE}
@@ -40,53 +41,38 @@ root.dir = rprojroot::find_rstudio_root_file()
 
 knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE, error = TRUE)
 
-# load tidyverse for data science such as data handling and visualization
+# the following lines test if the necessary packages are already installed.
 if(!require(tidyverse)){
   install.packages("tidyverse")
-  library(tidyverse)
 }
-
-# load readxl for excel file reading
 if(!require(readxl)){
   install.packages("readxl")
-  library(readxl)
 }
-
-# load ggthemes to have Extra Themes, Scales and Geoms for 'ggplot2'
 if(!require(ggthemes)){
   install.packages("ggthemes")
-  library(ggthemes)
 }
-
-# load kableExtra to improve table rendering
 if(!require(kableExtra)){
   install.packages("kableExtra")
-  library(kableExtra)
 }
-
-# load tibble to deal with tibble format
-if(!require(kableExtra)){
-  install.packages("kableExtra")
-  library(kableExtra)
-}
-
-# load tibble to deal with tibble format
-if(!require(kableExtra)){
-  install.packages("kableExtra")
-  library(kableExtra)
-}
-
-# load DBI to manage communication between R and relational database management system
-if(!require(DBI)){
-  install.packages("DBI")
-  library(DBI)
-}
-
-# load RSQLite to make database engine in R and provides an interface compliant with the DBI package
 if(!require(RSQLite)){
   install.packages("RSQLite")
-  library(RSQLite)
 }
+if(!require(DBI)){
+  install.packages("DBI")
+}
+# then load the necessary packages
+# load tidyverse for data science such as data handling and visualization
+library(tidyverse)
+# load readxl for excel file reading
+library(readxl)
+# load ggthemes to have Extra Themes, Scales and Geoms for 'ggplot2'
+library(ggthemes)
+# load kableExtra to improve table rendering
+library(kableExtra)
+# load DBI to manage communication between R and relational database management system
+library(DBI)
+# load RSQLite to make database engine in R and provides an interface compliant with the DBI package
+library(RSQLite)
 
 # params for SQL
 dep <- params$department
