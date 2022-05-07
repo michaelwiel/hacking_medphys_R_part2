@@ -9,3 +9,5 @@ medical_physics_db.sqlite
 /db_R_tutorial_files
 sss
 ToDo_and_Ideas.txt
+Report-*
+db_R_tutorial_withBonus.Rmd

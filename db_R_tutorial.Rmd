@@ -23,7 +23,7 @@ html-file: https://charmingquark.at/db_R_tutorial.html
 This is a R/RStudio-Version for Part 2 of the article series "Hacking Medical Physics" by Jonas Andersson and Gavin Poludniowski (GitHub repository: [rvbCMTS/EMP-News](https://github.com/rvbCMTS/EMP-News.git)) in the newsletter of the European Federation of Organizations for Medical Physics (EFOMP)^[[European Medical Physics News](https://www.efomp.org/index.php?r=fc&id=emp-news)]. GitHub repository for this R/RStudio version: [Michael Wieland - Hacking Medical Physics - R Version](https://github.com/michaelwiel/hacking_medphys_R_part2.git).
 
 ### Tutorial Overview
-In this tutorial we will read in personnel dosimeter data from dosimetry lab reports in the form of Excel-files. To store the data we create a SQLite database and then do some data analysis by querying the data from the database and produce figures and tables. Additionally we will have a a look at the reporting capabilities of R Markdown, discuss parameterized reports and automating reporting tasks.
+In this tutorial we will read in personnel dosimeter data from dosimetry lab reports in the form of Excel-files. To store the data we create a SQLite database which we will then query for data analysis and produce some figures and tables. Additionally we will have a look at the reporting capabilities of R Markdown, discuss parameterized reports and automation of reporting tasks.
 
 ### Ressources
 In order to run this R Markdown file you need to install [R](https://www.r-project.org/) and [RStudio](https://www.rstudio.com/) ([RStudio Installer](https://www.rstudio.com/products/rstudio/download/)). An alternative IDE to RStudio is the open source IDE [Bio7](https://bio7.org/). Bio7 can be extended with plug-ins, among others with an [ImageJ](https://imagej.nih.gov/ij/)-plug-in for image analysis.   
@@ -42,26 +42,31 @@ Resources on R Markdown, the tool this tutorial is written with:
 
 ### Working in RStudio
 If you haven't done so already, download all files from the GitHub-Repository [michaelwiel/hacking_medphys_R_part2](https://github.com/michaelwiel/hacking_medphys_R_part2). 
-Open the the file "hacking_medphys_R_part2.Rproj" which should contain two [R Markdown files](https://rmarkdown.rstudio.com/) named "db_R_tutorial.Rmd" and "sample_report.Rmd". If you can't see them as tabs in the RStudio environment you can open them from the "Files"-pane or from "Files -> Open Files".  
+Open the file `hacking_medphys_R_part2.Rproj` within RStudio. Opening the project should automatically load two [R Markdown files](https://rmarkdown.rstudio.com/) named `db_R_tutorial.Rmd` and `sample_report.Rmd`. If you can't see them as tabs in the RStudio environment `Source` pane you can open them from the menue with `File -> Open File` or from the `Files`-pane:
+
+![RStudio Enviroment with Source and Files Panes](figures/files_pane.png)
+
 <br>
-If you are still reading the html-version or md-version of this tutorial we highly recommend to switch to RStudio and keep on reading in the R Markdown file "db_R_tutorial.Rmd" in order to run the code in the tutorial yourself.
+If you are still reading the html-version or md-version of this tutorial we highly recommend to switch to RStudio and keep on reading in the R Markdown file `db_R_tutorial.Rmd` in order to run the code in the tutorial yourself.
 
 ### Executing Code
-You can run the code in the RStudio console window or directly in the R Markdown file by clicking on the little "Play"-button in the top right hand corner of the code chunks:
+You can run the code in the RStudio `Console` pane or directly in the R Markdown file by clicking on the little "Play"-button in the top right hand corner of the code chunks:
 
-![Code chunk example - Execute code with play button in the top right hand corner](figures/example_codechunk.png)
-If you want to test the code yourself you have to execute all of the code in the tutorial in order (i.e. press the green play button in each code chunk in the order it appears in the text). You can start at any point by executing the code until the code chunk you want to start with by pressing the button left from the play button (downfacing arrow with a green line below it). 
+![Code chunk example](figures/example_codechunk.png)
+
+<br>
+If you want to test the code yourself you have to execute all of the code in the tutorial from top to bottom (i.e. press the green play button in each code chunk in the order they appear in the text). If you want to start testing the code at some other point in the tutorial you still have to execute all the code before the given point. To execute all the code until the code chunk you want to start with, click the button left from the play button (down facing arrow with a green line below it). 
 
 
 ### Package Setup
 <!-- We will make heavy use of the package collection `tidyverse` and the "pipe"-operator (` %>% `). Together with R Markdown they are facilitators of literate programming^[[Wikipedia: Literate programming](https://en.wikipedia.org/wiki/Literate_programming)]. To learn more have a look at: [`tidyverse` - R packages for data science](https://www.tidyverse.org/).   -->
 
-The functionality of R can be vastly extended by installing additional packages. You can download packages from different sources. A safe way to install packages is to do so from within RStudio by clicking on "Tools" -> "Install packages..." in the menu bar. For R newcomers we added the next code chunks which automate the installation process (don't forget to press the little green play buttons...). 
+The functionality of R can be vastly extended by installing additional packages. You can download packages from different sources. A safe way to install packages is to do so from within RStudio by clicking on `Tools -> Install packages...` in the menu bar. For R newcomers we added the next code chunks which automate the installation process (don't forget to press the little green play buttons...). 
 
 ```{r network, warning=FALSE, message=FALSE, echo=FALSE}
 # Define the repository for downloading packages
 options(repos = list(CRAN="http://cran.rstudio.com/"))
-# This is a precaution to avoid problems with the next code chunk when packages are missing the the file is knitted (rendered to html).
+# This is a precaution to avoid problems with the next code chunk when packages are missing and the Rmd -file is knitted (rendered to html). More on knitting a RMarkdown script later on.
 ```
 
 ```{r packages, warning=FALSE, message=FALSE, results='hide'}
@@ -90,7 +95,9 @@ if(!require(RSQLite)){
 if(!require(DBI)){
   install.packages("DBI")
 }
-
+if(!require(rprojroot)){
+  install.packages("rprojroot")
+}
 ```
 
 ```{r loading_packages}
@@ -115,11 +122,14 @@ library(RSQLite)
 
 
 ## Reading in Data
-If your data files reside in the working directory you can access them in a relative fashion. Your current working directory should be the folder where this R Markdown-file is stored and the data files are stored in a subfolder called "reports". If you downloaded the whole repository from Github and open RStudio by clicking the `hacking_medphys_R_part2.RProj`-file you should have the same setup and are good to go.
+If your data files reside in the working directory you can access them in a relative fashion. Your current working directory should be the folder where this R Markdown-file is stored and the data files are stored in a subfolder called `reports`. If you downloaded the whole repository from Github and open RStudio by clicking the `hacking_medphys_R_part2.RProj`-file you should have the right setup and are good to go.
 
 ```{r checking_wd}
 # If you followed the above steps your working directory should be set correctly.
-# Anyhow we will make sure that the working directory is set to the location of the Rproj-File with the next lines
+# Working with Rproj: 
+  # https://support.rstudio.com/hc/en-us/articles/200526207-Using-RStudio-Projects
+# Anyhow we will make sure that the working directory is set to 
+  # the location of the Rproj-File with the next lines
 
 # Find the root directory of the R Project File
 root.dir = rprojroot::find_rstudio_root_file()
@@ -136,7 +146,7 @@ read_xls(path = "reports/StaffDoses_1.xls") %>%
   head(5)
 # if you get an error message here check
   # if the working directory is set correctly and 
-  # if the subfolder "reports" is in the right position
+  # if the subfolder "reports" is in the right position (see above)
 ```
 
 _Note for R Newcomers:_ If you know the order of the arguments of a function you don't have to supply the argument names. If you open the help for the function `read_xls` by typing `?read_xls` in the console the description of the function includes the list of arguments:  
@@ -147,7 +157,7 @@ Since `path` is the first argument we could also read in the data by just writin
 
 
 ### Fixing the column names
-Reading the Excel file with the function `read_xls` from the package `readxl` gives a decent first result. A few things should be changed though in order to work with the data properly. There are a lot of code style guides out there^[[Coding style, coding etiquette](https://blog.r-hub.io/2022/03/21/code-style/)] but we are going to adhere to the following convention of naming the variable names (column titles)^[[Social Science Computing Cooperative - Naming Variables](https://sscc.wisc.edu/sscc/pubs/DWE/book/4-2-naming-variables.html)]:  
+Reading the Excel file with the function `read_xls` from the package `readxl` gives a decent first result. A few things should be changed though in order to work with the data properly. There are a lot of coding style guides out there^[[Coding style, coding etiquette](https://blog.r-hub.io/2022/03/21/code-style/)] but we are going to adhere to the following convention of naming the variables (column titles)^[[Social Science Computing Cooperative - Naming Variables](https://sscc.wisc.edu/sscc/pubs/DWE/book/4-2-naming-variables.html)]:  
 
 > * Use only lower case.  
 > * Use the underscore, "_" as a replacment for spaces to separate words (called __snake coding__).
@@ -159,13 +169,15 @@ Assuming that the reports are always delivered in the same format and structure 
 report_column_names <- read_xls(path = "reports/StaffDoses_1.xls",
                                 n_max = 0) %>% 
   # to extract the column names we don't need any data therefore we read in n_max=0 lines
+    # from the first report
   colnames() %>% # extracting the column names as a vector
   tolower() %>% # convert upper case to lower case
   gsub(pattern = " ", 
        replacement = "_") %>% # replacing blanks with underscores
   gsub(pattern = "[().]", 
        replacement = "")  # deleting round brackets and dots; 
-    # the square-brackets function as operator (all characters inside the square-brackets are identified)
+    # the square-brackets function as operator 
+      # (all characters inside the square-brackets are identified)
 
 #checking the result:
 report_column_names
@@ -188,7 +200,9 @@ length(all_reports_to_read_in)
 
 With a loop we read in all data from the folder `reports` into a [data.frame](https://www.rdocumentation.org/packages/base/versions/3.6.2/topics/data.frame)-object:
 ```{r readAllFilesFromFolder03}
-# create an empty dataframe (R object with )
+# create an empty dataframe
+  # data.frame: collections of variables which share many of the properties of matrices 
+  # and of lists, used as the fundamental data structure by most of R's modeling software.
 all_reports <- data.frame() 
 
 # a for-loop to read in all reports
@@ -217,7 +231,7 @@ Some data wrangling is needed to get the right data types:
 * Create a column `status` before converting `hp10` and `hp007` to numeric in order not to lose information. Where `hp10` and `hp007` have the values "B", "NR" or `NA` (B: Below Measurement Threshold; NR: Not returned; `NA`: Missing Value) we transfer those values to the new column, if the values are numeric we set the value in the new column to "OK".  
 * Convert dates to date format  
 
-The dates in the reports have abbreviated month names in English. If your machine `locale` is not set to English you might run into troubles when you convert the dates from the format `string` to format `date`. One way to read in the data correctly with little coding is to set the `locale` on the machine to English temporarily. For date-time conversion to and from character see [`strptime`](https://www.rdocumentation.org/packages/base/versions/3.6.2/topics/strptime).
+The dates in the reports have abbreviated month names in English. If your machine `locale` is not set to English you might run into troubles when you convert the dates from the format `character` to format `date`. One way to read in the data correctly with little coding is to set the `locale` on the machine to English temporarily. For date-time conversion to and from `character` see [`strptime`](https://www.rdocumentation.org/packages/base/versions/3.6.2/topics/strptime).
 
 ```{r fixDataTypes, warning=FALSE}
 # "warning = FALSE" set in this code chunk to avoid warning messages 
@@ -253,7 +267,7 @@ all_reports_fixed <- all_reports %>%
                             hp007 == "NR" ~ "NR",
                             is.na(hp007) ~ NA_character_,
                             is.numeric(as.numeric(hp007)) ~ "OK")) %>% 
-  # next we convert columns with numbers to numeric 
+  # next we convert columns with numbers to "numeric"
     # (non-numeric values in hp10 and hp007 will be converted to NA automatically)
   mutate(across(c(customer_uid, department_uid, person_uid, hp10, hp007, dosimeter_uid, report_uid), 
                 as.numeric)) %>% 
@@ -342,20 +356,21 @@ DROP TABLE IF EXISTS stage
 
 
 #### Our First Table
-Before we create our final personnel dosimeter table we are going to have a look at some useful functions and run a view tests. As data we will use a subset (first 10 rows) of the cleaned data we already prepared before (section "Fix data types"). 
+Before we create our final personnel dosimeter table we are going to have a look at some useful functions and run a few tests. As data we will use a subset (first 10 rows) of the cleaned data we already prepared before (section "Fix data types"). 
 
 ```{r tableTestDataprep}
-# In SQL there are several possibilities to handle date, I prefer "text"; 
+# In SQL there are several possibilities to handle date, 
+  # one of them is "text" ("character" in R); 
 # details see here: https://www.sqlite.org/lang_datefunc.html 
-# Therefore we first change the data type of the date columns to text
+# Therefore we first change the data type of the date columns to "character"
 all_reports_fixed_dateastext <- all_reports_fixed %>% 
   mutate(across(c(measurement_period_start:report_date), as.character))
 
-# storing the first 10 rows in a separate dataframe
+# storing the first 10 rows in a separate data.frame/tibble
 arf_rows01to10 <- all_reports_fixed_dateastext[1:10,]
 ```
 
-The easiest way to create a table is by using the function `dbWriteTable` which takes a dataframe as argument and writes the data into a table.  
+The easiest way to create a table is to use the function `dbWriteTable` which takes a dataframe as argument and writes the data into a table.  
 
 ```{r tableTest02}
 # creating a table from a dataframe
@@ -363,14 +378,14 @@ dbWriteTable(conn = mp_db_conn,
              name = "test01",
              value  = arf_rows01to10,
              overwrite = TRUE)
-# I set the argument "overwrite" to TRUE in case you run this script more than once.
+# We set the argument "overwrite" to TRUE in case you run this script more than once.
   # If you write data to a table with dbWriteTable() there are three possibilities:
   # 1) The table exists but you want to overwrite it: use the "overwrite = TRUE"
   # 2) The table exists and you want to add data: use "append = TRUE"
   # 3) The table does not exist: neither overwrite or append have to be used
 # If the table exists but you neither set append or overwrite to TRUE you will get an error message 
 
-#check if it worked by listing all tables of a database:
+#check if it worked by listing all tables of the database:
 dbListTables(conn = mp_db_conn)
 ```
 
@@ -395,7 +410,7 @@ dbGetQuery(conn = mp_db_conn,
            statement = "pragma table_info('test01')")
 ```
 
-As you can see from the output we don't have a primary key (all "pk" are set to 0) and neither have we set a UNIQUE constraint.  
+As you can see from the output we don't have a [primary key](https://www.sqlshack.com/learn-sql-primary-key/) (all "pk" are set to 0) and neither have we set a [UNIQUE constraint](https://www.sqlservertutorial.net/sql-server-basics/sql-server-unique-constraint/).  
 <br>
 Let's see what happens when we add some more data. This time we create a dataframe with rows 10 to 12 from `all_reports_fixed_dateastext`. Row 10 is already in the database and rows 11 and 12 are new data.
 
@@ -508,8 +523,7 @@ We have achieved our goal to prevent duplicates but unfortunately there is no ea
 #### Adding only unique Data
 For details and source of the following approach see the forum thread "[RStudio Community - Creating and populating a SQLite database via R - How to ignore duplicate rows?](https://community.rstudio.com/t/creating-and-populating-a-sqlite-database-via-r-how-to-ignore-duplicate-rows/85470/3)".
 
-For the work around we will use a second table called `stage` with the same structure as `staffdose` but without any constraints. The table `stage` will therefore accept any data even if it already exists in `staffdose`. First we will read in the new data into the intermediary table `stage` and can then transfer only the new data 
-to the table `staffdose` with the command `INSERT OR IGNORE INTO staffdose`:
+For the work around we will use a second table called `stage` with the same structure as `staffdose` but without any constraints. The table `stage` will therefore accept any data even if it already exists in `staffdose`. First we will read in the new data into the intermediary table `stage` and can then transfer only the new data to the table `staffdose` with the SQL command `INSERT OR IGNORE INTO staffdose`:
 
 ```{r createStage}
 # we use "DROP TABLE IF EXISTS" in case we run the script more than once
