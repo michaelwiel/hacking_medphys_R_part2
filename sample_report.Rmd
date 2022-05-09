@@ -103,7 +103,7 @@ The resulting html-report is styled with the RMarkdown built in theme `simplex`.
 * [Pimp my RMD: a few tips for R Mardkown](https://holtzy.github.io/Pimp-my-rmd/)  
 
 ## Parameterized Report
-If you have a look in the YAML header you will find a `params`-section. With that configuration you can use `Knit with parameters...`. This opens a dialogue where you can select one of the departments and create the report for that department. Try it yourself, click `Knit with parameters...` and then change the department and the year. For this sample report it is definitely an overkill but imagine you have a 20 page report...  
+If you have a look in the YAML header you will find a `params`-section. With that configuration you can use `Knit with parameters...` (You will find it in the drop down menu of the `Knit` button). This opens a dialogue where you can select one of the departments and create the report for that department. Try it yourself, click `Knit with parameters...` and then change the department and the year. For this sample report it is definitely an overkill but imagine you have a 20 page report...  
 More on parameterized reports: [R Markdown: The Definitive Guide - Chapter 15](https://bookdown.org/yihui/rmarkdown/parameterized-reports.html).
 
 

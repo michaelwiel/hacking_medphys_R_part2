@@ -3,7 +3,7 @@ title: "Hacking Medical Physics with R"
 author: |
   Michael Wieland (mchl.wieland@gmail.com)   
   Francois Gardavaud (francois.gardavaud@aphp.fr)
-date: "2022-05-07"
+date: "2022-05-10"
 output: 
   html_document: 
     highlight: pygments
@@ -20,7 +20,7 @@ html-file: https://charmingquark.at/db_R_tutorial.html
 -->
 
 ## Short Description
-This is a R/RStudio-Version for Part 2 of the article series "Hacking Medical Physics" by Jonas Andersson and Gavin Poludniowski (GitHub repository: [rvbCMTS/EMP-News](https://github.com/rvbCMTS/EMP-News.git)) in the newsletter of the European Federation of Organizations for Medical Physics (EFOMP)^[[European Medical Physics News](https://www.efomp.org/index.php?r=fc&id=emp-news)]. GitHub repository for this R/RStudio version: [Michael Wieland - Hacking Medical Physics - R Version](https://github.com/michaelwiel/hacking_medphys_R_part2.git).
+This is a R/RStudio-Version for Part 2 of the article series "Hacking Medical Physics" by Jonas Andersson and Gavin Poludniowski (GitHub repository: [rvbCMTS/EMP-News](https://github.com/rvbCMTS/EMP-News.git)) in the newsletter of the European Federation of Organizations for Medical Physics (EFOMP)^[[European Medical Physics News](https://www.efomp.org/index.php?r=fc&id=emp-news)]. GitHub repository for this R/RStudio tutorial: [Michael Wieland - Hacking Medical Physics - R Version](https://github.com/michaelwiel/hacking_medphys_R_part2.git).
 
 ### Tutorial Overview
 In this tutorial we will read in personnel dosimeter data from dosimetry lab reports in the form of Excel-files. To store the data we create a SQLite database which we will then query for data analysis and produce some figures and tables. Additionally we will have a look at the reporting capabilities of R Markdown, discuss parameterized reports and automation of reporting tasks.
@@ -114,7 +114,7 @@ library(tibble)
 library(kableExtra)
 # load DBI for communication between R and relational database management systems
 library(DBI)
-# load RSQLite to embed the SQLite database engine in R and provides an DBI-compliant interface
+# load RSQLite which embeds the SQLite database engine in R and provides an DBI-compliant interface
 library(RSQLite)
 ```
 
@@ -137,7 +137,7 @@ setwd(root.dir)
 ```
 
 
-### Reading an Excel File
+### Reading Data from an Excel File
 A quick way to read data from Excel files is to use the `readxl`-package:
 
 
@@ -175,8 +175,8 @@ _Note for R Newcomers:_ If you know the order of the arguments of a function you
 Since `path` is the first argument we could also read in the data by just writing `read_xls("reports/StaffDoses_1.xls")`. It is of course faster to type but on the other side makes the code harder to read if you don't know the function. The second thing to note is that there are a lot of other mandatory arguments but they all have a default value. For example `col_names` is set to `TRUE` by default and this will cause the function to regard the first line in the Excel file as column names and not as data.  
 
 
-### Fixing the column names
-Reading the Excel file with the function `read_xls` from the package `readxl` gives a decent first result. A few things should be changed though in order to work with the data properly. There are a lot of coding style guides out there^[[Coding style, coding etiquette](https://blog.r-hub.io/2022/03/21/code-style/)] but we are going to adhere to the following convention of naming the variables (column titles)^[[Social Science Computing Cooperative - Naming Variables](https://sscc.wisc.edu/sscc/pubs/DWE/book/4-2-naming-variables.html)]:  
+### Fixing the Column Names
+Reading the Excel file with the function `read_xls` gives a decent first result. A few things should be changed though in order to work with the data properly. There are a lot of coding style guides out there^[[Coding style, coding etiquette](https://blog.r-hub.io/2022/03/21/code-style/)] but we are going to adhere to the following convention of naming the variables (column titles)^[[Social Science Computing Cooperative - Naming Variables](https://sscc.wisc.edu/sscc/pubs/DWE/book/4-2-naming-variables.html)]:  
 
 > * Use only lower case.  
 > * Use the underscore, "_" as a replacment for spaces to separate words (called __snake coding__).
@@ -215,7 +215,7 @@ report_column_names
 ## [17] "report_date"              "report_uid"
 ```
 
-### Read in all reports from a folder
+### Read in all Reports from a Folder
 To read in all files from a folder we can make use of the function `read.files()` that gives a list of all files in a folder.
 
 
@@ -289,7 +289,7 @@ tibble(all_reports) %>%
 ## #   report_uid <chr>
 ```
 
-### Fix data types
+### Fixing Data Types
 Some data wrangling is needed to get the right data types: 
 
 * All numerical variables should be defined as `double` or `integer`,  
@@ -413,7 +413,7 @@ If you are new to SQL and you want to have a possibility to "look into" a SQLite
 <br>
 To connect R to the database management system (DBMS) SQLite we need the [`DBI`-package](https://dbi.r-dbi.org/) and [`RSQLite`-package](https://rsqlite.r-dbi.org/). If you not have done it already go ahead and install the `RSQLite`-package. This will automatically install the `DBI`-package. For detailed information on the `DBI` functions we will use, see the [DBI - Reference](https://dbi.r-dbi.org/reference/).
 
-### Creating (or opening a connection to) a Database
+### Creating or opening a Connection to a Database
 With the function `dbConnect` you create a database file or open a connection to an already existing database.  
 See [RSQLite Packages Vignette](https://rsqlite.r-dbi.org/reference/sqlite) for a list of optional arguments. The argument `flags` specifies the connection mode:  
 
@@ -1056,7 +1056,7 @@ dbGetQuery(conn = mp_db_conn,
 </tbody>
 </table>
 
-#### Total badge HP(10) Staff Dose Readings per Department
+#### Total Badge HP(10) Staff Dose Readings per Department
 
 ```r
 #params
@@ -1140,7 +1140,7 @@ SELECT name, department, hp10 FROM staffdose WHERE hp10>=0 LIMIT 5
 
 </div>
 
-### Closing the connection to the database
+### Closing the Connection to the Database
 When we are finished we close the connection to the database:
 
 ```r
@@ -1155,11 +1155,16 @@ From the [R Markdown website](https://R Markdown.rstudio.com/):
 
 > R Markdown supports dozens of static and dynamic output formats including HTML, PDF, MS Word, Beamer, HTML5 slides, Tufte-style handouts, books, dashboards, shiny applications, scientific articles, websites, and more ([see gallery](https://R Markdown.rstudio.com/gallery.html)). 
 
+>Creating documents with R Markdown starts with an .Rmd file that contains a combination of markdown (content with simple text formatting) and R code chunks. The .Rmd file is fed to knitr, which executes all of the R code chunks and creates a new markdown (.md) document which includes the R code and its output.
+
+![Document Creation from an .Rmd file. [RMarkdown Website](https://rmarkdown.rstudio.com/authoring_quick_tour.html)](figures/markdown_knitting_process.png)
+
 You might have to write reports for your department, your hospital, the authorities, ... where you have to present data. With [knitr](https://yihui.org/knitr/) you can convert your R Markdown file into a Word document and even use word-templates you create or your organization provides for you. With an additional Latex-Installation like [TinyTeX](https://yihui.org/tinytex/) you can create pdf-documents and there are many more options.  
-<br>
+
 
 ### Sample Report
-The easiest way to start is to create a report as html-file that you can then print to pdf with your browser. Check out the `sample_report.Rmd`-file for an example. We also included a parameterization for departments and years in the so called YAML-header. With that parameterization you can create reports for each department and year from one R Markdown file interactively. More on parameterized reports: [R Markdown: The Definitive Guide - Chapter 15](https://bookdown.org/yihui/RMarkdown/parameterized-reports.html). 
+The easiest way to start is to create a report as html-file that you can then print to pdf with a web browser of your choice. Check out the `sample_report.Rmd`-file for an example. If the file is not loaded in the `Source` pane, open it from the `Files` pane.  
+We included a parameterization for departments and years in the so called YAML-header. With that parameterization you can create reports for each department and year from one R Markdown file interactively. More on parameterized reports: [R Markdown: The Definitive Guide - Chapter 15](https://bookdown.org/yihui/RMarkdown/parameterized-reports.html). 
 <br>
 Open the file `sample_report.Rmd` and read the instructions for more information.
 
