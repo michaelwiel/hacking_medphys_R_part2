@@ -1814,6 +1814,8 @@ div.tocify {
 
 
 <h1 class="title toc-ignore">Hacking Medical Physics with R</h1>
+<h3 class="subtitle">Part 2. Working with databases—a step beyond
+spreadsheets</h3>
 <h4 class="author"><p>Michael Wieland (<a href="mailto:mchl.wieland@gmail.com" class="email">mchl.wieland@gmail.com</a>)<br />
 Francois Gardavaud (<a href="mailto:francois.gardavaud@aphp.fr" class="email">francois.gardavaud@aphp.fr</a>)</p></h4>
 <h4 class="date">2022-05-10</h4>
@@ -1828,9 +1830,9 @@ html-file: https://charmingquark.at/db_R_tutorial.html
 -->
 <div id="short-description" class="section level2">
 <h2>Short Description</h2>
-<p>This is a R/RStudio-Version for Part 2 of the article series “Hacking
-Medical Physics” by Jonas Andersson and Gavin Poludniowski (GitHub
-repository: <a href="https://github.com/rvbCMTS/EMP-News.git">rvbCMTS/EMP-News</a>) in
+<p>This is an R/RStudio-Version for Part 2 of the article series
+“Hacking Medical Physics” by Jonas Andersson and Gavin Poludniowski
+(GitHub repository: <a href="https://github.com/rvbCMTS/EMP-News.git">rvbCMTS/EMP-News</a>) in
 the newsletter of the European Federation of Organizations for Medical
 Physics (EFOMP)<a href="#fn1" class="footnote-ref" id="fnref1"><sup>1</sup></a>. GitHub repository for this R/RStudio
 tutorial: <a href="https://github.com/michaelwiel/hacking_medphys_R_part2.git">Michael
@@ -2306,7 +2308,7 @@ personnel dosimeter readings, we will call the database
 <h3>Creating a Table for the Dosimeter Data</h3>
 <p>In a database all data is stored in tables. For simplicity we will
 create a single table for the staff dosimeter readings and don’t go into
-details of optimal table design like <a href="https://opentextbc.ca/dbdesign01/chapter/chapter-11-functional-dependencies/">functional
+details of optimal table design like <a href="https://en.wikipedia.org/wiki/Functional_dependency">functional
 dependencies</a> and <a href="https://en.wikipedia.org/wiki/Database_normalization">normalization</a>.
 <br></p>
 <div id="our-first-table" class="section level4">
@@ -2861,7 +2863,7 @@ Luna Lovegood
 <div id="sql-engine-in-r-markdown" class="section level3">
 <h3>SQL Engine in R Markdown</h3>
 <p>As we will discuss in the next section, R Markdown is an incredible
-powerful tool. One of its cool features is its ability to <a href="https://bookdown.org/yihui/R%20Markdown/language-engines.html#sql">“speak”
+powerful tool. One of its cool features is its ability to <a href="https://bookdown.org/yihui/rmarkdown/language-engines.html#sql">“speak”
 SQL</a> and other languages. You can not only use R code chunks but
 others too. When using a SQL code chunk you don’t need the
 <code>DBI</code>-functions, you can write native SQL queries.<br />
@@ -2962,17 +2964,16 @@ Diagnostic Radiology
 <div id="reporting-with-r-markdown" class="section level2">
 <h2>Reporting with R Markdown</h2>
 <p>R is one of the most important statistics software solutions out
-there and together with RStudio and its integration of <a href="https://R%20Markdown.rstudio.com/">R Markdown</a> it is an
-incredible versatile tool for data analysis and reporting. The tutorial
-you are reading is compiled from a R Markdown file.<br />
-<br> From the <a href="https://R%20Markdown.rstudio.com/">R Markdown
+there and together with RStudio and its integration of <a href="https://RMarkdown.rstudio.com/">R Markdown</a> it is an incredible
+versatile tool for data analysis and reporting. The tutorial you are
+reading is compiled from a R Markdown file.<br />
+<br> From the <a href="https://RMarkdown.rstudio.com/">R Markdown
 website</a>:</p>
 <blockquote>
 <p>R Markdown supports dozens of static and dynamic output formats
 including HTML, PDF, MS Word, Beamer, HTML5 slides, Tufte-style
 handouts, books, dashboards, shiny applications, scientific articles,
-websites, and more (<a href="https://R%20Markdown.rstudio.com/gallery.html">see
-gallery</a>).</p>
+websites, and more (<a href="https://RMarkdown.rstudio.com/gallery.html">see gallery</a>).</p>
 </blockquote>
 <blockquote>
 <p>Creating documents with R Markdown starts with an .Rmd file that
@@ -3002,7 +3003,7 @@ loaded in the <code>Source</code> pane, open it from the
 We included a parameterization for departments and years in the so
 called YAML-header. With that parameterization you can create reports
 for each department and year from one R Markdown file interactively.
-More on parameterized reports: <a href="https://bookdown.org/yihui/RMarkdown/parameterized-reports.html">R
+More on parameterized reports: <a href="https://bookdown.org/yihui/rmarkdown/parameterized-reports.html">R
 Markdown: The Definitive Guide - Chapter 15</a>. <br> Open the file
 <code>sample_report.Rmd</code> and read the instructions for more
 information.</p>

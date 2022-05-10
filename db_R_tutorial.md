@@ -1,5 +1,6 @@
 ---
 title: "Hacking Medical Physics with R"
+subtitle: "Part 2. Working with databases—a step beyond spreadsheets"
 author: |
   Michael Wieland (mchl.wieland@gmail.com)   
   Francois Gardavaud (francois.gardavaud@aphp.fr)
@@ -20,7 +21,7 @@ html-file: https://charmingquark.at/db_R_tutorial.html
 -->
 
 ## Short Description
-This is a R/RStudio-Version for Part 2 of the article series "Hacking Medical Physics" by Jonas Andersson and Gavin Poludniowski (GitHub repository: [rvbCMTS/EMP-News](https://github.com/rvbCMTS/EMP-News.git)) in the newsletter of the European Federation of Organizations for Medical Physics (EFOMP)^[[European Medical Physics News](https://www.efomp.org/index.php?r=fc&id=emp-news)]. GitHub repository for this R/RStudio tutorial: [Michael Wieland - Hacking Medical Physics - R Version](https://github.com/michaelwiel/hacking_medphys_R_part2.git).
+This is an R/RStudio-Version for Part 2 of the article series "Hacking Medical Physics" by Jonas Andersson and Gavin Poludniowski (GitHub repository: [rvbCMTS/EMP-News](https://github.com/rvbCMTS/EMP-News.git)) in the newsletter of the European Federation of Organizations for Medical Physics (EFOMP)^[[European Medical Physics News](https://www.efomp.org/index.php?r=fc&id=emp-news)]. GitHub repository for this R/RStudio tutorial: [Michael Wieland - Hacking Medical Physics - R Version](https://github.com/michaelwiel/hacking_medphys_R_part2.git).
 
 ### Tutorial Overview
 In this tutorial we will read in personnel dosimeter data from dosimetry lab reports in the form of Excel-files. To store the data we create a SQLite database which we will then query for data analysis and produce some figures and tables. Additionally we will have a look at the reporting capabilities of R Markdown, discuss parameterized reports and automation of reporting tasks.
@@ -432,7 +433,7 @@ mp_db_conn <- dbConnect(drv = RSQLite::SQLite(),
 
 
 ### Creating a Table for the Dosimeter Data
-In a database all data is stored in tables. For simplicity we will create a single table for the staff dosimeter readings and don't go into details of optimal table design like [functional dependencies](https://opentextbc.ca/dbdesign01/chapter/chapter-11-functional-dependencies/) and [normalization](https://en.wikipedia.org/wiki/Database_normalization). 
+In a database all data is stored in tables. For simplicity we will create a single table for the staff dosimeter readings and don't go into details of optimal table design like [functional dependencies](https://en.wikipedia.org/wiki/Functional_dependency) and [normalization](https://en.wikipedia.org/wiki/Database_normalization). 
 <br>
 
 
@@ -1087,7 +1088,7 @@ dbGetQuery(conn = mp_db_conn,
 ![](db_R_tutorial_files/figure-html/sqlTotalDose2020-1.png)<!-- -->
 
 ### SQL Engine in R Markdown
-As we will discuss in the next section, R Markdown is an incredible powerful tool. One of its cool features is its ability to ["speak" SQL](https://bookdown.org/yihui/R Markdown/language-engines.html#sql) and other languages. You can not only use R code chunks but others too. When using a SQL code chunk you don't need the `DBI`-functions, you can write native SQL queries.  
+As we will discuss in the next section, R Markdown is an incredible powerful tool. One of its cool features is its ability to ["speak" SQL](https://bookdown.org/yihui/rmarkdown/language-engines.html#sql) and other languages. You can not only use R code chunks but others too. When using a SQL code chunk you don't need the `DBI`-functions, you can write native SQL queries.  
 Here is an example of a SQL code chunk (note that it starts with `sql` instead of `r` and you have to provide a connection to a database):  
 
 ![Example of a SQL code chunk - R Markdown Screenshot](figures/example_codechunk_sql.png)
@@ -1149,11 +1150,11 @@ dbDisconnect(mp_db_conn)
 
 
 ## Reporting with R Markdown
-R is one of the most important statistics software solutions out there and together with RStudio and its integration of [R Markdown](https://R Markdown.rstudio.com/) it is an incredible versatile tool for data analysis and reporting. The tutorial you are reading is compiled from a R Markdown file.  
+R is one of the most important statistics software solutions out there and together with RStudio and its integration of [R Markdown](https://RMarkdown.rstudio.com/) it is an incredible versatile tool for data analysis and reporting. The tutorial you are reading is compiled from a R Markdown file.  
 <br>
-From the [R Markdown website](https://R Markdown.rstudio.com/):
+From the [R Markdown website](https://RMarkdown.rstudio.com/):
 
-> R Markdown supports dozens of static and dynamic output formats including HTML, PDF, MS Word, Beamer, HTML5 slides, Tufte-style handouts, books, dashboards, shiny applications, scientific articles, websites, and more ([see gallery](https://R Markdown.rstudio.com/gallery.html)). 
+> R Markdown supports dozens of static and dynamic output formats including HTML, PDF, MS Word, Beamer, HTML5 slides, Tufte-style handouts, books, dashboards, shiny applications, scientific articles, websites, and more ([see gallery](https://RMarkdown.rstudio.com/gallery.html)). 
 
 >Creating documents with R Markdown starts with an .Rmd file that contains a combination of markdown (content with simple text formatting) and R code chunks. The .Rmd file is fed to knitr, which executes all of the R code chunks and creates a new markdown (.md) document which includes the R code and its output.
 
@@ -1164,7 +1165,7 @@ You might have to write reports for your department, your hospital, the authorit
 
 ### Sample Report
 The easiest way to start is to create a report as html-file that you can then print to pdf with a web browser of your choice. Check out the `sample_report.Rmd`-file for an example. If the file is not loaded in the `Source` pane, open it from the `Files` pane.  
-We included a parameterization for departments and years in the so called YAML-header. With that parameterization you can create reports for each department and year from one R Markdown file interactively. More on parameterized reports: [R Markdown: The Definitive Guide - Chapter 15](https://bookdown.org/yihui/RMarkdown/parameterized-reports.html). 
+We included a parameterization for departments and years in the so called YAML-header. With that parameterization you can create reports for each department and year from one R Markdown file interactively. More on parameterized reports: [R Markdown: The Definitive Guide - Chapter 15](https://bookdown.org/yihui/rmarkdown/parameterized-reports.html). 
 <br>
 Open the file `sample_report.Rmd` and read the instructions for more information.
 
