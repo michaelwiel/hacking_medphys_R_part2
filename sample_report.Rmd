@@ -32,15 +32,17 @@ params:
 options(repos = list(CRAN="http://cran.rstudio.com/"))
 ```
 
+```{r network, warning=FALSE, message=FALSE, echo=FALSE}
+# Define the repository for downloading packages
+options(repos = list(CRAN="http://cran.rstudio.com/"))
+# This is a precaution to avoid problems with the next code chunk when packages are missing and the Rmd -file is knitted (rendered to html). More on knitting a RMarkdown script later on.
+```
 
-```{r packages, include=FALSE}
+```{r packages, warning=FALSE, message=FALSE, results='hide'}
 ###################### set-up environment section ################################
-# Set the project path to the root level -
-root.dir = rprojroot::find_rstudio_root_file()
 
-knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE, error = TRUE)
-
-# the following lines test if the necessary packages are already installed.
+# The following lines check if the necessary packages are already installed. 
+# If a package is missing it will be installed.
 if(!require(tidyverse)){
   install.packages("tidyverse")
 }
@@ -49,6 +51,9 @@ if(!require(readxl)){
 }
 if(!require(ggthemes)){
   install.packages("ggthemes")
+}
+if(!require(tibble)){
+  install.packages("tibble")
 }
 if(!require(kableExtra)){
   install.packages("kableExtra")
@@ -59,20 +64,32 @@ if(!require(RSQLite)){
 if(!require(DBI)){
   install.packages("DBI")
 }
-# then load the necessary packages
-# load tidyverse for data science such as data handling and visualization
+if(!require(rprojroot)){
+  install.packages("rprojroot")
+}
+```
+
+```{r loading_packages}
+# loading the necessary packages
+
+# load tidyverse for data handling and visualization
+  # tidyverse is actually a collection of packages (ggplot2 for visualization and many more)
 library(tidyverse)
-# load readxl for excel file reading
+# load readxl for reading data from excel files
 library(readxl)
-# load ggthemes to have Extra Themes, Scales and Geoms for 'ggplot2'
+# load ggthemes for additional themes for the package ggplot2
 library(ggthemes)
+# load tibble to deal with tibble format
+library(tibble)
 # load kableExtra to improve table rendering
 library(kableExtra)
-# load DBI to manage communication between R and relational database management system
+# load DBI for communication between R and relational database management systems
 library(DBI)
-# load RSQLite to make database engine in R and provides an interface compliant with the DBI package
+# load RSQLite which embeds the SQLite database engine in R and provides an DBI-compliant interface
 library(RSQLite)
+```
 
+```{r sql_prep, include=FALSE}
 # params for SQL
 dep <- params$department
 status_ok <- "OK"
