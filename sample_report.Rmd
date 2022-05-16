@@ -33,7 +33,7 @@ options(repos = list(CRAN="http://cran.rstudio.com/"))
 # This is a precaution to avoid problems with the next code chunk when packages are missing and the Rmd -file is knitted (rendered to html). More on knitting a RMarkdown script later on.
 ```
 
-```{r packages, warning=FALSE, message=FALSE, results='hide'}
+```{r packages, warning=FALSE, message=FALSE, include=FALSE}
 ###################### set-up environment section ################################
 
 # The following lines check if the necessary packages are already installed. 
@@ -41,50 +41,27 @@ options(repos = list(CRAN="http://cran.rstudio.com/"))
 if(!require(tidyverse)){
   install.packages("tidyverse")
 }
-if(!require(readxl)){
-  install.packages("readxl")
-}
-if(!require(ggthemes)){
-  install.packages("ggthemes")
-}
-if(!require(tibble)){
-  install.packages("tibble")
-}
-if(!require(kableExtra)){
-  install.packages("kableExtra")
-}
 if(!require(RSQLite)){
   install.packages("RSQLite")
 }
 if(!require(DBI)){
   install.packages("DBI")
 }
-if(!require(rprojroot)){
-  install.packages("rprojroot")
-}
 ```
 
-```{r loading_packages}
+```{r loading_packages, include=FALSE}
 # loading the necessary packages
 
 # load tidyverse for data handling and visualization
   # tidyverse is actually a collection of packages (ggplot2 for visualization and many more)
 library(tidyverse)
 # load readxl for reading data from excel files
-library(readxl)
-# load ggthemes for additional themes for the package ggplot2
-library(ggthemes)
-# load tibble to deal with tibble format
-library(tibble)
-# load kableExtra to improve table rendering
-library(kableExtra)
-# load DBI for communication between R and relational database management systems
 library(DBI)
 # load RSQLite which embeds the SQLite database engine in R and provides an DBI-compliant interface
 library(RSQLite)
 ```
 
-```{r sql_prep, include=FALSE}
+```{r sql_prep}
 # params for SQL
 dep <- params$department
 status_ok <- "OK"
@@ -124,10 +101,9 @@ More on parameterized reports: [R Markdown: The Definitive Guide - Chapter 15](h
 -- RMarkdown supports SQL and many other languages
 -- https://bookdown.org/yihui/rmarkdown/language-engines.html#sql
 -- Within a SQL-code chunk you can write SQL statements directly without using any function from the DBI-package
--- If you want to assign the output to a variable you have to specify it with the output.var option
 
---SELECT * from staffdose WHERE department = ?dep
-
+-- with output.var="rep_data" in the code chunk options header 
+-- we store the result of the SQL-query in the variable "rep_data"
 SELECT hp10, department, STRFTIME('%Y', measurement_period_end) AS report_year 
 FROM staffdose 
 WHERE hp10>=0 AND status = ?status_ok AND dosimeter_type = ?dos_type AND report_year = ?year AND department = ?dep
