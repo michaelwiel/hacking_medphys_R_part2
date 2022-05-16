@@ -373,56 +373,21 @@ pre code {
 <p><span style="color:black">Sample Report - Radiotherapy -
 2020</span></p></h1>
 <h4 class="author"><p>Michael Wieland &amp; Francois Gardavaud</p></h4>
-<h4 class="date">2022-05-10 22:47:01</h4>
+<h4 class="date">2022-05-17 00:28:06</h4>
 
 </div>
 
 
-<pre class="r"><code>###################### set-up environment section ################################
+<pre class="r"><code># params for SQL
+dep &lt;- params$department
+status_ok &lt;- &quot;OK&quot;
+dos_type &lt;- &quot;Badge&quot;
+year &lt;- as.character(params$year)
 
-# The following lines check if the necessary packages are already installed. 
-# If a package is missing it will be installed.
-if(!require(tidyverse)){
-  install.packages(&quot;tidyverse&quot;)
-}
-if(!require(readxl)){
-  install.packages(&quot;readxl&quot;)
-}
-if(!require(ggthemes)){
-  install.packages(&quot;ggthemes&quot;)
-}
-if(!require(tibble)){
-  install.packages(&quot;tibble&quot;)
-}
-if(!require(kableExtra)){
-  install.packages(&quot;kableExtra&quot;)
-}
-if(!require(RSQLite)){
-  install.packages(&quot;RSQLite&quot;)
-}
-if(!require(DBI)){
-  install.packages(&quot;DBI&quot;)
-}
-if(!require(rprojroot)){
-  install.packages(&quot;rprojroot&quot;)
-}</code></pre>
-<pre class="r"><code># loading the necessary packages
-
-# load tidyverse for data handling and visualization
-  # tidyverse is actually a collection of packages (ggplot2 for visualization and many more)
-library(tidyverse)
-# load readxl for reading data from excel files
-library(readxl)
-# load ggthemes for additional themes for the package ggplot2
-library(ggthemes)
-# load tibble to deal with tibble format
-library(tibble)
-# load kableExtra to improve table rendering
-library(kableExtra)
-# load DBI for communication between R and relational database management systems
-library(DBI)
-# load RSQLite which embeds the SQLite database engine in R and provides an DBI-compliant interface
-library(RSQLite)</code></pre>
+# connection in the setup code chunk to make the connection available for the SQL-chunks
+mp_db_conn &lt;- dbConnect(drv = RSQLite::SQLite(), 
+                        dbname = &quot;medical_physics_db.sqlite&quot;,
+                        flags = SQLITE_RO) # open connection in Read-Only-Mode</code></pre>
 <div id="introduction" class="section level2">
 <h2>Introduction</h2>
 <p>This is a sample report written for the R/RStudio-Version tutorial
@@ -487,10 +452,9 @@ Markdown: The Definitive Guide - Chapter 15</a>.</p>
 <pre class="sql"><code>-- RMarkdown supports SQL and many other languages
 -- https://bookdown.org/yihui/rmarkdown/language-engines.html#sql
 -- Within a SQL-code chunk you can write SQL statements directly without using any function from the DBI-package
--- If you want to assign the output to a variable you have to specify it with the output.var option
 
---SELECT * from staffdose WHERE department = ?dep
-
+-- with output.var=&quot;rep_data&quot; in the code chunk options header 
+-- we store the result of the SQL-query in the variable &quot;rep_data&quot;
 SELECT hp10, department, STRFTIME(&#39;%Y&#39;, measurement_period_end) AS report_year 
 FROM staffdose 
 WHERE hp10&gt;=0 AND status = ?status_ok AND dosimeter_type = ?dos_type AND report_year = ?year AND department = ?dep</code></pre>
