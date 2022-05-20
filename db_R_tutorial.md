@@ -4,7 +4,7 @@ subtitle: "Part 2. Working with databases—a step beyond spreadsheets"
 author: |
   Michael Wieland (mchl.wieland@gmail.com)   
   Francois Gardavaud (francois.gardavaud@aphp.fr)
-date: "2022-05-10"
+date: "2022-05-21"
 output: 
   html_document: 
     highlight: pygments
@@ -26,7 +26,7 @@ This is an R/RStudio-Version for Part 2 of the article series "Hacking Medical P
 ### Tutorial Overview
 In this tutorial we will read in personnel dosimeter data from dosimetry lab reports in the form of Excel-files. To store the data we create a SQLite database which we will then query for data analysis and produce some figures and tables. Additionally we will have a look at the reporting capabilities of R Markdown, discuss parameterized reports and automation of reporting tasks.
 
-### Ressources
+## Ressources
 In order to run this R Markdown file you need to install [R](https://www.r-project.org/) and [RStudio](https://www.rstudio.com/) ([RStudio Installer](https://www.rstudio.com/products/rstudio/download/)). An alternative IDE to RStudio is the open source IDE [Bio7](https://bio7.org/). Bio7 can be extended with plug-ins, among others with an [ImageJ](https://imagej.nih.gov/ij/)-plug-in for image analysis.   
 
 Resources to get started with R:  
@@ -78,9 +78,9 @@ if(!require(tidyverse)){
 if(!require(readxl)){
   install.packages("readxl")
 }
-if(!require(ggthemes)){
-  install.packages("ggthemes")
-}
+# if(!require(ggthemes)){
+#   install.packages("ggthemes")
+# }
 if(!require(tibble)){
   install.packages("tibble")
 }
@@ -108,7 +108,7 @@ library(tidyverse)
 # load readxl for reading data from excel files
 library(readxl)
 # load ggthemes for additional themes for the package ggplot2
-library(ggthemes)
+#library(ggthemes)
 # load tibble to deal with tibble format
 library(tibble)
 # load kableExtra to improve table rendering
@@ -302,24 +302,41 @@ The dates in the reports have abbreviated month names in English. If your machin
 
 
 ```r
-# "warning = FALSE" set in this code chunk to avoid warning messages 
-  # raised by creation of NAs by coercion to numeric of the hp10 and hp007 columns
-
 # storing the machine locale setting for time and dates in variable "loc"
-loc <- Sys.getlocale("LC_TIME") #
+loc <- Sys.getlocale("LC_TIME") 
+```
 
-# setting the machine locale for time and dates to "English"
-Sys.setlocale("LC_TIME", locale = "English") 
+
+
+
+```r
+# the value for "locale" is depending on the operating system. For Windows the value is "English".
+# check the help page with "?Sys.setlocale()" if you are not using Windows.
+
+# The next lines should detect the OS type and set the locale correctly (Tested on Windows 10, 11, ???????????). 
+
+# detect OS type
+os <- Sys.info()["sysname"]
+
+# set locale according to OS type
+if (os == "Windows") {
+  temp_loc <- "English"
+} else if (os == "Linux" | os == "Darwin") {
+  temp_loc == "en_GB.UTF-8"
+} else {stop("Could not detect type of operating system")}
+
+Sys.setlocale("LC_TIME", locale = temp_loc)
 ```
 
 ```
 ## [1] "English_United States.1252"
 ```
 
-```r
-# the value for "locale" is depending on the operating system. For Windows the value is "English".
-# check the help page with "?Sys.setlocale()" if you are not using Windows.
 
+
+```r
+# "warning = FALSE" set in this code chunk to avoid warning messages 
+  # raised by creation of NAs by coercion to numeric of the hp10 and hp007 columns
 
 all_reports_fixed <- all_reports %>% 
   # At first we replace the colon with dots as comma sign 
@@ -378,14 +395,12 @@ head(all_reports_fixed)
 ## #   report_uid <dbl>, status <chr>
 ```
 
+
 ```r
 # setting back the locale 
 Sys.setlocale("LC_TIME", locale = loc) 
 ```
 
-```
-## [1] "German_Austria.1252"
-```
 
 
 ## Using R with SQLite
@@ -615,10 +630,10 @@ Now we have 13 rows in the table which means that we created a duplicate by addi
 
 #### Table with Constraints
 In order to avoid duplicates we need constraints like a `PRIMARY KEY` and/or a `UNIQUE` constraint.
-There are different strategies to implement constraints but for consistency reasons we will build our dosimeter readings table analogous to the Python tutorial "by hand" and call it `staffdose`.  
+There are different strategies to implement constraints but for consistency reasons we will build our dosimeter readings table analogous to the Python tutorial and call it `staffdose`.  
 As `PRIMARY KEY` we add an `id`-column and set a `UNIQUE`-constraint with `report_uid, person_uid, dosimeter_placement`.  
 <br>
-First we delete the table `test01` with the function `dbExecute`. This function executes data manipulation statements without returning a result set. The output of `dBExecute` is the number of tables or table rows affected by the statement.
+First we delete the table `test01` with the function `dbExecute`. This function executes data manipulation statements without returning a result set. The output of `dBExecute` is the number of table rows affected by the statement.
 
 
 ```r
@@ -645,7 +660,7 @@ dbExecute(conn = mp_db_conn,
 ```
 
 ```r
-# check content of the database
+# check content of the database (should be empty at this point)
 dbListTables(conn = mp_db_conn)
 ```
 
