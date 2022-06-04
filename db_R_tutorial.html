@@ -10,7 +10,7 @@
 
 
 
-<meta name="date" content="2022-05-21" />
+<meta name="date" content="2022-06-04" />
 
 <title>Hacking Medical Physics with R</title>
 
@@ -1818,7 +1818,7 @@ div.tocify {
 spreadsheets</h3>
 <h4 class="author"><p>Michael Wieland (<a href="mailto:mchl.wieland@gmail.com" class="email">mchl.wieland@gmail.com</a>)<br />
 Francois Gardavaud (<a href="mailto:francois.gardavaud@aphp.fr" class="email">francois.gardavaud@aphp.fr</a>)</p></h4>
-<h4 class="date">2022-05-21</h4>
+<h4 class="date">2022-06-04</h4>
 
 </div>
 
@@ -1875,6 +1875,15 @@ Cookbook</a><br />
 <li><a href="https://bookdown.org/yihui/rmarkdown/">R Markdown: The
 Definitive Guide</a></li>
 </ul>
+<div id="operating-systems-and-software-versions" class="section level3">
+<h3>Operating Systems and Software Versions</h3>
+<p>This tutorial was successfully tested for Windows 10 and 11, for
+<span style="color:red;font-weight:bold">Apple macOS XX.xx??</span> and
+Ubuntu Linux <span style="color:red;font-weight:bold"> XX.xx??</span>
+with a several versions of R (minimum 4.1.1) and RStudio (minimum
+1.4.1103). If you run into problems while installing packages or running
+code please update to the recent versions or R and RStudio.</p>
+</div>
 <div id="working-in-rstudio" class="section level3">
 <h3>Working in RStudio</h3>
 <p>If you haven’t done so already, download all files from the
@@ -1915,7 +1924,6 @@ below it).</p>
 </div>
 <div id="package-setup" class="section level3">
 <h3>Package Setup</h3>
-<!-- We will make heavy use of the package collection `tidyverse` and the "pipe"-operator (` %>% `). Together with R Markdown they are facilitators of literate programming^[[Wikipedia: Literate programming](https://en.wikipedia.org/wiki/Literate_programming)]. To learn more have a look at: [`tidyverse` - R packages for data science](https://www.tidyverse.org/).   -->
 <p>The functionality of R can be vastly extended by installing
 additional packages. You can download packages from different sources. A
 safe way to install packages is to do so from within RStudio by clicking
@@ -1968,6 +1976,33 @@ process (don’t forget to press the little green play buttons…).</p>
 <span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a><span class="co"># load RSQLite which embeds the SQLite database engine in R and provides an DBI-compliant interface</span></span>
 <span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(RSQLite)</span></code></pre></div>
 </div>
+<div id="note-on-literate-programming-and-the-pipe-operator" class="section level3">
+<h3>Note on Literate Programming and the pipe operator</h3>
+<p>We will make heavy use of the package collection
+<code>tidyverse</code>. From the <a href="https://www.tidyverse.org/">package website</a>:</p>
+<blockquote>
+<p>The tidyverse is an opinionated collection of R packages designed for
+data science. All packages share an underlying design philosophy,
+grammar, and data structures.</p>
+</blockquote>
+<p>The <code>tidyverse</code> includes among many other the <a href="https://magrittr.tidyverse.org/"><code>magrittr</code> package</a>
+which provides the <code>%&gt;%</code> pipe operator throughout it’s
+ecosystem and…</p>
+<blockquote>
+<p>makes your code more readable by:<br />
+* structuring sequences of data operations left-to-right (as opposed to
+from the inside and out),<br />
+* avoiding nested function calls,<br />
+* minimizing the need for local variables and function
+definitions,<br />
+* and making it easy to add steps anywhere in the sequence of
+operations.</p>
+</blockquote>
+<p>Therefore the <code>tidyverse</code> with the pipe operator
+<code>%&gt;%</code>, together with R Markdown, are fantastic
+facilitators of <a href="https://en.wikipedia.org/wiki/Literate_programming">literate
+programming</a>].</p>
+</div>
 </div>
 <div id="reading-in-data" class="section level2">
 <h2>Reading in Data</h2>
@@ -1992,8 +2027,8 @@ right setup and are good to go.</p>
 <h3>Reading Data from an Excel File</h3>
 <p>A quick way to read data from Excel files is to use the
 <code>readxl</code>-package:</p>
-<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">read_xls</span>(<span class="at">path =</span> <span class="st">&quot;reports/StaffDoses_1.xls&quot;</span>) <span class="sc">%&gt;%</span></span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">head</span>(<span class="dv">5</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">read_xls</span>(<span class="at">path =</span> <span class="st">&quot;reports/StaffDoses_1.xls&quot;</span>) <span class="sc">%&gt;%</span> <span class="co">#read in data from one Excel file</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">head</span>(<span class="dv">5</span>) <span class="co"># show 5 first entries</span></span></code></pre></div>
 <pre><code>## # A tibble: 5 x 18
 ##   `Customer name`  `Customer UID` Department `Department UID` Name  `Person UID`
 ##   &lt;chr&gt;            &lt;chr&gt;          &lt;chr&gt;      &lt;chr&gt;            &lt;chr&gt; &lt;chr&gt;       
@@ -2026,6 +2061,13 @@ a lot of other mandatory arguments but they all have a default value.
 For example <code>col_names</code> is set to <code>TRUE</code> by
 default and this will cause the function to regard the first line in the
 Excel file as column names and not as data.</p>
+<p>In this first two lines of code you can also see the pipe-operator in
+action. The first function <code>read_xls</code> reads in the data from
+the excel file and with the pipe-operator the result is handed over
+(“piped”) to the next function <code>head</code> which displays the
+given number of data.frame rows (5 in this case). This makes the code
+easy to read from left to right and helps avoiding nested functions or
+storing results in intermediate variables.</p>
 </div>
 <div id="fixing-the-column-names" class="section level3">
 <h3>Fixing the Column Names</h3>
@@ -2170,8 +2212,8 @@ from <code>character</code> see <a href="https://www.rdocumentation.org/packages
 <span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a><span class="co"># set locale according to OS type</span></span>
 <span id="cb16-10"><a href="#cb16-10" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> (os <span class="sc">==</span> <span class="st">&quot;Windows&quot;</span>) {</span>
 <span id="cb16-11"><a href="#cb16-11" aria-hidden="true" tabindex="-1"></a>  temp_loc <span class="ot">&lt;-</span> <span class="st">&quot;English&quot;</span></span>
-<span id="cb16-12"><a href="#cb16-12" aria-hidden="true" tabindex="-1"></a>} <span class="cf">else</span> <span class="cf">if</span> (os <span class="sc">==</span> <span class="st">&quot;Linux&quot;</span> <span class="sc">|</span> os <span class="sc">==</span> <span class="st">&quot;Darwin&quot;</span>) {</span>
-<span id="cb16-13"><a href="#cb16-13" aria-hidden="true" tabindex="-1"></a>  temp_loc <span class="sc">==</span> <span class="st">&quot;en_GB.UTF-8&quot;</span></span>
+<span id="cb16-12"><a href="#cb16-12" aria-hidden="true" tabindex="-1"></a>} <span class="cf">else</span> <span class="cf">if</span> (os <span class="sc">==</span> <span class="st">&quot;Linux&quot;</span> <span class="sc">|</span> os <span class="sc">==</span> <span class="st">&quot;Darwin&quot;</span>) { <span class="co"># Darwin: Unix-OS and basis for macOS</span></span>
+<span id="cb16-13"><a href="#cb16-13" aria-hidden="true" tabindex="-1"></a>  temp_loc <span class="ot">&lt;-</span> <span class="st">&quot;en_GB.UTF-8&quot;</span></span>
 <span id="cb16-14"><a href="#cb16-14" aria-hidden="true" tabindex="-1"></a>} <span class="cf">else</span> {<span class="fu">stop</span>(<span class="st">&quot;Could not detect type of operating system&quot;</span>)}</span>
 <span id="cb16-15"><a href="#cb16-15" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb16-16"><a href="#cb16-16" aria-hidden="true" tabindex="-1"></a><span class="fu">Sys.setlocale</span>(<span class="st">&quot;LC_TIME&quot;</span>, <span class="at">locale =</span> temp_loc)</span></code></pre></div>

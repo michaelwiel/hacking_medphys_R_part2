@@ -41,6 +41,10 @@ Resources on R Markdown, the tool this tutorial is written with:
 * [R Markdown Cookbook](https://bookdown.org/yihui/rmarkdown-cookbook/)  
 * [R Markdown: The Definitive Guide](https://bookdown.org/yihui/rmarkdown/)  
 
+### Operating Systems and Software Versions
+This tutorial was successfully tested for Windows 10 and 11, for <span style="color:red;font-weight:bold">Apple macOS XX.xx??</span> and Ubuntu Linux <span style="color:red;font-weight:bold"> XX.xx??</span> with a several versions of R (minimum 4.1.1) and RStudio (minimum 1.4.1103). If you run into problems while installing packages or running code please update to the recent versions or R and RStudio.
+
+
 ### Working in RStudio
 If you haven't done so already, download all files from the GitHub-Repository [michaelwiel/hacking_medphys_R_part2](https://github.com/michaelwiel/hacking_medphys_R_part2). 
 Open the file `hacking_medphys_R_part2.Rproj` within RStudio. Opening the project should automatically load two [R Markdown files](https://rmarkdown.rstudio.com/) named `db_R_tutorial.Rmd` and `sample_report.Rmd`. If you can't see them as tabs in the RStudio environment `Source` pane you can open them from the menue with `File -> Open File` or from the `Files`-pane:
@@ -60,8 +64,6 @@ If you want to test the code yourself you have to execute all of the code in the
 
 
 ### Package Setup
-<!-- We will make heavy use of the package collection `tidyverse` and the "pipe"-operator (` %>% `). Together with R Markdown they are facilitators of literate programming^[[Wikipedia: Literate programming](https://en.wikipedia.org/wiki/Literate_programming)]. To learn more have a look at: [`tidyverse` - R packages for data science](https://www.tidyverse.org/).   -->
-
 The functionality of R can be vastly extended by installing additional packages. You can download packages from different sources. A safe way to install packages is to do so from within RStudio by clicking on `Tools -> Install packages...` in the menu bar. For R newcomers we added the next code chunks which automate the installation process (don't forget to press the little green play buttons...). 
 
 ```{r network, warning=FALSE, message=FALSE, echo=FALSE}
@@ -121,6 +123,21 @@ library(DBI)
 library(RSQLite)
 ```
 
+### Note on Literate Programming and the pipe operator
+We will make heavy use of the package collection `tidyverse`. From the [package website](https://www.tidyverse.org/):
+
+> The tidyverse is an opinionated collection of R packages designed for data science. All packages share an underlying design philosophy, grammar, and data structures.
+
+The `tidyverse` includes among many other the [`magrittr` package](https://magrittr.tidyverse.org/) which provides the `%>%` pipe operator throughout it's ecosystem and...
+
+> makes your code more readable by:  
+> * structuring sequences of data operations left-to-right (as opposed to from the inside and out),  
+> * avoiding nested function calls,  
+> * minimizing the need for local variables and function definitions,  
+> * and making it easy to add steps anywhere in the sequence of operations.
+
+Therefore the `tidyverse` with the pipe operator `%>%`, together with R Markdown, are fantastic facilitators of [literate programming](https://en.wikipedia.org/wiki/Literate_programming)].
+
 
 ## Reading in Data
 If your data files reside in the working directory you can access them in a relative fashion. Your current working directory should be the folder where this R Markdown-file is stored and the data files are stored in a subfolder called `reports`. If you downloaded the whole repository from Github and open RStudio by clicking the `hacking_medphys_R_part2.RProj`-file you should have the right setup and are good to go.
@@ -143,8 +160,9 @@ setwd(root.dir)
 A quick way to read data from Excel files is to use the `readxl`-package:
 
 ```{r readingExcel}
-read_xls(path = "reports/StaffDoses_1.xls") %>%
-  head(5)
+read_xls(path = "reports/StaffDoses_1.xls") %>% #read in data from one Excel file
+  head(5) # show 5 first entries
+
 # if you get an error message here check
   # if the working directory is set correctly and 
   # if the subfolder "reports" is in the right position (see above)
@@ -155,6 +173,8 @@ _Note for R Newcomers:_ If you know the order of the arguments of a function you
 `read_xls(path, sheet = NULL, range = NULL, col_names = TRUE, col_types = NULL, ...)`  
 <br>
 Since `path` is the first argument we could also read in the data by just writing `read_xls("reports/StaffDoses_1.xls")`. It is of course faster to type but on the other side makes the code harder to read if you don't know the function. The second thing to note is that there are a lot of other mandatory arguments but they all have a default value. For example `col_names` is set to `TRUE` by default and this will cause the function to regard the first line in the Excel file as column names and not as data.  
+
+In this first two lines of code you can also see the pipe-operator in action. The first function `read_xls` reads in the data from the excel file and with the pipe-operator the result is handed over ("piped") to the next function `head` which displays the given number of data.frame rows (5 in this case). This makes the code easy to read from left to right and helps avoiding nested functions or storing results in intermediate variables.
 
 
 ### Fixing the Column Names
@@ -237,8 +257,6 @@ The dates in the reports have abbreviated month names in English. If your machin
 ```{r storingLocale}
 # storing the machine locale setting for time and dates in variable "loc"
 loc <- Sys.getlocale("LC_TIME") 
-
-
 ```
 
 ```{r settingLocaleTemp_manually, eval=FALSE, echo=FALSE}
@@ -260,8 +278,8 @@ os <- Sys.info()["sysname"]
 # set locale according to OS type
 if (os == "Windows") {
   temp_loc <- "English"
-} else if (os == "Linux" | os == "Darwin") {
-  temp_loc == "en_GB.UTF-8"
+} else if (os == "Linux" | os == "Darwin") { # Darwin: Unix-OS and basis for macOS
+  temp_loc <- "en_GB.UTF-8"
 } else {stop("Could not detect type of operating system")}
 
 Sys.setlocale("LC_TIME", locale = temp_loc)
