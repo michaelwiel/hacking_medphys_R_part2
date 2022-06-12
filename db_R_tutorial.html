@@ -10,7 +10,7 @@
 
 
 
-<meta name="date" content="2022-06-04" />
+<meta name="date" content="2022-06-05" />
 
 <title>Hacking Medical Physics with R</title>
 
@@ -1818,7 +1818,7 @@ div.tocify {
 spreadsheets</h3>
 <h4 class="author"><p>Michael Wieland (<a href="mailto:mchl.wieland@gmail.com" class="email">mchl.wieland@gmail.com</a>)<br />
 Francois Gardavaud (<a href="mailto:francois.gardavaud@aphp.fr" class="email">francois.gardavaud@aphp.fr</a>)</p></h4>
-<h4 class="date">2022-06-04</h4>
+<h4 class="date">2022-06-05</h4>
 
 </div>
 
@@ -1977,7 +1977,7 @@ process (don’t forget to press the little green play buttons…).</p>
 <span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(RSQLite)</span></code></pre></div>
 </div>
 <div id="note-on-literate-programming-and-the-pipe-operator" class="section level3">
-<h3>Note on Literate Programming and the pipe operator</h3>
+<h3>Note on Literate Programming and the Pipe Operator</h3>
 <p>We will make heavy use of the package collection
 <code>tidyverse</code>. From the <a href="https://www.tidyverse.org/">package website</a>:</p>
 <blockquote>
@@ -1985,9 +1985,10 @@ process (don’t forget to press the little green play buttons…).</p>
 data science. All packages share an underlying design philosophy,
 grammar, and data structures.</p>
 </blockquote>
-<p>The <code>tidyverse</code> includes among many other the <a href="https://magrittr.tidyverse.org/"><code>magrittr</code> package</a>
-which provides the <code>%&gt;%</code> pipe operator throughout it’s
-ecosystem and…</p>
+<p>The <code>tidyverse</code> includes among many other the <a href="https://magrittr.tidyverse.org/"><code>magrittr</code>
+package</a>. The package provides the <code>%&gt;%</code> pipe operator
+throughout it’s ecosystem. The pipe operator an incredible helpful tool
+because it…</p>
 <blockquote>
 <p>makes your code more readable by:<br />
 * structuring sequences of data operations left-to-right (as opposed to
@@ -1998,10 +1999,16 @@ definitions,<br />
 * and making it easy to add steps anywhere in the sequence of
 operations.</p>
 </blockquote>
-<p>Therefore the <code>tidyverse</code> with the pipe operator
-<code>%&gt;%</code>, together with R Markdown, are fantastic
-facilitators of <a href="https://en.wikipedia.org/wiki/Literate_programming">literate
-programming</a>].</p>
+<p>The <code>tidyverse</code> with the pipe operator
+<code>%&gt;%</code>, together with R Markdown are therefore facilitators
+of <a href="https://en.wikipedia.org/wiki/Literate_programming">literate
+programming</a>.</p>
+<p>The pipe operator became so popular that it sparked the development
+of a native R pipe operator <code>|&gt;</code> which was implemented in
+base R with version 4.1.0. For information about the the development,
+history and even limitations of the pipe operators see <a href="http://adolfoalvarez.cl/blog/2021-09-16-plumbers-chains-and-famous-painters-the-history-of-the-pipe-operator-in-r/">here</a>,
+<a href="https://towardsdatascience.com/an-introduction-to-the-pipe-in-r-823090760d64">here</a>
+and <a href="https://www.datacamp.com/tutorial/pipe-r-tutorial">here</a>.</p>
 </div>
 </div>
 <div id="reading-in-data" class="section level2">

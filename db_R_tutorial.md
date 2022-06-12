@@ -4,7 +4,7 @@ subtitle: "Part 2. Working with databases—a step beyond spreadsheets"
 author: |
   Michael Wieland (mchl.wieland@gmail.com)   
   Francois Gardavaud (francois.gardavaud@aphp.fr)
-date: "2022-06-04"
+date: "2022-06-05"
 output: 
   html_document: 
     highlight: pygments
@@ -121,12 +121,12 @@ library(DBI)
 library(RSQLite)
 ```
 
-### Note on Literate Programming and the pipe operator
+### Note on Literate Programming and the Pipe Operator
 We will make heavy use of the package collection `tidyverse`. From the [package website](https://www.tidyverse.org/):
 
 > The tidyverse is an opinionated collection of R packages designed for data science. All packages share an underlying design philosophy, grammar, and data structures.
 
-The `tidyverse` includes among many other the [`magrittr` package](https://magrittr.tidyverse.org/) which provides the `%>%` pipe operator throughout it's ecosystem and...
+The `tidyverse` includes among many other the [`magrittr` package](https://magrittr.tidyverse.org/). The package provides the `%>%` pipe operator throughout it's ecosystem. The pipe operator an incredible helpful tool because it...
 
 > makes your code more readable by:  
 > * structuring sequences of data operations left-to-right (as opposed to from the inside and out),  
@@ -134,7 +134,10 @@ The `tidyverse` includes among many other the [`magrittr` package](https://magri
 > * minimizing the need for local variables and function definitions,  
 > * and making it easy to add steps anywhere in the sequence of operations.
 
-Therefore the `tidyverse` with the pipe operator `%>%`, together with R Markdown, are fantastic facilitators of [literate programming](https://en.wikipedia.org/wiki/Literate_programming)].
+The `tidyverse` with the pipe operator `%>%`, together with R Markdown are therefore facilitators of [literate programming](https://en.wikipedia.org/wiki/Literate_programming).  
+
+The pipe operator became so popular that it sparked the development of a native R pipe operator `|>` which was implemented in base R with version 4.1.0. For information about the the development, history and even limitations of the pipe operators see [here](http://adolfoalvarez.cl/blog/2021-09-16-plumbers-chains-and-famous-painters-the-history-of-the-pipe-operator-in-r/), [here](https://towardsdatascience.com/an-introduction-to-the-pipe-in-r-823090760d64) and [here](https://www.datacamp.com/tutorial/pipe-r-tutorial).
+
 
 
 ## Reading in Data
