@@ -101,6 +101,9 @@ if(!require(DBI)){
 if(!require(rprojroot)){
   install.packages("rprojroot")
 }
+if(!require(knitr)){
+  install.packages("knitr")
+}
 ```
 
 ```{r loading_packages}
@@ -121,6 +124,8 @@ library(kableExtra)
 library(DBI)
 # load RSQLite which embeds the SQLite database engine in R and provides an DBI-compliant interface
 library(RSQLite)
+# load knitr which handle path directory conflict
+library(knitr)
 ```
 
 ### Note on Literate Programming and the Pipe Operator
@@ -153,9 +158,10 @@ If your data files reside in the working directory you can access them in a rela
   # the location of the Rproj-File with the next lines
 
 # Find the root directory of the R Project File
-root.dir = rprojroot::find_rstudio_root_file()
+path_project <- rprojroot::find_rstudio_root_file()
 # Set the project path to the root level
-setwd(root.dir)
+require("knitr")
+opts_knit$set(root.dir = path_project)
 ```
 
 
