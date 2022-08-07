@@ -4,7 +4,7 @@ subtitle: "Part 2. Working with databases—a step beyond spreadsheets"
 author: |
   Michael Wieland (mchl.wieland@gmail.com)   
   Francois Gardavaud (francois.gardavaud@aphp.fr)
-date: "2022-06-05"
+date: "2022-08-07"
 output: 
   html_document: 
     highlight: pygments
@@ -13,6 +13,7 @@ output:
     toc_float: yes
     toc_depth: 3
     keep_md: yes
+    df_print: paged
 ---
 <!-- 
 If you are new to R and RStudio you might prefer reading the html- or md-file of the tutorial
@@ -21,12 +22,15 @@ html-file: https://charmingquark.at/db_R_tutorial.html
 -->
 
 ## Short Description
-This is an R/RStudio-Version for Part 2 of the article series "Hacking Medical Physics" by Jonas Andersson and Gavin Poludniowski (GitHub repository: [rvbCMTS/EMP-News](https://github.com/rvbCMTS/EMP-News.git)) in the newsletter of the European Federation of Organizations for Medical Physics (EFOMP)^[[European Medical Physics News](https://www.efomp.org/index.php?r=fc&id=emp-news)]. GitHub repository for this R/RStudio tutorial: [Michael Wieland - Hacking Medical Physics - R Version](https://github.com/michaelwiel/hacking_medphys_R_part2.git).
+This is an R/RStudio-Version for Part 2 of the article series "Hacking Medical Physics" by Jonas Andersson and Gavin Poludniowski (GitHub repository: [rvbCMTS/EMP-News](https://github.com/rvbCMTS/EMP-News.git)) published in the newsletter of the European Federation of Organizations for Medical Physics (EFOMP)^[[European Medical Physics News](https://www.efomp.org/index.php?r=fc&id=emp-news)]. The GitHub repository for this R/RStudio tutorial can be found at: [Michael Wieland - Hacking Medical Physics - R Version](https://github.com/michaelwiel/hacking_medphys_R_part2.git).
+
+### Motivation
+R has become one of the top programming languages for data science during the last years^[[R Wikipedia Article](https://en.wikipedia.org/wiki/R_(programming_language))] ^[[TIOBE Index](https://www.tiobe.com/tiobe-index/)]. R itself is open source and it can be vastly augmented by additional packages. Together with R Markdown it is a great tool for data analysis, visualization, and data reporting. This makes R the perfect fit for the tasks discussed in this tutorial.
 
 ### Tutorial Overview
-In this tutorial we will read in personnel dosimeter data from dosimetry lab reports in the form of Excel-files. To store the data we create a SQLite database which we will then query for data analysis and produce some figures and tables. Additionally we will have a look at the reporting capabilities of R Markdown, discuss parameterized reports and automation of reporting tasks.
+In this tutorial we will read in personnel dosimeter data from dosimetry lab reports in the form of Excel-files. To store the data we create a SQLite database which we will then query for data analysis and produce some figures and tables. Additionally we will have a look at the reporting capabilities of [R Markdown](https://RMarkdown.rstudio.com/), discuss parameterized reports, and automation of reporting tasks.
 
-## Ressources
+## Resources
 In order to run this R Markdown file you need to install [R](https://www.r-project.org/) and [RStudio](https://www.rstudio.com/) ([RStudio Installer](https://www.rstudio.com/products/rstudio/download/)). An alternative IDE to RStudio is the open source IDE [Bio7](https://bio7.org/). Bio7 can be extended with plug-ins, among others with an [ImageJ](https://imagej.nih.gov/ij/)-plug-in for image analysis.   
 
 Resources to get started with R:  
@@ -42,14 +46,16 @@ Resources on R Markdown, the tool this tutorial is written with:
 * [R Markdown: The Definitive Guide](https://bookdown.org/yihui/rmarkdown/)  
 
 ### Operating Systems and Software Versions
-This tutorial was successfully tested for Windows 10 and 11, for <span style="color:red;font-weight:bold">Apple macOS XX.xx??</span> and Ubuntu Linux <span style="color:red;font-weight:bold"> XX.xx??</span> with a several versions of R (minimum 4.1.1) and RStudio (minimum 1.4.1103). If you run into problems while installing packages or running code please update to the recent versions or R and RStudio.
+This tutorial was successfully tested for Windows 10 and 11, for Apple macOS 10.15 (Catalina) and 12 (Monterey) and Ubuntu Linux Ubunutu 20.04 with a several versions of R (minimum 4.1.1) and RStudio (minimum 1.4.1103). If you run into problems while installing packages or running the code please update to the recent versions of R and RStudio.
 
 
 ### Working in RStudio
 If you haven't done so already, download all files from the GitHub-Repository [michaelwiel/hacking_medphys_R_part2](https://github.com/michaelwiel/hacking_medphys_R_part2). 
-Open the file `hacking_medphys_R_part2.Rproj` within RStudio. Opening the project should automatically load two [R Markdown files](https://rmarkdown.rstudio.com/) named `db_R_tutorial.Rmd` and `sample_report.Rmd`. If you can't see them as tabs in the RStudio environment `Source` pane you can open them from the menue with `File -> Open File` or from the `Files`-pane:
+Open the file `hacking_medphys_R_part2.Rproj` within RStudio. You can also just double click the file in the file explorer which should open the project in RStudio. Opening the project should automatically set the working directory to the location of the Rproject-file and the `Files` pane should show you the contents of the folder you just downloaded:
 
 ![RStudio Enviroment with Source and Files Panes](figures/files_pane.png)
+
+You can open the two [R Markdown files](https://rmarkdown.rstudio.com/) named `db_R_tutorial.Rmd` and `sample_report.Rmd` by just clicking on them in the `Files` pane. If you can't see them as tabs in the RStudio environment `Source` pane you can open them from the menue with `File -> Open File`.
 
 <br>
 If you are still reading the html-version or md-version of this tutorial we highly recommend to switch to RStudio and keep on reading in the R Markdown file `db_R_tutorial.Rmd` in order to run the code in the tutorial yourself.
@@ -60,11 +66,11 @@ You can run the code in the RStudio `Console` pane or directly in the R Markdown
 ![Code chunk example](figures/example_codechunk.png)
 
 <br>
-If you want to test the code yourself you have to execute all of the code in the tutorial from top to bottom (i.e. press the green play button in each code chunk in the order they appear in the text). If you want to start testing the code at some other point in the tutorial you still have to execute all the code before the given point. To execute all the code until the code chunk you want to start with, click the button left from the play button (down facing arrow with a green line below it). 
+If you want to test the code yourself you have to execute all of the code in the tutorial from top to bottom (i.e. press the green play button in each code chunk in the order they appear in the text). If you want to start testing the code at some other point in the tutorial you still have to execute all the code before the given point. To execute all the code until the code chunk you want to start with, click the button to the left of the play button (down-facing arrow with a green line below it). 
 
 
 ### Package Setup
-The functionality of R can be vastly extended by installing additional packages. You can download packages from different sources. A safe way to install packages is to do so from within RStudio by clicking on `Tools -> Install packages...` in the menu bar. For R newcomers we added the next code chunks which automate the installation process (don't forget to press the little green play buttons...). 
+The functionality of R can be vastly extended by installing additional packages. You can download packages from different sources. A safe way to install packages is to do so from within RStudio by clicking on `Tools -> Install packages...` in the menu bar. For R newcomers we have added the next code chunks which automate the installation process (don't forget to press the little green play buttons...). 
 
 
 
@@ -73,52 +79,35 @@ The functionality of R can be vastly extended by installing additional packages.
 ###################### set-up environment section ################################
 
 # The following lines check if the necessary packages are already installed. 
-# If a package is missing it will be installed.
-if(!require(tidyverse)){
-  install.packages("tidyverse")
-}
-if(!require(readxl)){
-  install.packages("readxl")
-}
-# if(!require(ggthemes)){
-#   install.packages("ggthemes")
-# }
-if(!require(tibble)){
-  install.packages("tibble")
-}
-if(!require(kableExtra)){
-  install.packages("kableExtra")
-}
-if(!require(RSQLite)){
-  install.packages("RSQLite")
-}
-if(!require(DBI)){
-  install.packages("DBI")
-}
-if(!require(rprojroot)){
-  install.packages("rprojroot")
-}
-```
-
-
-```r
-# loading the necessary packages
+# If a package is missing it will be installed and loaded.
+# If a package is already installed it will just be loaded
 
 # load tidyverse for data handling and visualization
   # tidyverse is actually a collection of packages (ggplot2 for visualization and many more)
-library(tidyverse)
+if(!require(tidyverse)){
+  install.packages("tidyverse")
+  library(tidyverse)
+}
 # load readxl for reading data from excel files
-library(readxl)
-# load ggthemes for additional themes for the package ggplot2
-#library(ggthemes)
-# load tibble to deal with tibble format
-library(tibble)
+if(!require(readxl)){
+  install.packages("readxl")
+  library(readxl)
+}
 # load kableExtra to improve table rendering
-library(kableExtra)
-# load DBI for communication between R and relational database management systems
-library(DBI)
+if(!require(kableExtra)){
+  install.packages("kableExtra")
+  library(kableExtra)
+}
 # load RSQLite which embeds the SQLite database engine in R and provides an DBI-compliant interface
-library(RSQLite)
+if(!require(RSQLite)){
+  install.packages("RSQLite")
+  library(RSQLite)
+}
+# load DBI for communication between R and relational database management systems
+if(!require(DBI)){
+  install.packages("DBI")
+  library(DBI)
+}
 ```
 
 ### Note on Literate Programming and the Pipe Operator
@@ -126,7 +115,8 @@ We will make heavy use of the package collection `tidyverse`. From the [package 
 
 > The tidyverse is an opinionated collection of R packages designed for data science. All packages share an underlying design philosophy, grammar, and data structures.
 
-The `tidyverse` includes among many other the [`magrittr` package](https://magrittr.tidyverse.org/). The package provides the `%>%` pipe operator throughout it's ecosystem. The pipe operator an incredible helpful tool because it...
+The `tidyverse` includes among many others the [`magrittr` package](https://magrittr.tidyverse.org/). The package provides the `%>%` pipe operator throughout its ecosystem.
+The pipe operator is an incredible helpful tool because it...
 
 > makes your code more readable by:  
 > * structuring sequences of data operations left-to-right (as opposed to from the inside and out),  
@@ -139,23 +129,8 @@ The `tidyverse` with the pipe operator `%>%`, together with R Markdown are there
 The pipe operator became so popular that it sparked the development of a native R pipe operator `|>` which was implemented in base R with version 4.1.0. For information about the the development, history and even limitations of the pipe operators see [here](http://adolfoalvarez.cl/blog/2021-09-16-plumbers-chains-and-famous-painters-the-history-of-the-pipe-operator-in-r/), [here](https://towardsdatascience.com/an-introduction-to-the-pipe-in-r-823090760d64) and [here](https://www.datacamp.com/tutorial/pipe-r-tutorial).
 
 
-
 ## Reading in Data
 If your data files reside in the working directory you can access them in a relative fashion. Your current working directory should be the folder where this R Markdown-file is stored and the data files are stored in a subfolder called `reports`. If you downloaded the whole repository from Github and open RStudio by clicking the `hacking_medphys_R_part2.RProj`-file you should have the right setup and are good to go.
-
-
-```r
-# If you followed the above steps your working directory should be set correctly.
-# Working with Rproj: 
-  # https://support.rstudio.com/hc/en-us/articles/200526207-Using-RStudio-Projects
-# Anyhow we will make sure that the working directory is set to 
-  # the location of the Rproj-File with the next lines
-
-# Find the root directory of the R Project File
-root.dir = rprojroot::find_rstudio_root_file()
-# Set the project path to the root level
-setwd(root.dir)
-```
 
 
 ### Reading Data from an Excel File
@@ -167,21 +142,11 @@ read_xls(path = "reports/StaffDoses_1.xls") %>% #read in data from one Excel fil
   head(5) # show 5 first entries
 ```
 
-```
-## # A tibble: 5 x 18
-##   `Customer name`  `Customer UID` Department `Department UID` Name  `Person UID`
-##   <chr>            <chr>          <chr>      <chr>            <chr> <chr>       
-## 1 Hogsmeade Royal~ 141            Nuclear M~ 1                Seve~ 12368       
-## 2 Hogsmeade Royal~ 141            Nuclear M~ 1                Harr~ 12369       
-## 3 Hogsmeade Royal~ 141            Nuclear M~ 1                Parv~ 12370       
-## 4 Hogsmeade Royal~ 141            Nuclear M~ 1                Parv~ 12370       
-## 5 Hogsmeade Royal~ 141            Nuclear M~ 1                Cedr~ 12371       
-## # ... with 12 more variables: Radiation type <chr>, Hp(10) <chr>,
-## #   Hp(0.07) <chr>, User type <chr>, Dosimeter type <chr>,
-## #   Dosimeter placement <chr>, Dosimeter UID <chr>,
-## #   Measurement period (start) <chr>, Measurement period (end) <chr>,
-## #   Read date <chr>, Report date <chr>, Report UID <chr>
-```
+<div data-pagedtable="false">
+  <script data-pagedtable-source type="application/json">
+{"columns":[{"label":["Customer name"],"name":[1],"type":["chr"],"align":["left"]},{"label":["Customer UID"],"name":[2],"type":["chr"],"align":["left"]},{"label":["Department"],"name":[3],"type":["chr"],"align":["left"]},{"label":["Department UID"],"name":[4],"type":["chr"],"align":["left"]},{"label":["Name"],"name":[5],"type":["chr"],"align":["left"]},{"label":["Person UID"],"name":[6],"type":["chr"],"align":["left"]},{"label":["Radiation type"],"name":[7],"type":["chr"],"align":["left"]},{"label":["Hp(10)"],"name":[8],"type":["chr"],"align":["left"]},{"label":["Hp(0.07)"],"name":[9],"type":["chr"],"align":["left"]},{"label":["User type"],"name":[10],"type":["chr"],"align":["left"]},{"label":["Dosimeter type"],"name":[11],"type":["chr"],"align":["left"]},{"label":["Dosimeter placement"],"name":[12],"type":["chr"],"align":["left"]},{"label":["Dosimeter UID"],"name":[13],"type":["chr"],"align":["left"]},{"label":["Measurement period (start)"],"name":[14],"type":["chr"],"align":["left"]},{"label":["Measurement period (end)"],"name":[15],"type":["chr"],"align":["left"]},{"label":["Read date"],"name":[16],"type":["chr"],"align":["left"]},{"label":["Report date"],"name":[17],"type":["chr"],"align":["left"]},{"label":["Report UID"],"name":[18],"type":["chr"],"align":["left"]}],"data":[{"1":"Hogsmeade Royal Infirmary","2":"141","3":"Nuclear Medicine","4":"1","5":"Severus Snape","6":"12368","7":"xbg","8":"0,09","9":"0,09","10":"Staff","11":"Badge","12":"Body","13":"90072","14":"22-Nov-2019","15":"19-Dec-2019","16":"24-Dec-2019","17":"28-Dec-2019","18":"1137"},{"1":"Hogsmeade Royal Infirmary","2":"141","3":"Nuclear Medicine","4":"1","5":"Harry Potter","6":"12369","7":"xbg","8":"B","9":"B","10":"Staff","11":"Badge","12":"Body","13":"90073","14":"22-Nov-2019","15":"19-Dec-2019","16":"24-Dec-2019","17":"28-Dec-2019","18":"1137"},{"1":"Hogsmeade Royal Infirmary","2":"141","3":"Nuclear Medicine","4":"1","5":"Parvati Patil","6":"12370","7":"xbg","8":"B","9":"B","10":"Staff","11":"Badge","12":"Body","13":"90075","14":"22-Nov-2019","15":"19-Dec-2019","16":"26-Dec-2019","17":"28-Dec-2019","18":"1137"},{"1":"Hogsmeade Royal Infirmary","2":"141","3":"Nuclear Medicine","4":"1","5":"Parvati Patil","6":"12370","7":"xbg","8":"NA","9":"2,34","10":"Staff","11":"Ring","12":"Left hand","13":"90076","14":"22-Nov-2019","15":"19-Dec-2019","16":"24-Dec-2019","17":"28-Dec-2019","18":"1137"},{"1":"Hogsmeade Royal Infirmary","2":"141","3":"Nuclear Medicine","4":"1","5":"Cedric Diggory","6":"12371","7":"xbg","8":"0,11","9":"0,11","10":"Staff","11":"Badge","12":"Body","13":"90077","14":"22-Nov-2019","15":"19-Dec-2019","16":"25-Dec-2019","17":"28-Dec-2019","18":"1137"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
+  </script>
+</div>
 
 ```r
 # if you get an error message here check
@@ -193,7 +158,7 @@ _Note for R Newcomers:_ If you know the order of the arguments of a function you
 <br>
 `read_xls(path, sheet = NULL, range = NULL, col_names = TRUE, col_types = NULL, ...)`  
 <br>
-Since `path` is the first argument we could also read in the data by just writing `read_xls("reports/StaffDoses_1.xls")`. It is of course faster to type but on the other side makes the code harder to read if you don't know the function. The second thing to note is that there are a lot of other mandatory arguments but they all have a default value. For example `col_names` is set to `TRUE` by default and this will cause the function to regard the first line in the Excel file as column names and not as data.  
+Since `path` is the first argument we could also read in the data by just writing `read_xls("reports/StaffDoses_1.xls")`. It is of course faster to type but on the other side makes the code harder to read if you don't know the function. The second thing to note is that there are a lot of other optional arguments but they all have a default value. For example `col_names` is set to `TRUE` by default and this will cause the function to regard the first line in the Excel file as column names and not as data.  
 
 In this first two lines of code you can also see the pipe-operator in action. The first function `read_xls` reads in the data from the excel file and with the pipe-operator the result is handed over ("piped") to the next function `head` which displays the given number of data.frame rows (5 in this case). This makes the code easy to read from left to right and helps avoiding nested functions or storing results in intermediate variables.
 
@@ -294,30 +259,21 @@ for (i in 1:length(all_reports_to_read_in)) {
 colnames(all_reports) <- report_column_names 
 
 # check result
-tibble(all_reports) %>% 
-  head(3)
+head(all_reports, 3)
 ```
 
-```
-## # A tibble: 3 x 18
-##   customer_name      customer_uid department   department_uid name    person_uid
-##   <chr>              <chr>        <chr>        <chr>          <chr>   <chr>     
-## 1 Hogsmeade Royal I~ 141          Nuclear Med~ 1              Severu~ 12368     
-## 2 Hogsmeade Royal I~ 141          Nuclear Med~ 1              Harry ~ 12369     
-## 3 Hogsmeade Royal I~ 141          Nuclear Med~ 1              Parvat~ 12370     
-## # ... with 12 more variables: radiation_type <chr>, hp10 <chr>, hp007 <chr>,
-## #   user_type <chr>, dosimeter_type <chr>, dosimeter_placement <chr>,
-## #   dosimeter_uid <chr>, measurement_period_start <chr>,
-## #   measurement_period_end <chr>, read_date <chr>, report_date <chr>,
-## #   report_uid <chr>
-```
+<div data-pagedtable="false">
+  <script data-pagedtable-source type="application/json">
+{"columns":[{"label":["customer_name"],"name":[1],"type":["chr"],"align":["left"]},{"label":["customer_uid"],"name":[2],"type":["chr"],"align":["left"]},{"label":["department"],"name":[3],"type":["chr"],"align":["left"]},{"label":["department_uid"],"name":[4],"type":["chr"],"align":["left"]},{"label":["name"],"name":[5],"type":["chr"],"align":["left"]},{"label":["person_uid"],"name":[6],"type":["chr"],"align":["left"]},{"label":["radiation_type"],"name":[7],"type":["chr"],"align":["left"]},{"label":["hp10"],"name":[8],"type":["chr"],"align":["left"]},{"label":["hp007"],"name":[9],"type":["chr"],"align":["left"]},{"label":["user_type"],"name":[10],"type":["chr"],"align":["left"]},{"label":["dosimeter_type"],"name":[11],"type":["chr"],"align":["left"]},{"label":["dosimeter_placement"],"name":[12],"type":["chr"],"align":["left"]},{"label":["dosimeter_uid"],"name":[13],"type":["chr"],"align":["left"]},{"label":["measurement_period_start"],"name":[14],"type":["chr"],"align":["left"]},{"label":["measurement_period_end"],"name":[15],"type":["chr"],"align":["left"]},{"label":["read_date"],"name":[16],"type":["chr"],"align":["left"]},{"label":["report_date"],"name":[17],"type":["chr"],"align":["left"]},{"label":["report_uid"],"name":[18],"type":["chr"],"align":["left"]}],"data":[{"1":"Hogsmeade Royal Infirmary","2":"141","3":"Nuclear Medicine","4":"1","5":"Severus Snape","6":"12368","7":"xbg","8":"0,09","9":"0,09","10":"Staff","11":"Badge","12":"Body","13":"90072","14":"22-Nov-2019","15":"19-Dec-2019","16":"24-Dec-2019","17":"28-Dec-2019","18":"1137"},{"1":"Hogsmeade Royal Infirmary","2":"141","3":"Nuclear Medicine","4":"1","5":"Harry Potter","6":"12369","7":"xbg","8":"B","9":"B","10":"Staff","11":"Badge","12":"Body","13":"90073","14":"22-Nov-2019","15":"19-Dec-2019","16":"24-Dec-2019","17":"28-Dec-2019","18":"1137"},{"1":"Hogsmeade Royal Infirmary","2":"141","3":"Nuclear Medicine","4":"1","5":"Parvati Patil","6":"12370","7":"xbg","8":"B","9":"B","10":"Staff","11":"Badge","12":"Body","13":"90075","14":"22-Nov-2019","15":"19-Dec-2019","16":"26-Dec-2019","17":"28-Dec-2019","18":"1137"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
+  </script>
+</div>
 
 ### Fixing Data Types
 Some data wrangling is needed to get the right data types: 
 
 * All numerical variables should be defined as `double` or `integer`,  
 * Replace semicolons with dots in decimal numbers so R can recognize them as numbers ("English convention" for decimal numbers),  
-* Create a column `status` before converting `hp10` and `hp007` to numeric in order not to lose information. Where `hp10` and `hp007` have the values "B", "NR" or `NA` (B: Below Measurement Threshold; NR: Not returned; `NA`: Missing Value) we transfer those values to the new column, if the values are numeric we set the value in the new column to "OK".  
+* Create a column `status` before converting `hp10` and `hp007` to numeric in order not to lose information. Where `hp10` and `hp007` have the values "B", "NR" or `NA` (B: Below Measurement Threshold; NR: Not returned; `NA`: Missing Value) we transfer those values to the new column; if the values are numeric we set the value in the new column to "OK".  
 * Convert dates to date format  
 
 The dates in the reports have abbreviated month names in English. If your machine `locale` is not set to English you might run into troubles when you convert the dates from the format `character` to format `date`. One way to read in the data correctly with little coding is to set the `locale` on the machine to English temporarily. For date-time conversion to and from `character` see [`strptime`](https://www.rdocumentation.org/packages/base/versions/3.6.2/topics/strptime).
@@ -330,12 +286,15 @@ loc <- Sys.getlocale("LC_TIME")
 
 
 
-
 ```r
 # the value for "locale" is depending on the operating system. For Windows the value is "English".
 # check the help page with "?Sys.setlocale()" if you are not using Windows.
 
-# The next lines should detect the OS type and set the locale correctly (Tested on Windows 10, 11, ???????????). 
+# The next lines should detect the OS type and set the locale correctly
+# Tested on:
+ # Windows 10, 11
+ # Apple macOS 10.15 (Catalina) and 12 (Monterey)
+ # Ubuntu Linux (Ubuntu 20.04). 
 
 # detect OS type
 os <- Sys.info()["sysname"]
@@ -400,22 +359,11 @@ all_reports_fixed <- all_reports %>%
 head(all_reports_fixed)
 ```
 
-```
-## # A tibble: 6 x 19
-##   customer_name     customer_uid department   department_uid name     person_uid
-##   <chr>                    <dbl> <chr>                 <dbl> <chr>         <dbl>
-## 1 Hogsmeade Royal ~          141 Nuclear Med~              1 Severus~      12368
-## 2 Hogsmeade Royal ~          141 Nuclear Med~              1 Harry P~      12369
-## 3 Hogsmeade Royal ~          141 Nuclear Med~              1 Parvati~      12370
-## 4 Hogsmeade Royal ~          141 Nuclear Med~              1 Parvati~      12370
-## 5 Hogsmeade Royal ~          141 Nuclear Med~              1 Cedric ~      12371
-## 6 Hogsmeade Royal ~          141 Nuclear Med~              1 Cedric ~      12371
-## # ... with 13 more variables: radiation_type <chr>, hp10 <dbl>, hp007 <dbl>,
-## #   user_type <chr>, dosimeter_type <chr>, dosimeter_placement <chr>,
-## #   dosimeter_uid <dbl>, measurement_period_start <date>,
-## #   measurement_period_end <date>, read_date <date>, report_date <date>,
-## #   report_uid <dbl>, status <chr>
-```
+<div data-pagedtable="false">
+  <script data-pagedtable-source type="application/json">
+{"columns":[{"label":["customer_name"],"name":[1],"type":["chr"],"align":["left"]},{"label":["customer_uid"],"name":[2],"type":["dbl"],"align":["right"]},{"label":["department"],"name":[3],"type":["chr"],"align":["left"]},{"label":["department_uid"],"name":[4],"type":["dbl"],"align":["right"]},{"label":["name"],"name":[5],"type":["chr"],"align":["left"]},{"label":["person_uid"],"name":[6],"type":["dbl"],"align":["right"]},{"label":["radiation_type"],"name":[7],"type":["chr"],"align":["left"]},{"label":["hp10"],"name":[8],"type":["dbl"],"align":["right"]},{"label":["hp007"],"name":[9],"type":["dbl"],"align":["right"]},{"label":["user_type"],"name":[10],"type":["chr"],"align":["left"]},{"label":["dosimeter_type"],"name":[11],"type":["chr"],"align":["left"]},{"label":["dosimeter_placement"],"name":[12],"type":["chr"],"align":["left"]},{"label":["dosimeter_uid"],"name":[13],"type":["dbl"],"align":["right"]},{"label":["measurement_period_start"],"name":[14],"type":["date"],"align":["right"]},{"label":["measurement_period_end"],"name":[15],"type":["date"],"align":["right"]},{"label":["read_date"],"name":[16],"type":["date"],"align":["right"]},{"label":["report_date"],"name":[17],"type":["date"],"align":["right"]},{"label":["report_uid"],"name":[18],"type":["dbl"],"align":["right"]},{"label":["status"],"name":[19],"type":["chr"],"align":["left"]}],"data":[{"1":"Hogsmeade Royal Infirmary","2":"141","3":"Nuclear Medicine","4":"1","5":"Severus Snape","6":"12368","7":"xbg","8":"0.09","9":"0.09","10":"Staff","11":"Badge","12":"Body","13":"90072","14":"2019-11-22","15":"2019-12-19","16":"2019-12-24","17":"2019-12-28","18":"1137","19":"OK"},{"1":"Hogsmeade Royal Infirmary","2":"141","3":"Nuclear Medicine","4":"1","5":"Harry Potter","6":"12369","7":"xbg","8":"NA","9":"NA","10":"Staff","11":"Badge","12":"Body","13":"90073","14":"2019-11-22","15":"2019-12-19","16":"2019-12-24","17":"2019-12-28","18":"1137","19":"B"},{"1":"Hogsmeade Royal Infirmary","2":"141","3":"Nuclear Medicine","4":"1","5":"Parvati Patil","6":"12370","7":"xbg","8":"NA","9":"NA","10":"Staff","11":"Badge","12":"Body","13":"90075","14":"2019-11-22","15":"2019-12-19","16":"2019-12-26","17":"2019-12-28","18":"1137","19":"B"},{"1":"Hogsmeade Royal Infirmary","2":"141","3":"Nuclear Medicine","4":"1","5":"Parvati Patil","6":"12370","7":"xbg","8":"NA","9":"2.34","10":"Staff","11":"Ring","12":"Left hand","13":"90076","14":"2019-11-22","15":"2019-12-19","16":"2019-12-24","17":"2019-12-28","18":"1137","19":"OK"},{"1":"Hogsmeade Royal Infirmary","2":"141","3":"Nuclear Medicine","4":"1","5":"Cedric Diggory","6":"12371","7":"xbg","8":"0.11","9":"0.11","10":"Staff","11":"Badge","12":"Body","13":"90077","14":"2019-11-22","15":"2019-12-19","16":"2019-12-25","17":"2019-12-28","18":"1137","19":"OK"},{"1":"Hogsmeade Royal Infirmary","2":"141","3":"Nuclear Medicine","4":"1","5":"Cedric Diggory","6":"12371","7":"xbg","8":"NA","9":"3.14","10":"Staff","11":"Ring","12":"Right hand","13":"90078","14":"2019-11-22","15":"2019-12-19","16":"2019-12-25","17":"2019-12-28","18":"1137","19":"OK"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
+  </script>
+</div>
 
 
 ```r
@@ -427,7 +375,7 @@ Sys.setlocale("LC_TIME", locale = loc)
 
 ## Using R with SQLite
 
-### Ressources and Motivation
+### Resources and Motivation
 For this part we are drawing heavily on the following resources:  
 
 * [RStudio - Databases using R](https://db.rstudio.com/)  
@@ -453,9 +401,9 @@ To connect R to the database management system (DBMS) SQLite we need the [`DBI`-
 
 ### Creating or opening a Connection to a Database
 With the function `dbConnect` you create a database file or open a connection to an already existing database.  
-See [RSQLite Packages Vignette](https://rsqlite.r-dbi.org/reference/sqlite) for a list of optional arguments. The argument `flags` specifies the connection mode:  
+See [RSQLite Packages Vignette](https://rsqlite.r-dbi.org/reference/sqlite) for a list of optional arguments. The optional argument `flags` specifies the connection mode:  
 
-* SQLITE_RWC: open the database in read/write mode and create the database file if it does not already exist [DEFAULT];  
+* SQLITE_RWC: open the database in read/write mode and create the database file if it does not already exist [This is the default value which we will use to create the database. Remember: Default values for optional arguments do not have to be stated explicitly];  
 * SQLITE_RW: open the database in read/write mode. Raise an error if the file does not already exist;  
 * SQLITE_RO: open the database in read only mode. Raise an error if the file does not already exist.  
 
@@ -492,7 +440,7 @@ Before we create our final personnel dosimeter table we are going to have a look
 all_reports_fixed_dateastext <- all_reports_fixed %>% 
   mutate(across(c(measurement_period_start:report_date), as.character))
 
-# storing the first 10 rows in a separate data.frame/tibble
+# storing the first 10 rows in a separate data.frame
 arf_rows01to10 <- all_reports_fixed_dateastext[1:10,]
 ```
 
@@ -525,35 +473,16 @@ Now we execute our first SQL queries with `dbGetQuery()` which returns the resul
 
 ```r
 dbGetQuery(conn = mp_db_conn,
-           statement = "SELECT * FROM test01") %>% 
-  tibble::tibble()
+           statement = "SELECT * FROM test01")
 ```
 
-```
-## # A tibble: 10 x 19
-##    customer_name    customer_uid department    department_uid name    person_uid
-##    <chr>                   <dbl> <chr>                  <dbl> <chr>        <dbl>
-##  1 Hogsmeade Royal~          141 Nuclear Medi~              1 Severu~      12368
-##  2 Hogsmeade Royal~          141 Nuclear Medi~              1 Harry ~      12369
-##  3 Hogsmeade Royal~          141 Nuclear Medi~              1 Parvat~      12370
-##  4 Hogsmeade Royal~          141 Nuclear Medi~              1 Parvat~      12370
-##  5 Hogsmeade Royal~          141 Nuclear Medi~              1 Cedric~      12371
-##  6 Hogsmeade Royal~          141 Nuclear Medi~              1 Cedric~      12371
-##  7 Hogsmeade Royal~          141 Nuclear Medi~              1 Ron We~      12372
-##  8 Hogsmeade Royal~          141 Nuclear Medi~              1 Tom Ma~      12373
-##  9 Hogsmeade Royal~          141 Diagnostic R~              2 Hermio~      12374
-## 10 Hogsmeade Royal~          141 Diagnostic R~              2 Albus ~      12375
-## # ... with 13 more variables: radiation_type <chr>, hp10 <dbl>, hp007 <dbl>,
-## #   user_type <chr>, dosimeter_type <chr>, dosimeter_placement <chr>,
-## #   dosimeter_uid <dbl>, measurement_period_start <chr>,
-## #   measurement_period_end <chr>, read_date <chr>, report_date <chr>,
-## #   report_uid <dbl>, status <chr>
-```
+<div data-pagedtable="false">
+  <script data-pagedtable-source type="application/json">
+{"columns":[{"label":["customer_name"],"name":[1],"type":["chr"],"align":["left"]},{"label":["customer_uid"],"name":[2],"type":["dbl"],"align":["right"]},{"label":["department"],"name":[3],"type":["chr"],"align":["left"]},{"label":["department_uid"],"name":[4],"type":["dbl"],"align":["right"]},{"label":["name"],"name":[5],"type":["chr"],"align":["left"]},{"label":["person_uid"],"name":[6],"type":["dbl"],"align":["right"]},{"label":["radiation_type"],"name":[7],"type":["chr"],"align":["left"]},{"label":["hp10"],"name":[8],"type":["dbl"],"align":["right"]},{"label":["hp007"],"name":[9],"type":["dbl"],"align":["right"]},{"label":["user_type"],"name":[10],"type":["chr"],"align":["left"]},{"label":["dosimeter_type"],"name":[11],"type":["chr"],"align":["left"]},{"label":["dosimeter_placement"],"name":[12],"type":["chr"],"align":["left"]},{"label":["dosimeter_uid"],"name":[13],"type":["dbl"],"align":["right"]},{"label":["measurement_period_start"],"name":[14],"type":["chr"],"align":["left"]},{"label":["measurement_period_end"],"name":[15],"type":["chr"],"align":["left"]},{"label":["read_date"],"name":[16],"type":["chr"],"align":["left"]},{"label":["report_date"],"name":[17],"type":["chr"],"align":["left"]},{"label":["report_uid"],"name":[18],"type":["dbl"],"align":["right"]},{"label":["status"],"name":[19],"type":["chr"],"align":["left"]}],"data":[{"1":"Hogsmeade Royal Infirmary","2":"141","3":"Nuclear Medicine","4":"1","5":"Severus Snape","6":"12368","7":"xbg","8":"0.09","9":"0.09","10":"Staff","11":"Badge","12":"Body","13":"90072","14":"2019-11-22","15":"2019-12-19","16":"2019-12-24","17":"2019-12-28","18":"1137","19":"OK"},{"1":"Hogsmeade Royal Infirmary","2":"141","3":"Nuclear Medicine","4":"1","5":"Harry Potter","6":"12369","7":"xbg","8":"NA","9":"NA","10":"Staff","11":"Badge","12":"Body","13":"90073","14":"2019-11-22","15":"2019-12-19","16":"2019-12-24","17":"2019-12-28","18":"1137","19":"B"},{"1":"Hogsmeade Royal Infirmary","2":"141","3":"Nuclear Medicine","4":"1","5":"Parvati Patil","6":"12370","7":"xbg","8":"NA","9":"NA","10":"Staff","11":"Badge","12":"Body","13":"90075","14":"2019-11-22","15":"2019-12-19","16":"2019-12-26","17":"2019-12-28","18":"1137","19":"B"},{"1":"Hogsmeade Royal Infirmary","2":"141","3":"Nuclear Medicine","4":"1","5":"Parvati Patil","6":"12370","7":"xbg","8":"NA","9":"2.34","10":"Staff","11":"Ring","12":"Left hand","13":"90076","14":"2019-11-22","15":"2019-12-19","16":"2019-12-24","17":"2019-12-28","18":"1137","19":"OK"},{"1":"Hogsmeade Royal Infirmary","2":"141","3":"Nuclear Medicine","4":"1","5":"Cedric Diggory","6":"12371","7":"xbg","8":"0.11","9":"0.11","10":"Staff","11":"Badge","12":"Body","13":"90077","14":"2019-11-22","15":"2019-12-19","16":"2019-12-25","17":"2019-12-28","18":"1137","19":"OK"},{"1":"Hogsmeade Royal Infirmary","2":"141","3":"Nuclear Medicine","4":"1","5":"Cedric Diggory","6":"12371","7":"xbg","8":"NA","9":"3.14","10":"Staff","11":"Ring","12":"Right hand","13":"90078","14":"2019-11-22","15":"2019-12-19","16":"2019-12-25","17":"2019-12-28","18":"1137","19":"OK"},{"1":"Hogsmeade Royal Infirmary","2":"141","3":"Nuclear Medicine","4":"1","5":"Ron Weasley","6":"12372","7":"xbg","8":"NA","9":"NA","10":"Staff","11":"Badge","12":"Body","13":"90079","14":"2019-11-22","15":"2019-12-19","16":"2019-12-26","17":"2019-12-28","18":"1137","19":"B"},{"1":"Hogsmeade Royal Infirmary","2":"141","3":"Nuclear Medicine","4":"1","5":"Tom Marvolo Riddle","6":"12373","7":"xbg","8":"NA","9":"NA","10":"Staff","11":"Badge","12":"Body","13":"90080","14":"2019-11-22","15":"2019-12-19","16":"NA","17":"2019-12-28","18":"1137","19":"NR"},{"1":"Hogsmeade Royal Infirmary","2":"141","3":"Diagnostic Radiology","4":"2","5":"Hermione Grainger","6":"12374","7":"xbg","8":"NA","9":"NA","10":"Staff","11":"Badge","12":"Body","13":"90081","14":"2019-11-22","15":"2019-12-19","16":"2019-12-24","17":"2019-12-28","18":"1137","19":"B"},{"1":"Hogsmeade Royal Infirmary","2":"141","3":"Diagnostic Radiology","4":"2","5":"Albus Dumbledore","6":"12375","7":"xbg","8":"0.08","9":"0.08","10":"Staff","11":"Badge","12":"Body","13":"90082","14":"2019-11-22","15":"2019-12-19","16":"2019-12-25","17":"2019-12-28","18":"1137","19":"OK"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
+  </script>
+</div>
 
 ```r
-# Conversion of the resulting dataframe into a tibble (a special form of dataframe) 
-  # is only necessary for visualization reasons (more compact output in the rendered html)
-
 # Let's select a subset of columns
 dbGetQuery(conn = mp_db_conn,
            statement = "SELECT name, person_uid, dosimeter_uid, report_uid,
@@ -561,19 +490,11 @@ dbGetQuery(conn = mp_db_conn,
                         FROM test01")
 ```
 
-```
-##                  name person_uid dosimeter_uid report_uid report_month
-## 1       Severus Snape      12368         90072       1137      2019-12
-## 2        Harry Potter      12369         90073       1137      2019-12
-## 3       Parvati Patil      12370         90075       1137      2019-12
-## 4       Parvati Patil      12370         90076       1137      2019-12
-## 5      Cedric Diggory      12371         90077       1137      2019-12
-## 6      Cedric Diggory      12371         90078       1137      2019-12
-## 7         Ron Weasley      12372         90079       1137      2019-12
-## 8  Tom Marvolo Riddle      12373         90080       1137      2019-12
-## 9   Hermione Grainger      12374         90081       1137      2019-12
-## 10   Albus Dumbledore      12375         90082       1137      2019-12
-```
+<div data-pagedtable="false">
+  <script data-pagedtable-source type="application/json">
+{"columns":[{"label":["name"],"name":[1],"type":["chr"],"align":["left"]},{"label":["person_uid"],"name":[2],"type":["dbl"],"align":["right"]},{"label":["dosimeter_uid"],"name":[3],"type":["dbl"],"align":["right"]},{"label":["report_uid"],"name":[4],"type":["dbl"],"align":["right"]},{"label":["report_month"],"name":[5],"type":["chr"],"align":["left"]}],"data":[{"1":"Severus Snape","2":"12368","3":"90072","4":"1137","5":"2019-12"},{"1":"Harry Potter","2":"12369","3":"90073","4":"1137","5":"2019-12"},{"1":"Parvati Patil","2":"12370","3":"90075","4":"1137","5":"2019-12"},{"1":"Parvati Patil","2":"12370","3":"90076","4":"1137","5":"2019-12"},{"1":"Cedric Diggory","2":"12371","3":"90077","4":"1137","5":"2019-12"},{"1":"Cedric Diggory","2":"12371","3":"90078","4":"1137","5":"2019-12"},{"1":"Ron Weasley","2":"12372","3":"90079","4":"1137","5":"2019-12"},{"1":"Tom Marvolo Riddle","2":"12373","3":"90080","4":"1137","5":"2019-12"},{"1":"Hermione Grainger","2":"12374","3":"90081","4":"1137","5":"2019-12"},{"1":"Albus Dumbledore","2":"12375","3":"90082","4":"1137","5":"2019-12"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
+  </script>
+</div>
 
 ```r
 # See the structure of the table by using built in pragma statements
@@ -582,28 +503,11 @@ dbGetQuery(conn = mp_db_conn,
            statement = "pragma table_info('test01')")
 ```
 
-```
-##    cid                     name type notnull dflt_value pk
-## 1    0            customer_name TEXT       0         NA  0
-## 2    1             customer_uid REAL       0         NA  0
-## 3    2               department TEXT       0         NA  0
-## 4    3           department_uid REAL       0         NA  0
-## 5    4                     name TEXT       0         NA  0
-## 6    5               person_uid REAL       0         NA  0
-## 7    6           radiation_type TEXT       0         NA  0
-## 8    7                     hp10 REAL       0         NA  0
-## 9    8                    hp007 REAL       0         NA  0
-## 10   9                user_type TEXT       0         NA  0
-## 11  10           dosimeter_type TEXT       0         NA  0
-## 12  11      dosimeter_placement TEXT       0         NA  0
-## 13  12            dosimeter_uid REAL       0         NA  0
-## 14  13 measurement_period_start TEXT       0         NA  0
-## 15  14   measurement_period_end TEXT       0         NA  0
-## 16  15                read_date TEXT       0         NA  0
-## 17  16              report_date TEXT       0         NA  0
-## 18  17               report_uid REAL       0         NA  0
-## 19  18                   status TEXT       0         NA  0
-```
+<div data-pagedtable="false">
+  <script data-pagedtable-source type="application/json">
+{"columns":[{"label":["cid"],"name":[1],"type":["int"],"align":["right"]},{"label":["name"],"name":[2],"type":["chr"],"align":["left"]},{"label":["type"],"name":[3],"type":["chr"],"align":["left"]},{"label":["notnull"],"name":[4],"type":["int"],"align":["right"]},{"label":["dflt_value"],"name":[5],"type":["lgl"],"align":["right"]},{"label":["pk"],"name":[6],"type":["int"],"align":["right"]}],"data":[{"1":"0","2":"customer_name","3":"TEXT","4":"0","5":"NA","6":"0"},{"1":"1","2":"customer_uid","3":"REAL","4":"0","5":"NA","6":"0"},{"1":"2","2":"department","3":"TEXT","4":"0","5":"NA","6":"0"},{"1":"3","2":"department_uid","3":"REAL","4":"0","5":"NA","6":"0"},{"1":"4","2":"name","3":"TEXT","4":"0","5":"NA","6":"0"},{"1":"5","2":"person_uid","3":"REAL","4":"0","5":"NA","6":"0"},{"1":"6","2":"radiation_type","3":"TEXT","4":"0","5":"NA","6":"0"},{"1":"7","2":"hp10","3":"REAL","4":"0","5":"NA","6":"0"},{"1":"8","2":"hp007","3":"REAL","4":"0","5":"NA","6":"0"},{"1":"9","2":"user_type","3":"TEXT","4":"0","5":"NA","6":"0"},{"1":"10","2":"dosimeter_type","3":"TEXT","4":"0","5":"NA","6":"0"},{"1":"11","2":"dosimeter_placement","3":"TEXT","4":"0","5":"NA","6":"0"},{"1":"12","2":"dosimeter_uid","3":"REAL","4":"0","5":"NA","6":"0"},{"1":"13","2":"measurement_period_start","3":"TEXT","4":"0","5":"NA","6":"0"},{"1":"14","2":"measurement_period_end","3":"TEXT","4":"0","5":"NA","6":"0"},{"1":"15","2":"read_date","3":"TEXT","4":"0","5":"NA","6":"0"},{"1":"16","2":"report_date","3":"TEXT","4":"0","5":"NA","6":"0"},{"1":"17","2":"report_uid","3":"REAL","4":"0","5":"NA","6":"0"},{"1":"18","2":"status","3":"TEXT","4":"0","5":"NA","6":"0"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
+  </script>
+</div>
 
 As you can see from the output we don't have a [primary key](https://www.sqlshack.com/learn-sql-primary-key/) (all "pk" are set to 0) and neither have we set a [UNIQUE constraint](https://www.sqlservertutorial.net/sql-server-basics/sql-server-unique-constraint/).  
 <br>
@@ -624,28 +528,14 @@ dbWriteTable(conn = mp_db_conn,
 dbGetQuery(conn = mp_db_conn,
            statement = "SELECT name, person_uid, dosimeter_uid, 
                         STRFTIME('%Y-%m', report_date) AS report_month
-                        FROM test01") %>% 
-  tibble()
+                        FROM test01")
 ```
 
-```
-## # A tibble: 13 x 4
-##    name               person_uid dosimeter_uid report_month
-##    <chr>                   <dbl>         <dbl> <chr>       
-##  1 Severus Snape           12368         90072 2019-12     
-##  2 Harry Potter            12369         90073 2019-12     
-##  3 Parvati Patil           12370         90075 2019-12     
-##  4 Parvati Patil           12370         90076 2019-12     
-##  5 Cedric Diggory          12371         90077 2019-12     
-##  6 Cedric Diggory          12371         90078 2019-12     
-##  7 Ron Weasley             12372         90079 2019-12     
-##  8 Tom Marvolo Riddle      12373         90080 2019-12     
-##  9 Hermione Grainger       12374         90081 2019-12     
-## 10 Albus Dumbledore        12375         90082 2019-12     
-## 11 Albus Dumbledore        12375         90082 2019-12     
-## 12 Filius Flitwick         12376         90083 2019-12     
-## 13 Neville Longbottom      12377         90084 2019-12
-```
+<div data-pagedtable="false">
+  <script data-pagedtable-source type="application/json">
+{"columns":[{"label":["name"],"name":[1],"type":["chr"],"align":["left"]},{"label":["person_uid"],"name":[2],"type":["dbl"],"align":["right"]},{"label":["dosimeter_uid"],"name":[3],"type":["dbl"],"align":["right"]},{"label":["report_month"],"name":[4],"type":["chr"],"align":["left"]}],"data":[{"1":"Severus Snape","2":"12368","3":"90072","4":"2019-12"},{"1":"Harry Potter","2":"12369","3":"90073","4":"2019-12"},{"1":"Parvati Patil","2":"12370","3":"90075","4":"2019-12"},{"1":"Parvati Patil","2":"12370","3":"90076","4":"2019-12"},{"1":"Cedric Diggory","2":"12371","3":"90077","4":"2019-12"},{"1":"Cedric Diggory","2":"12371","3":"90078","4":"2019-12"},{"1":"Ron Weasley","2":"12372","3":"90079","4":"2019-12"},{"1":"Tom Marvolo Riddle","2":"12373","3":"90080","4":"2019-12"},{"1":"Hermione Grainger","2":"12374","3":"90081","4":"2019-12"},{"1":"Albus Dumbledore","2":"12375","3":"90082","4":"2019-12"},{"1":"Albus Dumbledore","2":"12375","3":"90082","4":"2019-12"},{"1":"Filius Flitwick","2":"12376","3":"90083","4":"2019-12"},{"1":"Neville Longbottom","2":"12377","3":"90084","4":"2019-12"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
+  </script>
+</div>
 
 Now we have 13 rows in the table which means that we created a duplicate by adding row 10 a second time (entry for the dosimeter reading of Albus Dumbledore from December 2019).  
 
@@ -757,10 +647,11 @@ dbGetQuery(conn = mp_db_conn,
   head(1)
 ```
 
-```
-##   cid name    type notnull dflt_value pk
-## 1   0   id INTEGER       1         NA  1
-```
+<div data-pagedtable="false">
+  <script data-pagedtable-source type="application/json">
+{"columns":[{"label":[""],"name":["_rn_"],"type":[""],"align":["left"]},{"label":["cid"],"name":[1],"type":["int"],"align":["right"]},{"label":["name"],"name":[2],"type":["chr"],"align":["left"]},{"label":["type"],"name":[3],"type":["chr"],"align":["left"]},{"label":["notnull"],"name":[4],"type":["int"],"align":["right"]},{"label":["dflt_value"],"name":[5],"type":["lgl"],"align":["right"]},{"label":["pk"],"name":[6],"type":["int"],"align":["right"]}],"data":[{"1":"0","2":"id","3":"INTEGER","4":"1","5":"NA","6":"1","_rn_":"1"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
+  </script>
+</div>
 
 ```r
 # the id-column should have the value 1 for "notnull" and "pk" (primary key)
@@ -786,19 +677,11 @@ dbGetQuery(conn = mp_db_conn,
            statement = "SELECT name, person_uid, dosimeter_placement, dosimeter_uid, report_uid FROM staffdose")
 ```
 
-```
-##                  name person_uid dosimeter_placement dosimeter_uid report_uid
-## 1       Severus Snape      12368                Body         90072       1137
-## 2        Harry Potter      12369                Body         90073       1137
-## 3       Parvati Patil      12370                Body         90075       1137
-## 4       Parvati Patil      12370           Left hand         90076       1137
-## 5      Cedric Diggory      12371                Body         90077       1137
-## 6      Cedric Diggory      12371          Right hand         90078       1137
-## 7         Ron Weasley      12372                Body         90079       1137
-## 8  Tom Marvolo Riddle      12373                Body         90080       1137
-## 9   Hermione Grainger      12374                Body         90081       1137
-## 10   Albus Dumbledore      12375                Body         90082       1137
-```
+<div data-pagedtable="false">
+  <script data-pagedtable-source type="application/json">
+{"columns":[{"label":["name"],"name":[1],"type":["chr"],"align":["left"]},{"label":["person_uid"],"name":[2],"type":["int"],"align":["right"]},{"label":["dosimeter_placement"],"name":[3],"type":["chr"],"align":["left"]},{"label":["dosimeter_uid"],"name":[4],"type":["int"],"align":["right"]},{"label":["report_uid"],"name":[5],"type":["dbl"],"align":["right"]}],"data":[{"1":"Severus Snape","2":"12368","3":"Body","4":"90072","5":"1137"},{"1":"Harry Potter","2":"12369","3":"Body","4":"90073","5":"1137"},{"1":"Parvati Patil","2":"12370","3":"Body","4":"90075","5":"1137"},{"1":"Parvati Patil","2":"12370","3":"Left hand","4":"90076","5":"1137"},{"1":"Cedric Diggory","2":"12371","3":"Body","4":"90077","5":"1137"},{"1":"Cedric Diggory","2":"12371","3":"Right hand","4":"90078","5":"1137"},{"1":"Ron Weasley","2":"12372","3":"Body","4":"90079","5":"1137"},{"1":"Tom Marvolo Riddle","2":"12373","3":"Body","4":"90080","5":"1137"},{"1":"Hermione Grainger","2":"12374","3":"Body","4":"90081","5":"1137"},{"1":"Albus Dumbledore","2":"12375","3":"Body","4":"90082","5":"1137"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
+  </script>
+</div>
 
 ```r
 # add dataset with rows already contained in the table
@@ -818,7 +701,7 @@ Now you should get an error message like:
 We have achieved our goal to prevent duplicates but unfortunately there is no easy way to just add unique data with any of the functions of the packages `DBI` or `RSQLite`. To solve this problem we need a workaround. 
 
 #### Adding only unique Data
-For details and source of the following approach see the forum thread "[RStudio Community - Creating and populating a SQLite database via R - How to ignore duplicate rows?](https://community.rstudio.com/t/creating-and-populating-a-sqlite-database-via-r-how-to-ignore-duplicate-rows/85470/3)".
+For details and the source of the following approach see the forum thread "[RStudio Community - Creating and populating a SQLite database via R - How to ignore duplicate rows?](https://community.rstudio.com/t/creating-and-populating-a-sqlite-database-via-r-how-to-ignore-duplicate-rows/85470/3)".
 
 For the work around we will use a second table called `stage` with the same structure as `staffdose` but without any constraints. The table `stage` will therefore accept any data even if it already exists in `staffdose`. First we will read in the new data into the intermediary table `stage` and can then transfer only the new data to the table `staffdose` with the SQL command `INSERT OR IGNORE INTO staffdose`:
 
@@ -901,24 +784,15 @@ dbAppendUniqueStaffDose(connection = mp_db_conn,
 
 # Let's view the table:
 check <- dbGetQuery(conn = mp_db_conn, 
-                    statement = "SELECT name, person_uid, dosimeter_placement, dosimeter_uid, report_uid FROM staffdose"); check
+                    statement = "SELECT name, person_uid, dosimeter_placement,
+                    dosimeter_uid, report_uid FROM staffdose"); check
 ```
 
-```
-##                  name person_uid dosimeter_placement dosimeter_uid report_uid
-## 1       Severus Snape      12368                Body         90072       1137
-## 2        Harry Potter      12369                Body         90073       1137
-## 3       Parvati Patil      12370                Body         90075       1137
-## 4       Parvati Patil      12370           Left hand         90076       1137
-## 5      Cedric Diggory      12371                Body         90077       1137
-## 6      Cedric Diggory      12371          Right hand         90078       1137
-## 7         Ron Weasley      12372                Body         90079       1137
-## 8  Tom Marvolo Riddle      12373                Body         90080       1137
-## 9   Hermione Grainger      12374                Body         90081       1137
-## 10   Albus Dumbledore      12375                Body         90082       1137
-## 11    Filius Flitwick      12376                Body         90083       1137
-## 12 Neville Longbottom      12377                Body         90084       1137
-```
+<div data-pagedtable="false">
+  <script data-pagedtable-source type="application/json">
+{"columns":[{"label":["name"],"name":[1],"type":["chr"],"align":["left"]},{"label":["person_uid"],"name":[2],"type":["int"],"align":["right"]},{"label":["dosimeter_placement"],"name":[3],"type":["chr"],"align":["left"]},{"label":["dosimeter_uid"],"name":[4],"type":["int"],"align":["right"]},{"label":["report_uid"],"name":[5],"type":["dbl"],"align":["right"]}],"data":[{"1":"Severus Snape","2":"12368","3":"Body","4":"90072","5":"1137"},{"1":"Harry Potter","2":"12369","3":"Body","4":"90073","5":"1137"},{"1":"Parvati Patil","2":"12370","3":"Body","4":"90075","5":"1137"},{"1":"Parvati Patil","2":"12370","3":"Left hand","4":"90076","5":"1137"},{"1":"Cedric Diggory","2":"12371","3":"Body","4":"90077","5":"1137"},{"1":"Cedric Diggory","2":"12371","3":"Right hand","4":"90078","5":"1137"},{"1":"Ron Weasley","2":"12372","3":"Body","4":"90079","5":"1137"},{"1":"Tom Marvolo Riddle","2":"12373","3":"Body","4":"90080","5":"1137"},{"1":"Hermione Grainger","2":"12374","3":"Body","4":"90081","5":"1137"},{"1":"Albus Dumbledore","2":"12375","3":"Body","4":"90082","5":"1137"},{"1":"Filius Flitwick","2":"12376","3":"Body","4":"90083","5":"1137"},{"1":"Neville Longbottom","2":"12377","3":"Body","4":"90084","5":"1137"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
+  </script>
+</div>
 
 ```r
 # looks good
@@ -1217,7 +1091,7 @@ You can of course automate this task too. Say you have to create a version of th
 year <- 2021
 
 
-# get list of department names for which dosimeter readings for chosen year exist
+# get list of department names for which dosimeter readings for the chosen year exist
 # opening connection (read only)
 mp_db_conn <- dbConnect(drv = RSQLite::SQLite(),
                         dbname = "medical_physics_db.sqlite",
@@ -1235,7 +1109,7 @@ dbDisconnect(conn = mp_db_conn)
 
 # creating reports for all departments for which dosimeter readings for chosen year exist
 # creating a function with parameters department and year
-render_report = function(department, year) {
+render_report <- function(department, year) {
   rmarkdown::render(
     "sample_report.Rmd", params = list(
       department = department,
